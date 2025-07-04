@@ -1,5 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import '../models/event_item.dart';
+import '../screens/event_detail_screen.dart';
 
 // 一つの企画情報をカード形式で表示するための、再利用可能なウィジェット
 class EventCard extends StatelessWidget {
@@ -35,8 +36,15 @@ class EventCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () {
-          // TODO: ここに企画詳細ページへの遷移処理を後で追加します
-          print('${event.title}がタップされました');
+          // Navigator.pushを使って画面遷移を実行
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              // 遷移先の画面としてEventDetailScreenを指定
+              // eventプロパティに、このカードが持つ企画情報を渡す
+              builder: (context) => EventDetailScreen(event: event),
+            ),
+          );
         },
         child: SizedBox(
           height: 120, // カードの高さを指定
