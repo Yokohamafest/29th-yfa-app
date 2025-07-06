@@ -100,8 +100,19 @@ class _EventListScreenState extends State<EventListScreen> {
             spacing: 8.0,
             children: allValues.map((value) {
               final isSelected = selectedValues.contains(value);
+
+              String displayName;
+              if (value is FestivalDay) {
+                displayName = value.name;
+              } else if (value is EventArea) {
+                displayName = value.name;
+              } else if (value is EventCategory) {
+                displayName = value.name;
+              } else {
+                displayName = value.name;
+              }
               return FilterChip(
-                label: Text(value.name),
+                label: Text(displayName),
                 selected: isSelected,
                 onSelected: (bool selected) {
                   setState(() {
