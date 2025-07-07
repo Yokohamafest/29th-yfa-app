@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../data/dummy_events.dart';
 import '../models/event_item.dart';
 import '../widgets/event_card.dart';
+import '../widgets/favorite_notification_settings.dart';
 
 class FavoritesScreen extends StatefulWidget {
   final Set<String> favoriteEventIds;
@@ -129,7 +130,42 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         }).toList()..sort((a, b) => a.startTime!.compareTo(b.startTime!));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('お気に入り企画')),
+      appBar: AppBar(
+        title: const Text('お気に入り企画'),
+        actions: [
+          Builder(
+            builder: (context) {
+              // アイコンだけでなくテキストも表示できるTextButton.iconに変更
+              return TextButton.icon(
+                onPressed: () {
+                  showModalBottomSheet(
+                    context: context,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(16),
+                      ),
+                    ),
+                    builder: (context) {
+                      return const FavoriteNotificationSettings();
+                    },
+                  );
+                },
+                // 表示するアイコン
+                icon: const Icon(Icons.notifications_active_outlined),
+                // 表示するテキスト
+                label: const Text('通知設定'),
+                // ボタンの文字とアイコンの色をAppBarのテーマに合わせる
+                style: TextButton.styleFrom(
+                  foregroundColor:
+                      Theme.of(context).appBarTheme.iconTheme?.color ??
+                      Colors.black,
+                ),
+              );
+            },
+          ),
+          const SizedBox(width: 8), // 右端に少し余白を追加
+        ],
+      ),
       body: favoritedEvents.isEmpty
           ? const Center(child: Text('お気に入りに登録した企画はありません'))
           : ListView(
