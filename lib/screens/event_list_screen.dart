@@ -4,7 +4,11 @@ import '../models/event_item.dart';
 import '../widgets/event_card.dart';
 
 class EventListScreen extends StatefulWidget {
-  const EventListScreen({super.key});
+  //お気に入り情報を受け取るための変数
+  final Set<String> favoriteEventIds;
+  final Function(String) onToggleFavorite;
+
+  const EventListScreen({super.key, required this.favoriteEventIds,required this.onToggleFavorite,});
 
   @override
   State<EventListScreen> createState() => _EventListScreenState();
@@ -13,6 +17,7 @@ class EventListScreen extends StatefulWidget {
 class _EventListScreenState extends State<EventListScreen> {
   List<EventItem> _filteredEvents = [];
   final TextEditingController _searchController = TextEditingController();
+
   final Set<EventCategory> _selectedCategories = {};
   final Set<EventArea> _selectedAreas = {};
   final Set<FestivalDay> _selectedDays = {};
@@ -209,7 +214,11 @@ class _EventListScreenState extends State<EventListScreen> {
         itemCount: _filteredEvents.length,
         itemBuilder: (context, index) {
           final event = _filteredEvents[index];
-          return EventCard(event: event);
+          return EventCard(
+            event: event,
+            favoriteEventIds: widget.favoriteEventIds,
+            onToggleFavorite: widget.onToggleFavorite,
+          );
         },
       ),
     );
