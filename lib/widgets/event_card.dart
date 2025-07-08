@@ -6,7 +6,16 @@ import '../screens/event_detail_screen.dart';
 class EventCard extends StatelessWidget {
   final EventItem event;
 
-  const EventCard({super.key, required this.event});
+  // お気に入り状態を管理する変数
+  final Set<String> favoriteEventIds;
+  final Function(String) onToggleFavorite;
+
+  const EventCard({
+    super.key,
+    required this.event,
+    required this.favoriteEventIds,
+    required this.onToggleFavorite,
+  });
 
   // タグを生成するためのヘルパーメソッド
   Widget _buildTag(String text, Color color) {
@@ -29,6 +38,8 @@ class EventCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isFavorited = favoriteEventIds.contains(event.id);
+
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
       elevation: 2.0,
@@ -71,22 +82,38 @@ class EventCard extends StatelessWidget {
               ),
 
               // --- 右側：文字情報エリア ---
-              // Expandedで残りのスペースをすべて文字エリアに使う
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.all(12.0),
+                  padding: const EdgeInsets.fromLTRB(12, 12, 0, 12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // 企画タイトル
-                      Text(
-                        event.title,
-                        style: const TextStyle(
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            // 企画タイトル
+                            child: Text(
+                              event.title,
+                              style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          // お気に入り登録ボタン
+                          IconButton(
+                            padding: const EdgeInsets.all(0),
+                            constraints: const BoxConstraints(),
+                            icon: Icon(
+                              isFavorited ? Icons.favorite : Icons.favorite_border,
+                              color: isFavorited ? Colors.red : Colors.grey,
+                            ),
+                            onPressed: () {
+                              // ボタンが押されたら、親から渡された関数を呼び出す
+                              onToggleFavorite(event.id);
+                            },
+                          ),
+                        ],
                       ),
                       // 団体名
                       Text(
