@@ -1,5 +1,7 @@
 ﻿import 'dart:math' as math; // 数学的な計算（sin関数）を使うためにインポート
 import 'package:flutter/material.dart';
+import 'announcement_screen.dart';
+import 'options_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,6 +18,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late final Animation<double> _xAnimation;
 
   bool _isAnimationInitialized = false;
+
+  bool _isMenuOpen = false;
+
+  // メニューの開閉を切り替える関数
+  void _toggleMenu() {
+    setState(() {
+      _isMenuOpen = !_isMenuOpen;
+    });
+  }
 
   @override
   void initState() {
@@ -95,6 +106,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
+    const double menuWidth = 250; // サイドメニューの幅を定義
 
     return Scaffold(
       body: Stack(
@@ -256,6 +268,93 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                 ),
               ],
+            ),
+          ),
+
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 300), // アニメーションの時間
+            curve: Curves.easeInOut, // アニメーションの緩急
+            // _isMenuOpenの値に応じて、leftの位置を変更する
+            left: _isMenuOpen ? 0 : -menuWidth, // 開いている時は0、閉じている時は画面外
+            top: 0,
+            bottom: 0,
+            width: menuWidth,
+            child: Material(
+              // 影や背景色をつけるためにMaterialで囲む
+              elevation: 8.0,
+              child: Container(
+                color: Colors.white,
+                child: SafeArea(
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 20),
+                      const Text(
+                        'メニュー',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const Divider(height: 40),
+                      ListTile(
+                        leading: const Icon(Icons.campaign),
+                        title: const Text('お知らせ'),
+                        onTap: () {
+                          // お知らせ一覧画面へ遷移
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AnnouncementScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.settings),
+                        title: const Text('オプション'),
+                        onTap: () {
+                          // オプション画面へ遷移
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const OptionsScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // --- レイヤー3: メニューを開くためのボタン ---
+          Positioned(
+            top: 40, // 位置を微調整
+            left: 0, // 画面の左端にピッタリつける
+            child: Material(
+              // ボタンに影をつける
+              elevation: _isMenuOpen ? 0.0 : 4.0,
+              // ボタンの背景色
+              color: Colors.white,
+              // 【重要】ボタンの形を定義
+              shape: const RoundedRectangleBorder(
+                // 右上と右下だけを角丸にする
+                borderRadius: BorderRadius.only(
+                  topRight: Radius.circular(20),
+                  bottomRight: Radius.circular(20),
+                ),
+              ),
+              // ボタンを押したときのエフェクトが、上記の形からはみ出ないようにする
+              clipBehavior: Clip.antiAlias,
+              child: IconButton(
+                icon: Icon(_isMenuOpen ? Icons.close : Icons.menu),
+                iconSize: 30,
+                color: const Color.fromARGB(255, 15, 114, 175),
+                tooltip: 'メニューを開く',
+                onPressed: _toggleMenu,
+              ),
             ),
           ),
         ],
