@@ -11,11 +11,11 @@ final List<EventItem> dummyEvents = [
     description: '大好評のお笑いライブを今年も開催!ヤーレンズ、ZAZY、生ファラオの豪華3組のゲストとお送りする盛りだくさんの90分!',
     imagePath: 'assets/images/sample_event_1.png', // 仮の画像パス
     area: EventArea.building5,
-    location: 'メインステージ',
+    location: '体育館ステージ',
     category: EventCategory.stage,
     date: FestivalDay.dayTwo,
-    startTime: DateTime(2025, 10, 25, 13, 0), // 2025年10月25日 13:00
-    endTime: DateTime(2025, 10, 25, 14, 0), // 2025年10月25日 14:00
+    startTime: DateTime(2025, 9, 15, 13, 0),
+    endTime: DateTime(2025, 9, 15, 14, 0),
   ),
 
   // --- ダミーデータ2: 時間指定のない展示企画 ---
