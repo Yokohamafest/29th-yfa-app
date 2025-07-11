@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../data/dummy_events.dart';
 import '../models/event_item.dart';
 import 'event_detail_screen.dart';
+import 'dart:math' as math;
 
 class TimetableScreen extends StatefulWidget {
   const TimetableScreen({super.key});
@@ -22,9 +23,10 @@ class _TimetableScreenState extends State<TimetableScreen> {
       appBar: AppBar(title: const Text('タイムテーブル'), elevation: 1.0),
       body: Column(
         children: [
-          // --- 1. 日付切り替えボタン ---
+          // --- ここからが画面上部に「固定」される部分 ---
+          // 1. 日付切り替えボタン
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16.0),
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
             child: ToggleButtons(
               isSelected: [
                 _selectedDay == FestivalDay.dayOne,
@@ -38,7 +40,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
                 });
               },
               borderRadius: BorderRadius.circular(8.0),
-
               children: const [
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16),
@@ -51,32 +52,34 @@ class _TimetableScreenState extends State<TimetableScreen> {
               ],
             ),
           ),
-
-          // --- 2. ステージ名のヘッダー ---
+          // 2. ステージタイトルヘッダー
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start, // 上揃えにする
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(width: _leftColumnWidth), // 時間軸の幅
+              SizedBox(width: _leftColumnWidth),
               _buildHeaderCell('体育館ステージ', Colors.orange.shade400),
+              SizedBox(width: 3),
               _buildHeaderCell('31Aステージ', Colors.green.shade400),
+              SizedBox(width: 3),
               _buildHeaderCell('32Aステージ', Colors.blue.shade400),
             ],
           ),
 
-          // --- 3. タイムテーブル本体 ---
+          // --- 3. タイムテーブル本体（ここから下がスクロールする） ---
           Expanded(
             child: SingleChildScrollView(
               child: Stack(
                 children: [
-                  // 背景のグリッド線と時間軸
                   _buildGridAndTimeAxis(),
-                  // 企画カード
                   Row(
                     children: [
-                      SizedBox(width: _leftColumnWidth), // 時間軸の幅だけスペース
-                      _buildStageColumn('体育館ステージ'),
-                      _buildStageColumn('31Aステージ'),
-                      _buildStageColumn('32Aステージ'),
+                      SizedBox(width: _leftColumnWidth),
+                      // 【変更点④】各列に色を渡し、間に隙間を追加
+                      _buildStageColumn('体育館ステージ', Colors.orange.shade400),
+                      const SizedBox(width: 3), // 企画列の間の隙間
+                      _buildStageColumn('31Aステージ', Colors.green.shade400),
+                      const SizedBox(width: 3), // 企画列の間の隙間
+                      _buildStageColumn('32Aステージ', Colors.blue.shade400),
                     ],
                   ),
                 ],
@@ -92,14 +95,12 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
   // ステージ名ヘッダーのセル
   Widget _buildHeaderCell(String title, Color backgroundColor) {
-    final screenWidth = MediaQuery.of(context).size.width;
-
     return Expanded(
       child: Column(
         children: [
           // 四角形のヘッダー本体
           Container(
-            height: 60, // ヘッダーの四角部分の高さ
+            height: 60, // ヘッダーの高さ
             color: backgroundColor,
             alignment: Alignment.center,
             child: Text(
@@ -109,11 +110,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
                 color: Colors.white,
               ),
             ),
-          ),
-          // 逆三角形の部分
-          CustomPaint(
-            size: Size((screenWidth - 50.0) / 3, 10), // 三角形のサイズ（幅20, 高さ10）
-            painter: _TrianglePainter(color: backgroundColor),
           ),
         ],
       ),
@@ -178,37 +174,44 @@ class _TimetableScreenState extends State<TimetableScreen> {
   }
 
   // 各ステージの列（企画カード）を生成
-  Widget _buildStageColumn(String locationName) {
-    // 選択された日付と場所に合致する企画だけをフィルタリング
+  Widget _buildStageColumn(String locationName, Color backgroundColor) {
     final eventsForStage = dummyEvents.where((event) {
       final isSameDay =
           event.date == _selectedDay || event.date == FestivalDay.both;
-      // 【変更点②】event.areaではなく、event.locationをチェックする
       final isSameLocation = event.location == locationName;
       final isTimed = event.startTime != null;
       return isSameDay && isSameLocation && isTimed;
     }).toList();
 
     return Expanded(
-      child: SizedBox(
-        height: (21 - 10) * _hourHeight,
-        child: Stack(
-          children: eventsForStage.map((event) {
-            final start = event.startTime!;
-            final end = event.endTime!;
-            final topPosition =
-                ((start.hour - 10) * 60 + start.minute) / 60.0 * _hourHeight;
-            final cardHeight =
-                end.difference(start).inMinutes / 60.0 * _hourHeight;
+      // 【変更点②】SizedBoxをContainerで囲み、背景色を設定
+      child: Container(
+        // ヘッダーの背景色を少し薄くして使用
+        color: backgroundColor.withOpacity(0.1),
+        child: SizedBox(
+          height: (21 - 10) * _hourHeight,
+          child: Stack(
+            children: eventsForStage.map((event) {
+              final start = event.startTime!;
+              final end = event.endTime!;
+              final topPosition =
+                  ((start.hour - 10) * 60 + start.minute) / 60.0 * _hourHeight;
+              // カードの高さ計算（最低の高さを保証）
+              final durationHeight =
+                  end.difference(start).inMinutes / 60.0 * _hourHeight;
+              const double minHeight = 45.0;
+              final cardHeight = math.max(durationHeight, minHeight);
 
-            return Positioned(
-              top: topPosition + (_hourHeight / 2),
-              left: 2,
-              right: 2,
-              height: cardHeight,
-              child: _TimetableEventCard(event: event),
-            );
-          }).toList(),
+              return Positioned(
+                top: topPosition + 60,
+                // 【変更点③】左右の余白を調整
+                left: 0,
+                right: 0,
+                height: cardHeight,
+                child: _TimetableEventCard(event: event),
+              );
+            }).toList(),
+          ),
         ),
       ),
     );
@@ -269,32 +272,5 @@ class _TimetableEventCard extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-// 逆三角形を描画するためのカスタムペインター
-class _TrianglePainter extends CustomPainter {
-  final Color color;
-
-  _TrianglePainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-
-    final path = Path();
-    path.moveTo(0, 0); // 左上の角から開始
-    path.lineTo(size.width, 0); // 右上の角へ線を引く
-    path.lineTo(size.width / 2, size.height); // 下の頂点へ線を引く
-    path.close(); // パスを閉じて三角形にする
-
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _TrianglePainter oldDelegate) {
-    return oldDelegate.color != color;
   }
 }
