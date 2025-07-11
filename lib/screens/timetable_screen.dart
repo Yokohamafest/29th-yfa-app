@@ -24,7 +24,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
         children: [
           // --- 1. 日付切り替えボタン ---
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            padding: const EdgeInsets.symmetric(vertical: 16.0),
             child: ToggleButtons(
               isSelected: [
                 _selectedDay == FestivalDay.dayOne,
@@ -53,17 +53,14 @@ class _TimetableScreenState extends State<TimetableScreen> {
           ),
 
           // --- 2. ステージ名のヘッダー ---
-          SizedBox(
-            height: 40,
-            // 【変更点】Rowを直接配置し、各セルに色を指定
-            child: Row(
-              children: [
-                SizedBox(width: _leftColumnWidth), // 時間軸の幅
-                _buildHeaderCell('体育館ステージ', Colors.orange.shade400),
-                _buildHeaderCell('31Aステージ', Colors.green.shade400),
-                _buildHeaderCell('32Aステージ', Colors.blue.shade400),
-              ],
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start, // 上揃えにする
+            children: [
+              SizedBox(width: _leftColumnWidth), // 時間軸の幅
+              _buildHeaderCell('体育館ステージ', Colors.orange.shade400),
+              _buildHeaderCell('31Aステージ', Colors.green.shade400),
+              _buildHeaderCell('32Aステージ', Colors.blue.shade400),
+            ],
           ),
 
           // --- 3. タイムテーブル本体 ---
@@ -95,19 +92,30 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
   // ステージ名ヘッダーのセル
   Widget _buildHeaderCell(String title, Color backgroundColor) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Expanded(
-      child: Container(
-        // 受け取った色を背景色として設定
-        color: backgroundColor,
-        child: Center(
-          child: Text(
-            title,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.white, // 文字色を白にすると見やすい
+      child: Column(
+        children: [
+          // 四角形のヘッダー本体
+          Container(
+            height: 60, // ヘッダーの四角部分の高さ
+            color: backgroundColor,
+            alignment: Alignment.center,
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
           ),
-        ),
+          // 逆三角形の部分
+          CustomPaint(
+            size: Size((screenWidth - 50.0) / 3, 10), // 三角形のサイズ（幅20, 高さ10）
+            painter: _TrianglePainter(color: backgroundColor),
+          ),
+        ],
       ),
     );
   }
@@ -261,5 +269,32 @@ class _TimetableEventCard extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+// 逆三角形を描画するためのカスタムペインター
+class _TrianglePainter extends CustomPainter {
+  final Color color;
+
+  _TrianglePainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    final path = Path();
+    path.moveTo(0, 0); // 左上の角から開始
+    path.lineTo(size.width, 0); // 右上の角へ線を引く
+    path.lineTo(size.width / 2, size.height); // 下の頂点へ線を引く
+    path.close(); // パスを閉じて三角形にする
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _TrianglePainter oldDelegate) {
+    return oldDelegate.color != color;
   }
 }
