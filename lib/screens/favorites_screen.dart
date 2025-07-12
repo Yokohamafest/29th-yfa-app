@@ -107,7 +107,10 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   @override
   Widget build(BuildContext context) {
     final favoritedEvents = dummyEvents
-        .where((event) => widget.favoriteEventIds.contains(event.id))
+        .where(
+          (event) =>
+              widget.favoriteEventIds.contains(event.id) && !event.hideFromList,
+        )
         .toList();
 
     final allDayEvents = favoritedEvents

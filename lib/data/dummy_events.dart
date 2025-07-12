@@ -16,6 +16,8 @@ final List<EventItem> dummyEvents = [
     date: FestivalDay.dayTwo,
     startTime: DateTime(2025, 9, 15, 13, 30),
     endTime: DateTime(2025, 9, 15, 14, 0),
+    //hideFromList: true,
+    //disableDetailsLink: true,
   ),
 
   // --- ダミーデータ2: 時間指定のない展示企画 ---

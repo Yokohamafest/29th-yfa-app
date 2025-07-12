@@ -244,14 +244,17 @@ class _TimetableEventCard extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(2)),
       clipBehavior: Clip.none,
       child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => EventDetailScreen(event: event),
-            ),
-          );
-        },
+        onTap: event.disableDetailsLink
+            ? null
+            : () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EventDetailScreen(event: event),
+                  ),
+                );
+              },
+
         child: Stack(
           clipBehavior: Clip.none,
           children: [

@@ -46,17 +46,19 @@ class EventCard extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () {
-          // Navigator.pushを使って画面遷移を実行
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              // 遷移先の画面としてEventDetailScreenを指定
-              // eventプロパティに、このカードが持つ企画情報を渡す
-              builder: (context) => EventDetailScreen(event: event),
-            ),
-          );
-        },
+        onTap: event.disableDetailsLink
+            ? null
+            : () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    // 遷移先の画面としてEventDetailScreenを指定
+                    // eventプロパティに、このカードが持つ企画情報を渡す
+                    builder: (context) => EventDetailScreen(event: event),
+                  ),
+                );
+              },
+
         child: SizedBox(
           height: 120, // カードの高さを指定
           child: Row(
@@ -95,7 +97,10 @@ class EventCard extends StatelessWidget {
                             // 企画タイトル
                             child: Text(
                               event.title,
-                              style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                fontSize: 16.0,
+                                fontWeight: FontWeight.bold,
+                              ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -105,7 +110,9 @@ class EventCard extends StatelessWidget {
                             padding: const EdgeInsets.all(0),
                             constraints: const BoxConstraints(),
                             icon: Icon(
-                              isFavorited ? Icons.favorite : Icons.favorite_border,
+                              isFavorited
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
                               color: isFavorited ? Colors.red : Colors.grey,
                             ),
                             onPressed: () {

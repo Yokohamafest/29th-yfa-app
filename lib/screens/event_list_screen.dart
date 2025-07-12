@@ -8,7 +8,11 @@ class EventListScreen extends StatefulWidget {
   final Set<String> favoriteEventIds;
   final Function(String) onToggleFavorite;
 
-  const EventListScreen({super.key, required this.favoriteEventIds,required this.onToggleFavorite,});
+  const EventListScreen({
+    super.key,
+    required this.favoriteEventIds,
+    required this.onToggleFavorite,
+  });
 
   @override
   State<EventListScreen> createState() => _EventListScreenState();
@@ -25,7 +29,9 @@ class _EventListScreenState extends State<EventListScreen> {
   @override
   void initState() {
     super.initState();
-    _filteredEvents = dummyEvents;
+    _filteredEvents = dummyEvents
+        .where((event) => !event.hideFromList)
+        .toList();
     _searchController.addListener(_runFilter);
   }
 
@@ -36,7 +42,9 @@ class _EventListScreenState extends State<EventListScreen> {
   }
 
   void _runFilter() {
-    List<EventItem> results = List.of(dummyEvents);
+    List<EventItem> results = dummyEvents
+        .where((event) => !event.hideFromList)
+        .toList();
     final searchQuery = _searchController.text.toLowerCase();
 
     if (searchQuery.isNotEmpty) {

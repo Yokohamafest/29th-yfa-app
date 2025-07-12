@@ -107,6 +107,8 @@ class EventItem {
   final FestivalDay date;
   final DateTime? startTime;
   final DateTime? endTime;
+  final bool hideFromList; // trueなら企画一覧とお気に入り一覧に表示しない
+  final bool disableDetailsLink; // trueなら詳細ページへの遷移を無効にする
 
   const EventItem({
     required this.id,
@@ -120,5 +122,7 @@ class EventItem {
     required this.date,
     this.startTime,
     this.endTime,
+    this.hideFromList = false, // デフォルトはfalseに設定
+    this.disableDetailsLink = false, // デフォルトはfalseに設定
   });
 }
