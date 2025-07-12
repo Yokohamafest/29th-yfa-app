@@ -14,7 +14,7 @@ final List<EventItem> dummyEvents = [
     location: '体育館ステージ',
     category: EventCategory.stage,
     date: FestivalDay.dayTwo,
-    startTime: DateTime(2025, 9, 15, 13, 0),
+    startTime: DateTime(2025, 9, 15, 13, 30),
     endTime: DateTime(2025, 9, 15, 14, 0),
   ),
 

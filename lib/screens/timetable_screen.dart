@@ -184,10 +184,9 @@ class _TimetableScreenState extends State<TimetableScreen> {
     }).toList();
 
     return Expanded(
-      // 【変更点②】SizedBoxをContainerで囲み、背景色を設定
       child: Container(
         // ヘッダーの背景色を少し薄くして使用
-        color: backgroundColor.withOpacity(0.1),
+        color: backgroundColor.withAlpha(25),
         child: SizedBox(
           height: (21 - 10) * _hourHeight,
           child: Stack(
@@ -204,7 +203,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
               return Positioned(
                 top: topPosition + 60,
-                // 【変更点③】左右の余白を調整
                 left: 0,
                 right: 0,
                 height: cardHeight,
@@ -221,15 +219,30 @@ class _TimetableScreenState extends State<TimetableScreen> {
 // --- タイムテーブル専用の企画カードウィジェット ---
 class _TimetableEventCard extends StatelessWidget {
   final EventItem event;
-  // TODO: お気に入り機能の連携
   const _TimetableEventCard({required this.event});
 
   @override
   Widget build(BuildContext context) {
     final formatter = DateFormat('HH:mm');
+
+    // 【変更点①】企画の時間の長さを分で計算
+    final durationInMinutes = event.endTime!
+        .difference(event.startTime!)
+        .inMinutes;
+
+    // 【変更点②】時間の長さに応じて、表示する行数を計算
+    // 30分ごとのブロック数を計算（例: 40分ならceil(1.33)で2ブロック、60分ならceil(2.0)で2ブロック）
+    final thirtyMinuteBlocks = (durationInMinutes / 30).ceil();
+    // 最低でも1ブロック（タイトル2行、団体名1行）は表示
+    final titleMaxLines = math.max(2, thirtyMinuteBlocks * 2);
+    final groupNameMaxLines = math.max(1, thirtyMinuteBlocks * 1);
+
     return Card(
-      color: Colors.yellow[200], // 参考画像に合わせた色
+      color: Colors.green.shade400,
       elevation: 2.0,
+      margin: const EdgeInsets.all(1.0),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(2)),
+      clipBehavior: Clip.none,
       child: InkWell(
         onTap: () {
           Navigator.push(
@@ -239,36 +252,62 @@ class _TimetableEventCard extends StatelessWidget {
             ),
           );
         },
-        child: Padding(
-          padding: const EdgeInsets.all(4.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ⑦ 開始・終了時刻
-              Text(
-                '${formatter.format(event.startTime!)} - ${formatter.format(event.endTime!)}',
-                style: const TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(3.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  //const SizedBox(height: 12),
+                  Text(
+                    event.title,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    // 【変更点③】計算した行数を適用
+                    maxLines: titleMaxLines,
+                  ),
+                  if (event.groupName.isNotEmpty)
+                    Text(
+                      event.groupName,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      // 【変更点④】計算した行数を適用
+                      maxLines: groupNameMaxLines,
+                    ),
+                ],
+              ),
+            ),
+            Positioned(
+              top: -12,
+              left: 0,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 2.0,
+                  vertical: 1.0,
+                ),
+                color: Colors.black.withAlpha(204),
+                child: Text(
+                  '${formatter.format(event.startTime!)} - ${formatter.format(event.endTime!)}',
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
               ),
-              const Spacer(),
-              // ⑤ 企画タイトル
-              Text(
-                event.title,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              // ⑤ 団体名（省略可能）
-              if (event.groupName.isNotEmpty)
-                Text(event.groupName, style: const TextStyle(fontSize: 10)),
-              const Spacer(),
-              // ⑤ お気に入りボタン（省略可能）
-              // Align(alignment: Alignment.bottomRight, child: Icon(Icons.favorite_border, size: 14)),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
