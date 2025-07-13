@@ -54,7 +54,9 @@ class EventCard extends StatelessWidget {
                   MaterialPageRoute(
                     // 遷移先の画面としてEventDetailScreenを指定
                     // eventプロパティに、このカードが持つ企画情報を渡す
-                    builder: (context) => EventDetailScreen(event: event),
+                    builder: (context) => EventDetailScreen(event: event, favoriteEventIds: favoriteEventIds,
+                onToggleFavorite: onToggleFavorite,
+),
                   ),
                 );
               },

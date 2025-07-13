@@ -6,7 +6,13 @@ import 'event_detail_screen.dart';
 import 'dart:math' as math;
 
 class TimetableScreen extends StatefulWidget {
-  const TimetableScreen({super.key});
+  // おkに入りの情報を受け取る変数
+  final Set<String> favoriteEventIds;
+  final Function(String) onToggleFavorite;
+
+  const TimetableScreen({super.key, required this.favoriteEventIds,
+    required this.onToggleFavorite,
+});
 
   @override
   State<TimetableScreen> createState() => _TimetableScreenState();
@@ -216,6 +222,8 @@ class _TimetableScreenState extends State<TimetableScreen> {
               timeSlot: timeSlot,
               cardHeight: cardHeight,
               cardColor: backgroundColor,
+              favoriteEventIds: widget.favoriteEventIds,
+              onToggleFavorite: widget.onToggleFavorite,
             ),
           ),
         );
@@ -242,12 +250,17 @@ class _TimetableEventCard extends StatelessWidget {
   final TimeSlot timeSlot;
   final double cardHeight;
   final Color cardColor;
+  final Set<String> favoriteEventIds;
+  final Function(String) onToggleFavorite;
+
 
   const _TimetableEventCard({
     required this.event,
     required this.timeSlot,
     required this.cardHeight,
     required this.cardColor,
+    required this.favoriteEventIds,
+    required this.onToggleFavorite,
   });
 
   @override
@@ -285,7 +298,9 @@ class _TimetableEventCard extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => EventDetailScreen(event: event),
+                    builder: (context) => EventDetailScreen(event: event, favoriteEventIds: favoriteEventIds,
+                      onToggleFavorite: onToggleFavorite,
+),
                   ),
                 );
               },

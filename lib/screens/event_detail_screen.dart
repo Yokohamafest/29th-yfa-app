@@ -1,14 +1,26 @@
 ﻿import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // 日付フォーマットのためにインポート
+import 'package:intl/intl.dart';
 import '../models/event_item.dart';
 
-class EventDetailScreen extends StatelessWidget {
-  // 表示するべき企画情報を、前の画面から受け取るための変数
+// 【変更点①】StatelessWidget から StatefulWidget に変更
+class EventDetailScreen extends StatefulWidget {
   final EventItem event;
+  final Set<String> favoriteEventIds;
+  final Function(String) onToggleFavorite;
 
-  const EventDetailScreen({super.key, required this.event});
+  const EventDetailScreen({
+    super.key,
+    required this.event,
+    required this.favoriteEventIds,
+    required this.onToggleFavorite,
+  });
 
-  // タグを生成するためのヘルパーメソッド（event_card.dartからコピー）
+  @override
+  State<EventDetailScreen> createState() => _EventDetailScreenState();
+}
+
+class _EventDetailScreenState extends State<EventDetailScreen> {
+  // _buildTagと_buildInfoRowはStateクラスの中に移動
   Widget _buildTag(String text, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
@@ -27,127 +39,10 @@ class EventDetailScreen extends StatelessWidget {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    // 時刻を「13:00」のような形式に変換するフォーマッター
-    final timeFormatter = DateFormat('HH:mm');
-    final dayFormatter = DateFormat('M/d (E)', 'ja_JP');
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(event.title), // AppBarのタイトルに企画名を表示
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 1. メイン画像
-            Image.asset(
-              event.imagePath,
-              width: double.infinity, // 横幅いっぱいに表示
-              height: 250,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  height: 250,
-                  color: Colors.grey[300],
-                  child: const Center(child: Icon(Icons.image_not_supported)),
-                );
-              },
-            ),
-
-            // 2. 文字情報エリア
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 企画タイトル
-                  Text(
-                    event.title,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8.0),
-                  // 団体名
-                  Text(
-                    event.groupName,
-                    style: TextStyle(fontSize: 16, color: Colors.grey[700]),
-                  ),
-                  const SizedBox(height: 16.0),
-
-                  // タグ表示
-                  Wrap(
-                    spacing: 8.0,
-                    runSpacing: 4.0,
-                    children: [
-                      _buildTag(event.category.name, Colors.blue),
-                      _buildTag(event.area.name, Colors.orange),
-                      _buildTag(event.date.name, Colors.green),
-                    ],
-                  ),
-                  const Divider(height: 32.0),
-
-                  // 開催日時
-                  _buildInfoRow(
-                    icon: Icons.schedule,
-                    title: '開催日時',
-                    // timeSlotsが空なら「常時開催」、そうでなければリストを表示
-                    child: event.timeSlots.isEmpty
-                        ? const Text('常時開催', style: TextStyle(fontSize: 16))
-                        : Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: event.timeSlots.map((slot) {
-                              return Text(
-                                '${dayFormatter.format(slot.startTime)} ${timeFormatter.format(slot.startTime)} - ${timeFormatter.format(slot.endTime)}',
-                                style: const TextStyle(fontSize: 16),
-                              );
-                            }).toList(),
-                          ),
-                  ),
-                  const SizedBox(height: 16.0),
-
-                  // 開催場所
-                  _buildInfoRow(
-                    icon: Icons.location_on,
-                    title: '開催場所',
-                    child: Text('${event.area.name} / ${event.location}'),
-                    // TODO: マップへの遷移機能を後で追加
-                    // trailing: OutlinedButton(onPressed: () {}, child: const Text('マップで見る')),
-                  ),
-                  const Divider(height: 32.0),
-
-                  // 企画説明
-                  Text(
-                    '企画説明',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8.0),
-                  Text(
-                    event.description,
-                    style: const TextStyle(fontSize: 16, height: 1.5),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // アイコンとタイトル、内容を横に並べるためのヘルパーメソッド
-  // アイコンとタイトル、内容を横に並べるためのヘルパーメソッド
   Widget _buildInfoRow({
     required IconData icon,
     required String title,
-    Widget? child, // 【変更点①】content: String から child: Widget? に変更
-    Widget? trailing,
+    Widget? child,
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -166,13 +61,117 @@ class EventDetailScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 4.0),
-              // 【変更点②】受け取ったchildウィジェットがnullでなければ表示
+
               if (child != null) child,
             ],
           ),
         ),
-        if (trailing != null) trailing,
       ],
+    );
+
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final timeFormatter = DateFormat('HH:mm');
+    final dayFormatter = DateFormat('M/d (E)', 'ja_JP');
+
+    // Stateクラスの中なので、widget. をつけてアクセス
+    final bool isFavorited = widget.favoriteEventIds.contains(widget.event.id);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.event.title),
+        actions: [
+          IconButton(
+            icon: Icon(
+              isFavorited ? Icons.favorite : Icons.favorite_border,
+              color: isFavorited ? Colors.red : null,
+            ),
+            tooltip: 'お気に入り',
+            // 【変更点②】onPressedの中身を修正
+            onPressed: () {
+              // まず、親に状態の変更を通知する（今まで通り）
+              widget.onToggleFavorite(widget.event.id);
+              // 次に、この画面自身を再描画するために、ローカルのsetStateを呼ぶ
+              // ※このsetStateは空でOK。目的は再描画のきっかけを作ることだけ。
+              setState(() {});
+            },
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ... (画像、タイトルなど、全ての event は widget.event に変更)
+            Image.asset(
+              widget.event.imagePath,
+              width: double.infinity, // 横幅いっぱいに表示
+              height: 250,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  height: 250,
+                  color: Colors.grey[300],
+                  child: const Center(child: Icon(Icons.image_not_supported)),
+                );
+              },
+
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(widget.event.title, style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),),
+                  Text(widget.event.groupName, style: TextStyle(fontSize: 16, color: Colors.grey[700]),),
+                  const SizedBox(height: 16.0),
+                  Wrap(
+                    // ...
+                    children: [
+                      _buildTag(widget.event.category.name, Colors.blue),
+                      _buildTag(widget.event.area.name, Colors.orange),
+                      _buildTag(widget.event.date.name, Colors.green),
+                    ],
+                  ),
+                  const Divider(height: 32.0),
+                  _buildInfoRow(
+                    icon: Icons.schedule,
+                    title: '開催日時',
+                    child: widget.event.timeSlots.isEmpty
+                        ? const Text('常時開催', style: TextStyle(fontSize: 16))
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: widget.event.timeSlots.map((slot) {
+                              return Text(
+                                '${dayFormatter.format(slot.startTime)} ${timeFormatter.format(slot.startTime)} - ${timeFormatter.format(slot.endTime)}',
+                                style: const TextStyle(fontSize: 16),
+                              );
+                            }).toList(),
+                          ),
+                  ),
+                  const SizedBox(height: 16.0),
+                  _buildInfoRow(
+                    icon: Icons.location_on,
+                    title: '開催場所',
+                    child: Text(
+                      '${widget.event.area.name} / ${widget.event.location}',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                  ),
+                  const Divider(height: 32.0),
+                  // ...
+                  Text(widget.event.description, /* ... */),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
