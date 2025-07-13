@@ -277,11 +277,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             // _isMenuOpenの値に応じて、leftの位置を変更する
             left: _isMenuOpen ? 0 : -menuWidth, // 開いている時は0、閉じている時は画面外
             top: 0,
-            bottom: 0,
+            height: 250,
             width: menuWidth,
             child: Material(
               // 影や背景色をつけるためにMaterialで囲む
               elevation: 8.0,
+              borderRadius: const BorderRadius.only(
+                bottomRight: Radius.circular(12.0),
+              ),
+              clipBehavior: Clip.antiAlias,
               child: Container(
                 color: Colors.white,
                 child: SafeArea(
