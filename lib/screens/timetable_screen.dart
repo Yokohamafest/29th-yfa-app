@@ -215,6 +215,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
               event: event,
               timeSlot: timeSlot,
               cardHeight: cardHeight,
+              cardColor: backgroundColor,
             ),
           ),
         );
@@ -240,11 +241,13 @@ class _TimetableEventCard extends StatelessWidget {
   final EventItem event;
   final TimeSlot timeSlot;
   final double cardHeight;
+  final Color cardColor;
 
   const _TimetableEventCard({
     required this.event,
     required this.timeSlot,
     required this.cardHeight,
+    required this.cardColor,
   });
 
   @override
@@ -270,7 +273,7 @@ class _TimetableEventCard extends StatelessWidget {
     }
 
     return Card(
-      color: Colors.green.shade400,
+      color: cardColor,
       elevation: 2.0,
       margin: const EdgeInsets.all(1.0),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(2)),
@@ -291,7 +294,7 @@ class _TimetableEventCard extends StatelessWidget {
           clipBehavior: Clip.none,
           children: [
             Padding(
-              padding: const EdgeInsets.all(1.0),
+              padding: const EdgeInsets.all(4.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
