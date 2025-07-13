@@ -2,9 +2,21 @@
 import 'package:flutter/material.dart';
 import 'announcement_screen.dart';
 import 'options_screen.dart';
+import '../data/dummy_events.dart';
+import '../models/event_item.dart';
+import '../widgets/event_card.dart';
+import '../data/dummy_announcements.dart';
+import 'announcement_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final Set<String> favoriteEventIds;
+  final Function(String) onToggleFavorite;
+
+  const HomeScreen({
+    super.key,
+    required this.favoriteEventIds,
+    required this.onToggleFavorite,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -20,6 +32,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   bool _isAnimationInitialized = false;
 
   bool _isMenuOpen = false;
+
+  List<EventItem> _recommendedEvents = [];
 
   // メニューの開閉を切り替える関数
   void _toggleMenu() {
@@ -37,6 +51,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       vsync: this,
       duration: const Duration(seconds: 4),
     )..repeat(reverse: true);
+    _selectRecommendedEvents();
+  }
+
+  void _selectRecommendedEvents() {
+    // 企画一覧に表示される企画のみを抽出
+    final allEvents = dummyEvents
+        .where((event) => !event.hideFromList)
+        .toList();
+    // リストをシャッフル
+    allEvents.shuffle();
+    // 先頭から3つを取得
+    setState(() {
+      _recommendedEvents = allEvents.take(3).toList();
+    });
   }
 
   @override
@@ -70,29 +98,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       _isAnimationInitialized = true;
     }
   }
-  /*
-  @override
-  void initState() {
-    super.initState();
-    final screenWidth = MediaQuery.of(context).size.width;
-
-    // --- スライドイン用アニメーションの準備 ---
-    _slideInController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    );
-    _xAnimation = Tween<double>(begin: screenWidth * -0.5, end: screenWidth * 0.15/*-200.0, end: 20.0*/).animate(
-      CurvedAnimation(parent: _slideInController, curve: Curves.easeOut),
-    );
-    _slideInController.forward(); // スライドインを開始
-
-    // --- 揺れ用アニメーションの準備 ---
-    _rockingController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 4), // 3秒かけて1往復する
-    )..repeat(reverse: true); // 常にアニメーションを再生＆反転を繰り返す
-  }
-*/
 
   @override
   void dispose() {
@@ -104,7 +109,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
+    //final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
     const double menuWidth = 250; // サイドメニューの幅を定義
 
@@ -128,7 +133,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 Stack(
                   children: [
                     SizedBox(
-                      height: screenHeight, // ヘッダーの高さ
+                      height: 420, // ヘッダーの高さ
                     ),
 
                     // 背景色（上半分）
@@ -240,31 +245,27 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ),
                   ],
                 ),
-                //　ここまでが画面上部のエリア
+                // ここまでが画面上部のエリア
 
-                //　ここから下にコンテンツを追加予定
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16.0,
-                    vertical: 24.0,
-                  ),
-                  child: Column(
-                    children: [
-                      _buildContentCard(
-                        title: '重要なお知らせ',
-                        content: '・〇〇は雨天のため中止となりました。\n・落とし物のお知らせです。',
-                      ),
-                      const SizedBox(height: 20),
-                      _buildContentCard(
-                        title: '注目企画',
-                        content:
-                            '・13:00〜 お笑いライブ @メインステージ\n・15:00〜 バンド演奏 @第一体育館',
-                      ),
-                      const SizedBox(height: 20),
-                      _buildContentCard(title: 'コンテンツ3', content: '内容'),
-                      const SizedBox(height: 20),
-                      _buildContentCard(title: 'コンテンツ4', content: '内容'),
-                    ],
+                // ここから下にコンテンツを追加予定
+                Container(
+                  color: const Color.fromARGB(255, 15, 114, 175),
+                  width: double.infinity,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 24.0,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // ① 最新のお知らせセクション
+                        _buildAnnouncementsSection(context),
+                        const SizedBox(height: 32),
+                        // ② おすすめ企画セクション
+                        _buildRecommendationsSection(context),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -366,7 +367,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  // コンテンツカードを生成するメソッド
+  // コンテンツカードを生成するメソッド 文字情報を追加する場合はこれを使える
+  /*
   Widget _buildContentCard({required String title, required String content}) {
     return Card(
       elevation: 4.0, // 影の離れ具合
@@ -385,6 +387,100 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ],
         ),
       ),
+    );
+  }
+  */
+
+  // 最新のお知らせセクションを生成するメソッド
+  Widget _buildAnnouncementsSection(BuildContext context) {
+    // お知らせを公開日時が新しい順にソートし、先頭3件を取得
+    final latestAnnouncements = (List.of(
+      dummyAnnouncements,
+    )..sort((a, b) => b.publishedAt.compareTo(a.publishedAt))).take(3).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          '最新のお知らせ',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Card(
+          child: Column(
+            children: [
+              // 取得した3件のお知らせをリスト表示
+              ...latestAnnouncements.map((announcement) {
+                return ListTile(
+                  title: Text(
+                    announcement.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AnnouncementDetailScreen(
+                          announcement: announcement,
+                        ),
+                      ),
+                    );
+                  },
+                );
+              }),
+              const Divider(height: 1),
+              // お知らせ一覧画面へのリンク
+              ListTile(
+                title: const Text(
+                  'お知らせ一覧',
+                  style: TextStyle(color: Colors.blue),
+                ),
+                trailing: const Icon(Icons.arrow_forward, color: Colors.blue),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AnnouncementScreen(),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // おすすめ企画セクションを生成するメソッド
+  Widget _buildRecommendationsSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'おすすめ企画',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 8),
+        // initStateで選ばれた3つの企画のカードを表示
+        ..._recommendedEvents.map(
+          (event) => EventCard(
+            event: event,
+            favoriteEventIds: widget.favoriteEventIds,
+            onToggleFavorite: widget.onToggleFavorite,
+          ),
+        ),
+      ],
     );
   }
 }

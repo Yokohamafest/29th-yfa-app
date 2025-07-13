@@ -15,8 +15,7 @@ class AnnouncementScreen extends StatefulWidget {
 class _AnnouncementScreenState extends State<AnnouncementScreen> {
   // お知らせのリストは変更なし
   late final List<AnnouncementItem> _announcements;
-  
-  // 【変更点①】既読にしたお知らせのIDを記憶するためのSetを追加
+
   final Set<String> _readAnnouncementIds = {};
 
   @override
@@ -24,8 +23,7 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
     super.initState();
     _announcements = List.of(dummyAnnouncements)
       ..sort((a, b) => b.publishedAt.compareTo(a.publishedAt));
-    
-    // 【変更点②】アプリ起動時に、保存された既読状態を読み込む
+
     _loadReadStatus();
   }
 
@@ -40,7 +38,7 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
       });
     }
   }
-  
+
   // スマホのストレージに既読IDリストを保存する関数
   Future<void> _saveReadStatus() async {
     final prefs = await SharedPreferences.getInstance();

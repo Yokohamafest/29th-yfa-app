@@ -62,7 +62,9 @@ class _MainScaffoldState extends State<MainScaffold> {
   Widget build(BuildContext context) {
     // 【変更点②】画面リストの定義と初期化を、buildメソッドの中に移動
     final List<Widget> screens = [
-      const HomeScreen(),
+      HomeScreen(        favoriteEventIds: _favoriteEventIds,
+        onToggleFavorite: _toggleFavorite,
+),
       TimetableScreen(
         favoriteEventIds: _favoriteEventIds,
         onToggleFavorite: _toggleFavorite,
