@@ -206,7 +206,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
                 left: 0,
                 right: 0,
                 height: cardHeight,
-                child: _TimetableEventCard(event: event),
+                child: _TimetableEventCard(event: event, cardHeight: cardHeight),
               );
             }).toList(),
           ),
@@ -219,23 +219,32 @@ class _TimetableScreenState extends State<TimetableScreen> {
 // --- タイムテーブル専用の企画カードウィジェット ---
 class _TimetableEventCard extends StatelessWidget {
   final EventItem event;
-  const _TimetableEventCard({required this.event});
+  final double cardHeight;
+
+  const _TimetableEventCard({required this.event,
+    required this.cardHeight,});
 
   @override
   Widget build(BuildContext context) {
     final formatter = DateFormat('HH:mm');
 
-    // 【変更点①】企画の時間の長さを分で計算
-    final durationInMinutes = event.endTime!
-        .difference(event.startTime!)
-        .inMinutes;
+    int titleMaxLines;
+    int groupNameMaxLines;
 
-    // 【変更点②】時間の長さに応じて、表示する行数を計算
-    // 30分ごとのブロック数を計算（例: 40分ならceil(1.33)で2ブロック、60分ならceil(2.0)で2ブロック）
-    final thirtyMinuteBlocks = (durationInMinutes / 30).ceil();
-    // 最低でも1ブロック（タイトル2行、団体名1行）は表示
-    final titleMaxLines = math.max(2, thirtyMinuteBlocks * 2);
-    final groupNameMaxLines = math.max(1, thirtyMinuteBlocks * 1);
+    // まず、カードが極端に短い場合（オーバーフロー対策）
+    if (cardHeight < 65) {
+      titleMaxLines = 1;
+      groupNameMaxLines = 1;
+    }
+    // カードに十分な高さがある場合は、企画の長さに応じて行数を増やす
+    else {
+      final durationInMinutes = event.endTime!.difference(event.startTime!).inMinutes;
+      final thirtyMinuteBlocks = (durationInMinutes / 30).ceil();
+      titleMaxLines = math.max(2, thirtyMinuteBlocks * 2);
+      groupNameMaxLines = math.max(1, thirtyMinuteBlocks);
+    }
+
+
 
     return Card(
       color: Colors.green.shade400,
@@ -259,7 +268,7 @@ class _TimetableEventCard extends StatelessWidget {
           clipBehavior: Clip.none,
           children: [
             Padding(
-              padding: const EdgeInsets.all(3.0),
+              padding: const EdgeInsets.all(1.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -279,11 +288,7 @@ class _TimetableEventCard extends StatelessWidget {
                   if (event.groupName.isNotEmpty)
                     Text(
                       event.groupName,
-                      style: const TextStyle(
-                        fontSize: 10,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: const TextStyle(fontSize: 10, color: Colors.white),
                       overflow: TextOverflow.ellipsis,
                       // 【変更点④】計算した行数を適用
                       maxLines: groupNameMaxLines,

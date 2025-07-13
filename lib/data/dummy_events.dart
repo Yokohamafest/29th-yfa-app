@@ -6,23 +6,311 @@ final List<EventItem> dummyEvents = [
   // --- ダミーデータ1: 時間指定のあるステージ企画 ---
   EventItem(
     id: 'event_001',
-    title: '「都市大お笑いライブ2024」',
-    groupName: '学生団体A',
+    title: '都市大お笑いライブ2024 体育館ステージ',
+    groupName: '横浜祭実行委員',
     description: '大好評のお笑いライブを今年も開催!ヤーレンズ、ZAZY、生ファラオの豪華3組のゲストとお送りする盛りだくさんの90分!',
     imagePath: 'assets/images/sample_event_1.png', // 仮の画像パス
     area: EventArea.building5,
     location: '体育館ステージ',
     category: EventCategory.stage,
     date: FestivalDay.dayTwo,
-    startTime: DateTime(2025, 9, 15, 13, 30),
-    endTime: DateTime(2025, 9, 15, 14, 0),
+    startTime: DateTime(2025, 9, 15, 12, 0),
+    endTime: DateTime(2025, 9, 15, 13, 30),
+    //hideFromList: true,
+    //disableDetailsLink: true,
+  ),
+
+  EventItem(
+    id: 'event_002',
+    title: '都市大お笑いライブ2024 パブリックビューイング',
+    groupName: '横浜祭実行委員',
+    description: '大好評のお笑いライブを今年も開催!ヤーレンズ、ZAZY、生ファラオの豪華3組のゲストとお送りする盛りだくさんの90分!',
+    imagePath: 'assets/images/sample_event_1.png', // 仮の画像パス
+    area: EventArea.building3,
+    location: '32Aステージ',
+    category: EventCategory.stage,
+    date: FestivalDay.dayTwo,
+    startTime: DateTime(2025, 9, 15, 12, 0),
+    endTime: DateTime(2025, 9, 15, 13, 30),
+    //hideFromList: true,
+    //disableDetailsLink: true,
+  ),
+
+  EventItem(
+    id: 'event_003',
+    title: 'ダンス部 LAVI STAGE',
+    groupName: 'ダンス部 LAVI',
+    description:
+        'texttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttext',
+    imagePath: 'assets/images/sample_event_1.png', // 仮の画像パス
+    area: EventArea.building5,
+    location: '体育館ステージ',
+    category: EventCategory.stage,
+    date: FestivalDay.dayOne,
+    startTime: DateTime(2025, 9, 14, 10, 35),
+    endTime: DateTime(2025, 9, 14, 11, 0),
+    //hideFromList: true,
+    //disableDetailsLink: true,
+  ),
+
+  EventItem(
+    id: 'event_004',
+    title: 'Stack Sounds Orchestra',
+    groupName: ' ',
+    description:
+        'texttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttext',
+    imagePath: 'assets/images/sample_event_1.png', // 仮の画像パス
+    area: EventArea.building5,
+    location: '体育館ステージ',
+    category: EventCategory.stage,
+    date: FestivalDay.dayOne,
+    startTime: DateTime(2025, 9, 14, 11, 20),
+    endTime: DateTime(2025, 9, 14, 11, 50),
+    //hideFromList: true,
+    //disableDetailsLink: true,
+  ),
+
+  EventItem(
+    id: 'event_005',
+    title: 'youmenosay',
+    groupName: ' ',
+    description:
+        'texttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttext',
+    imagePath: 'assets/images/sample_event_1.png', // 仮の画像パス
+    area: EventArea.building5,
+    location: '体育館ステージ',
+    category: EventCategory.stage,
+    date: FestivalDay.dayOne,
+    startTime: DateTime(2025, 9, 14, 12, 10),
+    endTime: DateTime(2025, 9, 14, 12, 40),
+    //hideFromList: true,
+    //disableDetailsLink: true,
+  ),
+
+  EventItem(
+    id: 'event_006',
+    title: '東京都市大学等々力中学校高等学校太鼓部',
+    groupName: ' ',
+    description:
+        'texttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttext',
+    imagePath: 'assets/images/sample_event_1.png', // 仮の画像パス
+    area: EventArea.building5,
+    location: '体育館ステージ',
+    category: EventCategory.stage,
+    date: FestivalDay.dayOne,
+    startTime: DateTime(2025, 9, 14, 13, 0),
+    endTime: DateTime(2025, 9, 14, 13, 40),
+    //hideFromList: true,
+    //disableDetailsLink: true,
+  ),
+
+  EventItem(
+    id: 'event_007',
+    title: 'ブラックバード',
+    groupName: 'コンピュータ技術研究会',
+    description:
+        'texttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttext',
+    imagePath: 'assets/images/sample_event_1.png', // 仮の画像パス
+    area: EventArea.building5,
+    location: '体育館ステージ',
+    category: EventCategory.stage,
+    date: FestivalDay.dayOne,
+    startTime: DateTime(2025, 9, 14, 14, 30),
+    endTime: DateTime(2025, 9, 14, 15, 0),
+    //hideFromList: true,
+    //disableDetailsLink: true,
+  ),
+
+  EventItem(
+    id: 'event_008',
+    title: '～宝をつかみ取れ～大抽選会 day1',
+    groupName: '横浜祭実行委員会',
+    description:
+        'texttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttext',
+    imagePath: 'assets/images/sample_event_1.png', // 仮の画像パス
+    area: EventArea.building5,
+    location: '体育館ステージ',
+    category: EventCategory.stage,
+    date: FestivalDay.dayOne,
+    startTime: DateTime(2025, 9, 14, 15, 20),
+    endTime: DateTime(2025, 9, 14, 16, 20),
+    //hideFromList: true,
+    //disableDetailsLink: true,
+  ),
+
+  EventItem(
+    id: 'event_009',
+    title: 'エレクトーン演奏会',
+    groupName: 'エレクトーンサークル sky tone',
+    description:
+        'texttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttext',
+    imagePath: 'assets/images/sample_event_1.png', // 仮の画像パス
+    area: EventArea.building5,
+    location: '体育館ステージ',
+    category: EventCategory.stage,
+    date: FestivalDay.dayOne,
+    startTime: DateTime(2025, 9, 14, 16, 40),
+    endTime: DateTime(2025, 9, 14, 17, 30),
+    //hideFromList: true,
+    //disableDetailsLink: true,
+  ),
+
+  EventItem(
+    id: 'event_010',
+    title: '音楽団体 PLAM 横浜祭ライブ',
+    groupName: '音楽団体 PLAM',
+    description:
+        'texttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttext',
+    imagePath: 'assets/images/sample_event_1.png', // 仮の画像パス
+    area: EventArea.building5,
+    location: '体育館ステージ',
+    category: EventCategory.stage,
+    date: FestivalDay.dayOne,
+    startTime: DateTime(2025, 9, 14, 18, 30),
+    endTime: DateTime(2025, 9, 14, 19, 30),
+    //hideFromList: true,
+    //disableDetailsLink: true,
+  ),
+
+  EventItem(
+    id: 'event_011',
+    title: '第28回横浜祭 VALORANT ドラフト杯 day1',
+    groupName: '横浜祭実行委員会',
+    description:
+        'texttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttext',
+    imagePath: 'assets/images/sample_event_1.png', // 仮の画像パス
+    area: EventArea.building3,
+    location: '31Aステージ',
+    category: EventCategory.stage,
+    date: FestivalDay.dayOne,
+    startTime: DateTime(2025, 9, 14, 11, 0),
+    endTime: DateTime(2025, 9, 14, 17, 0),
+    //hideFromList: true,
+    //disableDetailsLink: true,
+  ),
+
+  EventItem(
+    id: 'event_012',
+    title: 'ダンス部 UP BEAT',
+    groupName: ' ',
+    description:
+        'texttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttext',
+    imagePath: 'assets/images/sample_event_1.png', // 仮の画像パス
+    area: EventArea.building5,
+    location: '体育館ステージ',
+    category: EventCategory.stage,
+    date: FestivalDay.dayTwo,
+    startTime: DateTime(2025, 9, 15, 14, 10),
+    endTime: DateTime(2025, 9, 15, 15, 10),
+    //hideFromList: true,
+    //disableDetailsLink: true,
+  ),
+
+  EventItem(
+    id: 'event_013',
+    title: '横浜祭コンサート by TCU Wind Orchestra',
+    groupName: 'TCU Wind Orchestra',
+    description:
+        'texttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttext',
+    imagePath: 'assets/images/sample_event_1.png', // 仮の画像パス
+    area: EventArea.building5,
+    location: '体育館ステージ',
+    category: EventCategory.stage,
+    date: FestivalDay.dayTwo,
+    startTime: DateTime(2025, 9, 15, 15, 40),
+    endTime: DateTime(2025, 9, 15, 16, 20),
+    //hideFromList: true,
+    //disableDetailsLink: true,
+  ),
+
+  EventItem(
+    id: 'event_014',
+    title: 'アカペラパフォーマンス',
+    groupName: 'アカペラサークル Groove',
+    description:
+        'texttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttext',
+    imagePath: 'assets/images/sample_event_1.png', // 仮の画像パス
+    area: EventArea.building5,
+    location: '体育館ステージ',
+    category: EventCategory.stage,
+    date: FestivalDay.dayTwo,
+    startTime: DateTime(2025, 9, 15, 16, 50),
+    endTime: DateTime(2025, 9, 15, 17, 20),
+    //hideFromList: true,
+    //disableDetailsLink: true,
+  ),
+
+  EventItem(
+    id: 'event_015',
+    title: '～宝をつかみ取れ～大抽選会 day2',
+    groupName: '横浜祭実行委員会',
+    description:
+        'texttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttext',
+    imagePath: 'assets/images/sample_event_1.png', // 仮の画像パス
+    area: EventArea.building5,
+    location: '体育館ステージ',
+    category: EventCategory.stage,
+    date: FestivalDay.dayTwo,
+    startTime: DateTime(2025, 9, 15, 18, 20),
+    endTime: DateTime(2025, 9, 15, 19, 10),
+    //hideFromList: true,
+    //disableDetailsLink: true,
+  ),
+
+  EventItem(
+    id: 'event_016',
+    title: '第28回横浜祭 VALORANT ドラフト杯 day2',
+    groupName: '横浜祭実行委員会',
+    description:
+        'texttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttext',
+    imagePath: 'assets/images/sample_event_1.png', // 仮の画像パス
+    area: EventArea.building3,
+    location: '31Aステージ',
+    category: EventCategory.stage,
+    date: FestivalDay.dayTwo,
+    startTime: DateTime(2025, 9, 15, 13, 0),
+    endTime: DateTime(2025, 9, 15, 17, 0),
+    //hideFromList: true,
+    //disableDetailsLink: true,
+  ),
+
+  EventItem(
+    id: 'event_017',
+    title: 'デジコン博覧会',
+    groupName: 'デジタルコンテンツ研究会',
+    description:
+        'texttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttext',
+    imagePath: 'assets/images/sample_event_1.png', // 仮の画像パス
+    area: EventArea.building3,
+    location: '32Aステージ',
+    category: EventCategory.stage,
+    date: FestivalDay.dayTwo,
+    startTime: DateTime(2025, 9, 15, 13, 50),
+    endTime: DateTime(2025, 9, 15, 14, 50),
+    //hideFromList: true,
+    //disableDetailsLink: true,
+  ),
+
+  EventItem(
+    id: 'event_018',
+    title: '都市大ハッカソン',
+    groupName: '横浜祭実行委員会',
+    description:
+        'texttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttext',
+    imagePath: 'assets/images/sample_event_1.png', // 仮の画像パス
+    area: EventArea.building3,
+    location: '32Aステージ',
+    category: EventCategory.stage,
+    date: FestivalDay.dayTwo,
+    startTime: DateTime(2025, 9, 15, 15, 10),
+    endTime: DateTime(2025, 9, 15, 17, 40),
     //hideFromList: true,
     //disableDetailsLink: true,
   ),
 
   // --- ダミーデータ2: 時間指定のない展示企画 ---
   EventItem(
-    id: 'event_002',
+    id: 'event_099',
     title: '〇〇展示',
     groupName: '〇〇サークル',
     description:
@@ -36,7 +324,7 @@ final List<EventItem> dummyEvents = [
 
   // --- ダミーデータ3: 時間指定のない飲食企画 ---
   EventItem(
-    id: 'event_003',
+    id: 'event_100',
     title: '〇〇屋台',
     groupName: '〇〇サークル',
     description: 'texttexttexttexttexttexttexttexttexttexttexttexttexttexttext',
@@ -45,5 +333,39 @@ final List<EventItem> dummyEvents = [
     location: '模擬店エリア',
     category: EventCategory.food,
     date: FestivalDay.both,
+  ),
+
+  EventItem(
+    id: 'event_900',
+    title: '開祭式',
+    groupName: ' ',
+    description:
+        'texttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttext',
+    imagePath: 'assets/images/sample_event_1.png', // 仮の画像パス
+    area: EventArea.building5,
+    location: '体育館ステージ',
+    category: EventCategory.stage,
+    date: FestivalDay.dayOne,
+    startTime: DateTime(2025, 9, 14, 10, 0),
+    endTime: DateTime(2025, 9, 14, 10, 15),
+    hideFromList: true,
+    disableDetailsLink: true,
+  ),
+
+  EventItem(
+    id: 'event_901',
+    title: '閉祭式',
+    groupName: ' ',
+    description:
+        'texttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttexttext',
+    imagePath: 'assets/images/sample_event_1.png', // 仮の画像パス
+    area: EventArea.building5,
+    location: '体育館ステージ',
+    category: EventCategory.stage,
+    date: FestivalDay.dayTwo,
+    startTime: DateTime(2025, 9, 15, 17, 40),
+    endTime: DateTime(2025, 9, 15, 18, 0),
+    hideFromList: true,
+    disableDetailsLink: true,
   ),
 ];
