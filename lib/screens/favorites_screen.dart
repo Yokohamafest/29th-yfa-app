@@ -46,21 +46,6 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     for (int i = 0; i < scheduleEntries.length; i++) {
       final currentEntry = scheduleEntries[i];
 
-      // --- 空き時間をチェック ---
-      if (i > 0) {
-        final previousEntry = scheduleEntries[i - 1];
-        if (currentEntry.timeSlot.startTime.isAfter(
-          previousEntry.timeSlot.endTime,
-        )) {
-          scheduleWidgets.add(
-            _buildFreeTimeCard(
-              previousEntry.timeSlot.endTime,
-              currentEntry.timeSlot.startTime,
-            ),
-          );
-        }
-      }
-
       // --- 現在の企画情報を表示 ---
       scheduleWidgets.add(
         _buildTimeSlotHeader(
@@ -89,34 +74,6 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           fontSize: 18,
           fontWeight: FontWeight.bold,
           color: Colors.black87,
-        ),
-      ),
-    );
-  }
-
-  // 空き時間カードを生成するヘルパーメソッド
-  Widget _buildFreeTimeCard(DateTime startTime, DateTime endTime) {
-    // 空き時間を計算
-    final duration = endTime.difference(startTime);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Card(
-        color: Colors.grey[200],
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          side: BorderSide(color: Colors.grey[300]!),
-          borderRadius: BorderRadius.circular(10.0),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Center(
-            child: Text(
-              '空き時間（${duration.inMinutes}分）\n${timeFormatter.format(startTime)} - ${timeFormatter.format(endTime)}',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey[600]),
-            ),
-          ),
         ),
       ),
     );
@@ -213,7 +170,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 ],
 
                 const Text(
-                  'マイタイムテーブル',
+                  '時間指定企画',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 16),
