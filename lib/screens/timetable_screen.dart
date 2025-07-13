@@ -140,7 +140,10 @@ class _TimetableScreenState extends State<TimetableScreen> {
           top: topPosition + (_hourHeight / 2),
           left: _leftColumnWidth,
           right: 0,
-          child: Container(height: 1, color: Colors.grey[400]),
+          child: Container(
+            height: 1.5,
+            color: const Color.fromARGB(255, 70, 70, 70),
+          ),
         ),
       );
       // 30分ごとの破線 (20時は除く)
@@ -155,9 +158,9 @@ class _TimetableScreenState extends State<TimetableScreen> {
                 30,
                 (index) => Expanded(
                   child: Container(
-                    height: 1,
+                    height: 0.8,
                     color: index % 2 == 0
-                        ? Colors.grey[300]
+                        ? const Color.fromARGB(255, 70, 70, 70)
                         : Colors.transparent,
                   ),
                 ),
@@ -176,39 +179,55 @@ class _TimetableScreenState extends State<TimetableScreen> {
   // 各ステージの列（企画カード）を生成
   Widget _buildStageColumn(String locationName, Color backgroundColor) {
     final eventsForStage = dummyEvents.where((event) {
-      final isSameDay =
-          event.date == _selectedDay || event.date == FestivalDay.both;
       final isSameLocation = event.location == locationName;
-      final isTimed = event.startTime != null;
-      return isSameDay && isSameLocation && isTimed;
+      final isTimed = event.timeSlots.isNotEmpty;
+      return isSameLocation && isTimed;
     }).toList();
+
+    final List<Widget> cards = [];
+    for (final event in eventsForStage) {
+      for (final timeSlot in event.timeSlots) {
+        // 表示中の日付と、タイムスロットの日付が一致するかチェック
+        // （両日開催の企画が、両方の日に表示されるようにするため）
+        if (timeSlot.startTime.day !=
+            (_selectedDay == FestivalDay.dayOne ? 14 : 15)) {
+          continue; // 日付が違えばスキップ
+        }
+
+        final start = timeSlot.startTime;
+        final end = timeSlot.endTime;
+        final topPosition =
+            ((start.hour - 10) * 60 + start.minute) / 60.0 * _hourHeight;
+
+        final durationHeight =
+            end.difference(start).inMinutes / 60.0 * _hourHeight;
+        const double minHeight = 45.0;
+        final cardHeight = math.max(durationHeight, minHeight);
+
+        cards.add(
+          Positioned(
+            top: topPosition + 60,
+            left: 0,
+            right: 0,
+            height: cardHeight,
+            // 渡すeventオブジェクトは元のままでOK
+            child: _TimetableEventCard(
+              event: event,
+              timeSlot: timeSlot,
+              cardHeight: cardHeight,
+            ),
+          ),
+        );
+      }
+    }
 
     return Expanded(
       child: Container(
-        // ヘッダーの背景色を少し薄くして使用
         color: backgroundColor.withAlpha(25),
         child: SizedBox(
           height: (21 - 10) * _hourHeight,
           child: Stack(
-            children: eventsForStage.map((event) {
-              final start = event.startTime!;
-              final end = event.endTime!;
-              final topPosition =
-                  ((start.hour - 10) * 60 + start.minute) / 60.0 * _hourHeight;
-              // カードの高さ計算（最低の高さを保証）
-              final durationHeight =
-                  end.difference(start).inMinutes / 60.0 * _hourHeight;
-              const double minHeight = 45.0;
-              final cardHeight = math.max(durationHeight, minHeight);
-
-              return Positioned(
-                top: topPosition + 60,
-                left: 0,
-                right: 0,
-                height: cardHeight,
-                child: _TimetableEventCard(event: event, cardHeight: cardHeight),
-              );
-            }).toList(),
+            children: cards, // 生成したカードのリストを配置
           ),
         ),
       ),
@@ -219,10 +238,14 @@ class _TimetableScreenState extends State<TimetableScreen> {
 // --- タイムテーブル専用の企画カードウィジェット ---
 class _TimetableEventCard extends StatelessWidget {
   final EventItem event;
+  final TimeSlot timeSlot;
   final double cardHeight;
 
-  const _TimetableEventCard({required this.event,
-    required this.cardHeight,});
+  const _TimetableEventCard({
+    required this.event,
+    required this.timeSlot,
+    required this.cardHeight,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -238,13 +261,13 @@ class _TimetableEventCard extends StatelessWidget {
     }
     // カードに十分な高さがある場合は、企画の長さに応じて行数を増やす
     else {
-      final durationInMinutes = event.endTime!.difference(event.startTime!).inMinutes;
+      final durationInMinutes = timeSlot.endTime
+          .difference(timeSlot.startTime)
+          .inMinutes;
       final thirtyMinuteBlocks = (durationInMinutes / 30).ceil();
       titleMaxLines = math.max(2, thirtyMinuteBlocks * 2);
       groupNameMaxLines = math.max(1, thirtyMinuteBlocks);
     }
-
-
 
     return Card(
       color: Colors.green.shade400,
@@ -282,7 +305,6 @@ class _TimetableEventCard extends StatelessWidget {
                       color: Colors.white,
                     ),
                     overflow: TextOverflow.ellipsis,
-                    // 【変更点③】計算した行数を適用
                     maxLines: titleMaxLines,
                   ),
                   if (event.groupName.isNotEmpty)
@@ -290,7 +312,6 @@ class _TimetableEventCard extends StatelessWidget {
                       event.groupName,
                       style: const TextStyle(fontSize: 10, color: Colors.white),
                       overflow: TextOverflow.ellipsis,
-                      // 【変更点④】計算した行数を適用
                       maxLines: groupNameMaxLines,
                     ),
                 ],
@@ -306,7 +327,7 @@ class _TimetableEventCard extends StatelessWidget {
                 ),
                 color: Colors.black.withAlpha(204),
                 child: Text(
-                  '${formatter.format(event.startTime!)} - ${formatter.format(event.endTime!)}',
+                  '${formatter.format(timeSlot.startTime)} - ${formatter.format(timeSlot.endTime)}',
                   style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,

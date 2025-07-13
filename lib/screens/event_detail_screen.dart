@@ -31,6 +31,7 @@ class EventDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     // 時刻を「13:00」のような形式に変換するフォーマッター
     final timeFormatter = DateFormat('HH:mm');
+    final dayFormatter = DateFormat('M/d (E)', 'ja_JP');
 
     return Scaffold(
       appBar: AppBar(
@@ -93,10 +94,18 @@ class EventDetailScreen extends StatelessWidget {
                   _buildInfoRow(
                     icon: Icons.schedule,
                     title: '開催日時',
-                    // startTimeがnull（常時開催）かどうかで表示を切り替え
-                    content: event.startTime != null
-                        ? '${timeFormatter.format(event.startTime!)} - ${timeFormatter.format(event.endTime!)}'
-                        : '常時開催',
+                    // timeSlotsが空なら「常時開催」、そうでなければリストを表示
+                    child: event.timeSlots.isEmpty
+                        ? const Text('常時開催', style: TextStyle(fontSize: 16))
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: event.timeSlots.map((slot) {
+                              return Text(
+                                '${dayFormatter.format(slot.startTime)} ${timeFormatter.format(slot.startTime)} - ${timeFormatter.format(slot.endTime)}',
+                                style: const TextStyle(fontSize: 16),
+                              );
+                            }).toList(),
+                          ),
                   ),
                   const SizedBox(height: 16.0),
 
@@ -104,7 +113,7 @@ class EventDetailScreen extends StatelessWidget {
                   _buildInfoRow(
                     icon: Icons.location_on,
                     title: '開催場所',
-                    content: '${event.area.name} / ${event.location}',
+                    child: Text('${event.area.name} / ${event.location}'),
                     // TODO: マップへの遷移機能を後で追加
                     // trailing: OutlinedButton(onPressed: () {}, child: const Text('マップで見る')),
                   ),
@@ -133,11 +142,12 @@ class EventDetailScreen extends StatelessWidget {
   }
 
   // アイコンとタイトル、内容を横に並べるためのヘルパーメソッド
+  // アイコンとタイトル、内容を横に並べるためのヘルパーメソッド
   Widget _buildInfoRow({
     required IconData icon,
     required String title,
-    required String content,
-    Widget? trailing, // 右端に置く追加のウィジェット（任意）
+    Widget? child, // 【変更点①】content: String から child: Widget? に変更
+    Widget? trailing,
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -155,8 +165,9 @@ class EventDetailScreen extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 2.0),
-              Text(content, style: const TextStyle(fontSize: 16)),
+              const SizedBox(height: 4.0),
+              // 【変更点②】受け取ったchildウィジェットがnullでなければ表示
+              if (child != null) child,
             ],
           ),
         ),

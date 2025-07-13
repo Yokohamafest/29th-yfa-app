@@ -5,6 +5,12 @@ import '../models/event_item.dart';
 import '../widgets/event_card.dart';
 import '../widgets/favorite_notification_settings.dart';
 
+class ScheduleEntry {
+  final EventItem event;
+  final TimeSlot timeSlot;
+  ScheduleEntry(this.event, this.timeSlot);
+}
+
 class FavoritesScreen extends StatefulWidget {
   final Set<String> favoriteEventIds;
   final Function(String) onToggleFavorite;
@@ -26,8 +32,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   // --- ここから下は、ヘルパーメソッド ---
   static final timeFormatter = DateFormat('HH:mm');
 
-  List<Widget> _buildScheduleWidgets(List<EventItem> timedEvents) {
-    if (timedEvents.isEmpty) {
+  List<Widget> _buildScheduleWidgets(List<ScheduleEntry> scheduleEntries) {
+    if (scheduleEntries.isEmpty) {
       return [
         const Padding(
           padding: EdgeInsets.all(16.0),
@@ -35,23 +41,36 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         ),
       ];
     }
+
     final List<Widget> scheduleWidgets = [];
-    for (int i = 0; i < timedEvents.length; i++) {
-      final currentEvent = timedEvents[i];
+    for (int i = 0; i < scheduleEntries.length; i++) {
+      final currentEntry = scheduleEntries[i];
+
+      // --- 空き時間をチェック ---
       if (i > 0) {
-        final previousEvent = timedEvents[i - 1];
-        if (currentEvent.startTime!.isAfter(previousEvent.endTime!)) {
+        final previousEntry = scheduleEntries[i - 1];
+        if (currentEntry.timeSlot.startTime.isAfter(
+          previousEntry.timeSlot.endTime,
+        )) {
           scheduleWidgets.add(
-            _buildFreeTimeCard(previousEvent.endTime!, currentEvent.startTime!),
+            _buildFreeTimeCard(
+              previousEntry.timeSlot.endTime,
+              currentEntry.timeSlot.startTime,
+            ),
           );
         }
       }
+
+      // --- 現在の企画情報を表示 ---
       scheduleWidgets.add(
-        _buildTimeSlotHeader(currentEvent.startTime!, currentEvent.endTime!),
+        _buildTimeSlotHeader(
+          currentEntry.timeSlot.startTime,
+          currentEntry.timeSlot.endTime,
+        ),
       );
       scheduleWidgets.add(
         EventCard(
-          event: currentEvent,
+          event: currentEntry.event,
           favoriteEventIds: widget.favoriteEventIds,
           onToggleFavorite: widget.onToggleFavorite,
         ),
@@ -114,23 +133,27 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         .toList();
 
     final allDayEvents = favoritedEvents
-        .where((event) => event.startTime == null)
+        .where((event) => event.timeSlots.isEmpty)
         .toList();
 
     // 選択された日付に応じて、表示する時間指定企画を絞り込む
-    final timedEvents =
-        favoritedEvents.where((event) => event.startTime != null).where((
-          event,
-        ) {
-          if (_selectedDay == FestivalDay.dayOne) {
-            return event.date == FestivalDay.dayOne ||
-                event.date == FestivalDay.both;
-          } else {
-            // _selectedDay == FestivalDay.dayTwo
-            return event.date == FestivalDay.dayTwo ||
-                event.date == FestivalDay.both;
-          }
-        }).toList()..sort((a, b) => a.startTime!.compareTo(b.startTime!));
+    final List<ScheduleEntry> scheduleItems = [];
+    final dayToFilter = _selectedDay == FestivalDay.dayOne
+        ? 14
+        : 15; // 9/14 or 9/15 を日付で判定
+
+    for (final event in favoritedEvents) {
+      for (final slot in event.timeSlots) {
+        // 選択された日付のタイムスロットのみを追加
+        if (slot.startTime.day == dayToFilter) {
+          scheduleItems.add(ScheduleEntry(event, slot));
+        }
+      }
+    }
+    // 開始時間でソート
+    scheduleItems.sort(
+      (a, b) => a.timeSlot.startTime.compareTo(b.timeSlot.startTime),
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -227,7 +250,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   ),
                 ),
 
-                ..._buildScheduleWidgets(timedEvents),
+                ..._buildScheduleWidgets(scheduleItems),
               ],
             ),
     );

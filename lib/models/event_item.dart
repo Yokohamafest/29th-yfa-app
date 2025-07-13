@@ -94,6 +94,14 @@ extension EventCategoryExt on EventCategory {
   }
 }
 
+class TimeSlot {
+  final DateTime startTime;
+  final DateTime endTime;
+
+  const TimeSlot({required this.startTime, required this.endTime});
+}
+
+
 // 一つの企画が持つ情報を定義するクラス
 class EventItem {
   final String id;
@@ -104,11 +112,11 @@ class EventItem {
   final EventArea area;
   final String location;
   final EventCategory category;
-  final FestivalDay date;
-  final DateTime? startTime;
-  final DateTime? endTime;
   final bool hideFromList; // trueなら企画一覧とお気に入り一覧に表示しない
   final bool disableDetailsLink; // trueなら詳細ページへの遷移を無効にする
+  final FestivalDay date;
+  final List<TimeSlot> timeSlots;
+
 
   const EventItem({
     required this.id,
@@ -119,10 +127,10 @@ class EventItem {
     required this.area,
     required this.location,
     required this.category,
-    required this.date,
-    this.startTime,
-    this.endTime,
     this.hideFromList = false, // デフォルトはfalseに設定
     this.disableDetailsLink = false, // デフォルトはfalseに設定
+    required this.date,
+    // デフォルトは空のリスト。時間指定のない常時開催企画は、このリストが空になる
+    this.timeSlots = const [],
   });
 }
