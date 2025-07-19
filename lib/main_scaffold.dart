@@ -69,7 +69,7 @@ class _MainScaffoldState extends State<MainScaffold> {
         favoriteEventIds: _favoriteEventIds,
         onToggleFavorite: _toggleFavorite,
       ),
-      const MapScreen(),
+      MapScreen(),
       EventListScreen(
         favoriteEventIds: _favoriteEventIds,
         onToggleFavorite: _toggleFavorite,
