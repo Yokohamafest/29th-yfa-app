@@ -49,7 +49,7 @@ extension EventAreaExt on EventArea {
         return '4号館';
 
       case EventArea.building5:
-        return '5号館（体育館）';
+        return '体育館';
 
       case EventArea.outdoor:
         return '屋外';
@@ -94,7 +94,13 @@ extension EventCategoryExt on EventCategory {
   }
 }
 
-// 一つの企画が持つ情報を定義するクラス
+class TimeSlot {
+  final DateTime startTime;
+  final DateTime endTime;
+
+  const TimeSlot({required this.startTime, required this.endTime});
+}
+
 class EventItem {
   final String id;
   final String title;
@@ -102,11 +108,13 @@ class EventItem {
   final String description;
   final String imagePath;
   final EventArea area;
-  final String location;
-  final EventCategory category;
+  final String
+  location; // この文字列によってどこで行われる企画なのかを判定している（タイムテーブル画面とマップ画面）ので、文字は統一するように（「体育館」や「31A」、「32A」など）
+  final List<EventCategory> categories;
+  final bool hideFromList; // trueなら企画一覧とお気に入り一覧に表示しない デフォルトはfalse
+  final bool disableDetailsLink; // trueなら詳細ページへの遷移を無効にする デフォルトはfalse
   final FestivalDay date;
-  final DateTime? startTime;
-  final DateTime? endTime;
+  final List<TimeSlot> timeSlots;    // デフォルトは空のリスト 時間指定のない常時開催企画は、このリストが空になる
 
   const EventItem({
     required this.id,
@@ -116,9 +124,10 @@ class EventItem {
     required this.imagePath,
     required this.area,
     required this.location,
-    required this.category,
+    required this.categories,
+    this.hideFromList = false,
+    this.disableDetailsLink = false,
     required this.date,
-    this.startTime,
-    this.endTime,
+    this.timeSlots = const [],
   });
 }

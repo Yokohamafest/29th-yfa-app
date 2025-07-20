@@ -5,14 +5,22 @@ import '../models/event_item.dart';
 import '../widgets/event_card.dart';
 import '../widgets/favorite_notification_settings.dart';
 
+class ScheduleEntry {
+  final EventItem event;
+  final TimeSlot timeSlot;
+  ScheduleEntry(this.event, this.timeSlot);
+}
+
 class FavoritesScreen extends StatefulWidget {
   final Set<String> favoriteEventIds;
   final Function(String) onToggleFavorite;
+  final Function(String) onNavigateToMap;
 
   const FavoritesScreen({
     super.key,
     required this.favoriteEventIds,
     required this.onToggleFavorite,
+    required this.onNavigateToMap,
   });
 
   @override
@@ -20,14 +28,12 @@ class FavoritesScreen extends StatefulWidget {
 }
 
 class _FavoritesScreenState extends State<FavoritesScreen> {
-  // 選択中の日付を記憶するための変数を追加（初期値は1日目）
   FestivalDay _selectedDay = FestivalDay.dayOne;
 
-  // --- ここから下は、ヘルパーメソッド ---
   static final timeFormatter = DateFormat('HH:mm');
 
-  List<Widget> _buildScheduleWidgets(List<EventItem> timedEvents) {
-    if (timedEvents.isEmpty) {
+  List<Widget> _buildScheduleWidgets(List<ScheduleEntry> scheduleEntries) {
+    if (scheduleEntries.isEmpty) {
       return [
         const Padding(
           padding: EdgeInsets.all(16.0),
@@ -35,32 +41,29 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         ),
       ];
     }
+
     final List<Widget> scheduleWidgets = [];
-    for (int i = 0; i < timedEvents.length; i++) {
-      final currentEvent = timedEvents[i];
-      if (i > 0) {
-        final previousEvent = timedEvents[i - 1];
-        if (currentEvent.startTime!.isAfter(previousEvent.endTime!)) {
-          scheduleWidgets.add(
-            _buildFreeTimeCard(previousEvent.endTime!, currentEvent.startTime!),
-          );
-        }
-      }
+    for (int i = 0; i < scheduleEntries.length; i++) {
+      final currentEntry = scheduleEntries[i];
+
       scheduleWidgets.add(
-        _buildTimeSlotHeader(currentEvent.startTime!, currentEvent.endTime!),
+        _buildTimeSlotHeader(
+          currentEntry.timeSlot.startTime,
+          currentEntry.timeSlot.endTime,
+        ),
       );
       scheduleWidgets.add(
         EventCard(
-          event: currentEvent,
+          event: currentEntry.event,
           favoriteEventIds: widget.favoriteEventIds,
           onToggleFavorite: widget.onToggleFavorite,
+          onNavigateToMap: widget.onNavigateToMap,
         ),
       );
     }
     return scheduleWidgets;
   }
 
-  // 時間帯ヘッダーを生成するヘルパーメソッド
   Widget _buildTimeSlotHeader(DateTime startTime, DateTime endTime) {
     return Padding(
       padding: const EdgeInsets.only(top: 16.0, bottom: 8.0),
@@ -75,59 +78,35 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     );
   }
 
-  // 空き時間カードを生成するヘルパーメソッド
-  Widget _buildFreeTimeCard(DateTime startTime, DateTime endTime) {
-    // 空き時間を計算
-    final duration = endTime.difference(startTime);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Card(
-        color: Colors.grey[200],
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          side: BorderSide(color: Colors.grey[300]!),
-          borderRadius: BorderRadius.circular(10.0),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Center(
-            child: Text(
-              '空き時間（${duration.inMinutes}分）\n${timeFormatter.format(startTime)} - ${timeFormatter.format(endTime)}',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey[600]),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-  // --- ここまでヘルパーメソッド ---
-
   @override
   Widget build(BuildContext context) {
     final favoritedEvents = dummyEvents
-        .where((event) => widget.favoriteEventIds.contains(event.id))
+        .where(
+          (event) =>
+              widget.favoriteEventIds.contains(event.id) && !event.hideFromList,
+        )
         .toList();
 
     final allDayEvents = favoritedEvents
-        .where((event) => event.startTime == null)
+        .where((event) => event.timeSlots.isEmpty)
         .toList();
 
-    // 選択された日付に応じて、表示する時間指定企画を絞り込む
-    final timedEvents =
-        favoritedEvents.where((event) => event.startTime != null).where((
-          event,
-        ) {
-          if (_selectedDay == FestivalDay.dayOne) {
-            return event.date == FestivalDay.dayOne ||
-                event.date == FestivalDay.both;
-          } else {
-            // _selectedDay == FestivalDay.dayTwo
-            return event.date == FestivalDay.dayTwo ||
-                event.date == FestivalDay.both;
-          }
-        }).toList()..sort((a, b) => a.startTime!.compareTo(b.startTime!));
+    final List<ScheduleEntry> scheduleItems = [];
+    final dayToFilter = _selectedDay == FestivalDay.dayOne
+        ? 14
+        : 15;
+
+    for (final event in favoritedEvents) {
+      for (final slot in event.timeSlots) {
+        if (slot.startTime.day == dayToFilter) {
+          scheduleItems.add(ScheduleEntry(event, slot));
+        }
+      }
+    }
+    // 開始時間でソート
+    scheduleItems.sort(
+      (a, b) => a.timeSlot.startTime.compareTo(b.timeSlot.startTime),
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -135,7 +114,6 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         actions: [
           Builder(
             builder: (context) {
-              // アイコンだけでなくテキストも表示できるTextButton.iconに変更
               return TextButton.icon(
                 onPressed: () {
                   showModalBottomSheet(
@@ -150,11 +128,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                     },
                   );
                 },
-                // 表示するアイコン
                 icon: const Icon(Icons.notifications_active_outlined),
-                // 表示するテキスト
                 label: const Text('通知設定'),
-                // ボタンの文字とアイコンの色をAppBarのテーマに合わせる
                 style: TextButton.styleFrom(
                   foregroundColor:
                       Theme.of(context).appBarTheme.iconTheme?.color ??
@@ -163,7 +138,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               );
             },
           ),
-          const SizedBox(width: 8), // 右端に少し余白を追加
+          const SizedBox(width: 8),
         ],
       ),
       body: favoritedEvents.isEmpty
@@ -181,36 +156,32 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                       event: event,
                       favoriteEventIds: widget.favoriteEventIds,
                       onToggleFavorite: widget.onToggleFavorite,
+                      onNavigateToMap: widget.onNavigateToMap,
                     ),
                   ),
                   const Divider(height: 32, thickness: 1),
                 ],
 
                 const Text(
-                  'マイタイムテーブル',
+                  '時間指定企画',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 16),
 
-                //日付を切り替えるためのトグルボタン
                 Center(
                   child: ToggleButtons(
-                    // 現在選択されているボタンを示す
                     isSelected: [
                       _selectedDay == FestivalDay.dayOne,
                       _selectedDay == FestivalDay.dayTwo,
                     ],
-                    // ボタンが押されたときの処理
                     onPressed: (int index) {
                       setState(() {
-                        // 押されたボタンに応じて、_selectedDayの値を更新
                         _selectedDay = (index == 0)
                             ? FestivalDay.dayOne
                             : FestivalDay.dayTwo;
                       });
                     },
                     borderRadius: BorderRadius.circular(8.0),
-                    // 2つのボタンの見た目を定義
                     children: const [
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16),
@@ -224,7 +195,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   ),
                 ),
 
-                ..._buildScheduleWidgets(timedEvents),
+                ..._buildScheduleWidgets(scheduleItems),
               ],
             ),
     );
