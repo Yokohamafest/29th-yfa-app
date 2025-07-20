@@ -25,19 +25,11 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
-   AnimationController? _slideInController; // スライドイン用
+  AnimationController? _slideInController; // スライドイン用
   late final AnimationController _rockingController; // 揺れ用
   Animation<double>? _xAnimation;
   bool _isAnimationInitialized = false;
-  bool _isMenuOpen = false;
   List<EventItem> _recommendedEvents = [];
-
-  // メニューの開閉を切り替える関数
-  void _toggleMenu() {
-    setState(() {
-      _isMenuOpen = !_isMenuOpen;
-    });
-  }
 
   @override
   void initState() {
@@ -62,10 +54,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       vsync: this,
       duration: const Duration(seconds: 2),
     );
-    _xAnimation = Tween<double>(
-      begin: -200.0,
-      end: 20.0,
-    ).animate(
+    _xAnimation = Tween<double>(begin: -200.0, end: 20.0).animate(
       //【修正点①】_slideInControllerがnullでないことを'!'で保証
       CurvedAnimation(parent: _slideInController!, curve: Curves.easeOut),
     );
@@ -77,7 +66,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       setState(() {});
     }
   }
-
 
   void _selectRecommendedEvents() {
     // 企画一覧に表示される企画のみを抽出
@@ -104,7 +92,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     //final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
-    const double menuWidth = 250; // サイドメニューの幅を定義
 
     if (!_isAnimationInitialized) {
       _isAnimationInitialized = true;
@@ -115,20 +102,65 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           vsync: this,
           duration: const Duration(seconds: 2),
         );
-        _xAnimation = Tween<double>(
-          begin: -200.0, // 画面の左外側からスタート
-          end: 20.0,     // 最終的に停止する左からの位置
-        ).animate(
-        CurvedAnimation(parent: _slideInController!, curve: Curves.easeOut),
-        );
+        _xAnimation =
+            Tween<double>(
+              begin: -200.0, // 画面の左外側からスタート
+              end: 20.0, // 最終的に停止する左からの位置
+            ).animate(
+              CurvedAnimation(
+                parent: _slideInController!,
+                curve: Curves.easeOut,
+              ),
+            );
         // buildメソッドが完了した後にアニメーションを開始
         _slideInController!.forward();
       });
     }
 
-
-
     return Scaffold(
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            const DrawerHeader(
+              decoration: BoxDecoration(
+                color: Color(0xFF54A4DB), // ヘッダーの色
+              ),
+              child: Text(
+                'メニュー',
+                style: TextStyle(fontSize: 24, color: Colors.white),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.campaign),
+              title: const Text('お知らせ'),
+              onTap: () {
+                Navigator.pop(context); // Drawerを閉じる
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AnnouncementScreen(),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings),
+              title: const Text('オプション'),
+              onTap: () {
+                Navigator.pop(context); // Drawerを閉じる
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const OptionsScreen(),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+
       body: Stack(
         children: [
           Column(
@@ -178,19 +210,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       child: Container(color: Colors.white),
                     ),
 
-                    /*
-                    // 背景色（下半分）
-                    Positioned(
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      height: screenHeight * 0.5,
-                      child: Container(
-                        color: const Color.fromARGB(255, 15, 114, 175),
-                      ),
-                    ),
-*/
-
                     // ロゴやタイトル（ヘッダーエリア内の絶対位置に配置）
                     Positioned(
                       top: 100, //screenHeight * 0.15,
@@ -225,20 +244,27 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           );
                         },
                         child: AnimatedBuilder(
-                        animation: _rockingController,
-                        builder: (context, rockingChild) {
-                          final rockingValue = math.sin(_rockingController.value * 2 * math.pi);
-                          return Transform(
-                            transform: Matrix4.translationValues(0, rockingValue * 5, 0)
-                              ..rotateZ(rockingValue * 0.05),
-                            alignment: Alignment.center,
-                            child: rockingChild,
-                          );
-                        },
-                        child: Image.asset('assets/images/ship.png', width: 180),
+                          animation: _rockingController,
+                          builder: (context, rockingChild) {
+                            final rockingValue = math.sin(
+                              _rockingController.value * 2 * math.pi,
+                            );
+                            return Transform(
+                              transform: Matrix4.translationValues(
+                                0,
+                                rockingValue * 5,
+                                0,
+                              )..rotateZ(rockingValue * 0.05),
+                              alignment: Alignment.center,
+                              child: rockingChild,
+                            );
+                          },
+                          child: Image.asset(
+                            'assets/images/ship.png',
+                            width: 180,
+                          ),
+                        ),
                       ),
-                    ),
-
 
                     // 波の画像
                     Positioned(
@@ -280,94 +306,35 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
           ),
 
-          AnimatedPositioned(
-            duration: const Duration(milliseconds: 300), // アニメーションの時間
-            curve: Curves.easeInOut, // アニメーションの緩急
-            // _isMenuOpenの値に応じて、leftの位置を変更する
-            left: _isMenuOpen ? 0 : -menuWidth, // 開いている時は0、閉じている時は画面外
-            top: 0,
-            height: 300,
-            width: menuWidth,
-            child: Material(
-              // 影や背景色をつけるためにMaterialで囲む
-              elevation: 8.0,
-              borderRadius: const BorderRadius.only(
-                bottomRight: Radius.circular(12.0),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: Container(
-                color: Colors.white,
-                child: SafeArea(
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 20),
-                      const Text(
-                        'メニュー',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const Divider(height: 40),
-                      ListTile(
-                        leading: const Icon(Icons.campaign),
-                        title: const Text('お知らせ'),
-                        onTap: () {
-                          // お知らせ一覧画面へ遷移
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const AnnouncementScreen(),
-                            ),
-                          );
-                        },
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.settings),
-                        title: const Text('オプション'),
-                        onTap: () {
-                          // オプション画面へ遷移
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const OptionsScreen(),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-
           // --- レイヤー3: メニューを開くためのボタン ---
           Positioned(
-            top: 40, // 位置を微調整
-            left: 0, // 画面の左端にピッタリつける
-            child: Material(
-              // ボタンに影をつける
-              elevation: _isMenuOpen ? 0.0 : 4.0,
-              // ボタンの背景色
-              color: Colors.white,
-              // 【重要】ボタンの形を定義
-              shape: const RoundedRectangleBorder(
-                // 右上と右下だけを角丸にする
-                borderRadius: BorderRadius.only(
-                  topRight: Radius.circular(20),
-                  bottomRight: Radius.circular(20),
-                ),
-              ),
-              // ボタンを押したときのエフェクトが、上記の形からはみ出ないようにする
-              clipBehavior: Clip.antiAlias,
-              child: IconButton(
-                icon: Icon(_isMenuOpen ? Icons.close : Icons.menu),
-                iconSize: 30,
-                color: const Color.fromARGB(255, 15, 114, 175),
-                tooltip: 'メニューを開く',
-                onPressed: _toggleMenu,
-              ),
+            top: 45,
+            left: 0,
+            child: Builder(
+              // Scaffoldのcontextを正しく取得するためにBuilderで囲む
+              builder: (context) {
+                return Material(
+                  elevation: 4.0,
+                  color: Colors.white,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.only(
+                      topRight: Radius.circular(20),
+                      bottomRight: Radius.circular(20),
+                    ),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: IconButton(
+                    icon: const Icon(Icons.menu), // Drawerなので常にmenuアイコン
+                    iconSize: 30,
+                    color: const Color.fromARGB(255, 15, 114, 175),
+                    tooltip: 'メニューを開く',
+                    onPressed: () {
+                      // Drawerを開くための命令
+                      Scaffold.of(context).openDrawer();
+                    },
+                  ),
+                );
+              },
             ),
           ),
         ],
