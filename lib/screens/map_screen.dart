@@ -124,7 +124,7 @@ class _MapScreenState extends State<MapScreen> {
       _highlightedPinIds = {};
     });
 
-    Future.delayed(const Duration(seconds: 3), () {
+    Future.delayed(const Duration(seconds: 15), () {
       if (mounted) {
         setState(() {
           _blinkingPinId = null;
