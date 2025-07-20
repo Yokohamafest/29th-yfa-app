@@ -1,4 +1,4 @@
-﻿import 'dart:math' as math; // 数学的な計算（sin関数）を使うためにインポート
+﻿import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'announcement_screen.dart';
 import 'options_screen.dart';
@@ -25,8 +25,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
-  AnimationController? _slideInController; // スライドイン用
-  late final AnimationController _rockingController; // 揺れ用
+  AnimationController? _slideInController;
+  late final AnimationController _rockingController;
   Animation<double>? _xAnimation;
   bool _isAnimationInitialized = false;
   List<EventItem> _recommendedEvents = [];
@@ -35,7 +35,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   void initState() {
     super.initState();
 
-    // 画面サイズに依存しないアニメーションはここで初期化
     _rockingController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 4),
@@ -46,35 +45,27 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   void _initSlideAnimation() {
-    // この関数が呼ばれる時点ではcontextは有効
     if (!mounted) return;
-    //final screenWidth = MediaQuery.of(context).size.width;
 
     _slideInController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
     );
     _xAnimation = Tween<double>(begin: -200.0, end: 20.0).animate(
-      //【修正点①】_slideInControllerがnullでないことを'!'で保証
       CurvedAnimation(parent: _slideInController!, curve: Curves.easeOut),
     );
-    //【修正点②】_slideInControllerがnullでないことを'!'で保証
     _slideInController!.forward();
 
-    // 初期化が完了したことを画面に通知するためにsetStateを呼ぶ
     if (mounted) {
       setState(() {});
     }
   }
 
   void _selectRecommendedEvents() {
-    // 企画一覧に表示される企画のみを抽出
     final allEvents = dummyEvents
         .where((event) => !event.hideFromList)
         .toList();
-    // リストをシャッフル
     allEvents.shuffle();
-    // 先頭から3つを取得
     setState(() {
       _recommendedEvents = allEvents.take(3).toList();
     });
@@ -82,7 +73,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   void dispose() {
-    // 両方のコントローラーを破棄する
     _slideInController?.dispose();
     _rockingController.dispose();
     super.dispose();
@@ -90,29 +80,25 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    //final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
 
     if (!_isAnimationInitialized) {
       _isAnimationInitialized = true;
-      // このコールバックは、最初のフレームが描画された直後に一度だけ実行される
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        // このタイミングなら、screenWidthは常に正しい値
         _slideInController = AnimationController(
           vsync: this,
           duration: const Duration(seconds: 2),
         );
         _xAnimation =
             Tween<double>(
-              begin: -200.0, // 画面の左外側からスタート
-              end: 20.0, // 最終的に停止する左からの位置
+              begin: -200.0,
+              end: 20.0,
             ).animate(
               CurvedAnimation(
                 parent: _slideInController!,
                 curve: Curves.easeOut,
               ),
             );
-        // buildメソッドが完了した後にアニメーションを開始
         _slideInController!.forward();
       });
     }
@@ -124,7 +110,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           children: [
             const DrawerHeader(
               decoration: BoxDecoration(
-                color: Color(0xFF54A4DB), // ヘッダーの色
+                color: Color(0xFF54A4DB),
               ),
               child: Text(
                 'メニュー',
@@ -135,7 +121,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               leading: const Icon(Icons.campaign),
               title: const Text('お知らせ'),
               onTap: () {
-                Navigator.pop(context); // Drawerを閉じる
+                Navigator.pop(context);
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -148,7 +134,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               leading: const Icon(Icons.settings),
               title: const Text('オプション'),
               onTap: () {
-                Navigator.pop(context); // Drawerを閉じる
+                Navigator.pop(context);
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -176,32 +162,26 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           SingleChildScrollView(
             child: Column(
               children: [
-                // 画面上部のエリア
                 Stack(
                   children: [
                     SizedBox(
-                      height: 420, // ヘッダーの高さ
+                      height: 420,
                     ),
 
-                    // 背景色（上半分）
                     Container(
                       height: 250, //screenHeight * 0.4,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          // グラデーションの開始位置
                           begin: Alignment.topCenter,
-                          // グラデーションの終了位置
                           end: Alignment.bottomCenter,
-                          // グラデーションで使用する色のリスト
                           colors: [
-                            Color(0xFF54A4DB), // 上側の色
-                            Colors.white, // 下側の色
+                            Color(0xFF54A4DB),
+                            Colors.white,
                           ],
                         ),
                       ),
                     ),
 
-                    //背景色（中間）
                     Positioned(
                       top: 250, //screenHeight * 0.4,
                       left: 0,
@@ -210,32 +190,26 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       child: Container(color: Colors.white),
                     ),
 
-                    // ロゴやタイトル（ヘッダーエリア内の絶対位置に配置）
                     Positioned(
-                      top: 100, //screenHeight * 0.15,
+                      top: 100,
                       left: screenWidth * 0.55,
-                      //right: screenWidth * 0.05,
                       child: Image.asset(
                         'assets/images/title.png',
-                        //height: screenHeight * 0.22,
                         width: 150,
                       ),
                     ),
                     Positioned(
                       top: 0,
-                      //left: 0,
                       right: screenWidth * 0.05,
                       child: Image.asset(
                         'assets/images/voyage_logo.png',
                         width: 150,
-                        //height: screenHeight * 0.2,
                       ),
                     ),
 
-                    // 船のアニメーション（ヘッダーエリア内の絶対位置に配置）
                     if (_slideInController != null && _xAnimation != null)
                       AnimatedBuilder(
-                        animation: _slideInController!, // non-nullであることを保証
+                        animation: _slideInController!,
                         builder: (context, slideInChild) {
                           return Positioned(
                             left: _xAnimation!.value,
@@ -266,10 +240,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         ),
                       ),
 
-                    // 波の画像
                     Positioned(
                       top: 275,
-                      //bottom: screenHeight * 0.5,
                       left: 0,
                       right: 0,
                       child: Image.asset(
@@ -279,9 +251,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ),
                   ],
                 ),
-                // ここまでが画面上部のエリア
 
-                // ここから下にコンテンツを追加予定
                 Container(
                   color: const Color.fromARGB(255, 15, 114, 175),
                   width: double.infinity,
@@ -293,10 +263,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // ① 最新のお知らせセクション
                         _buildAnnouncementsSection(context),
                         const SizedBox(height: 32),
-                        // ② おすすめ企画セクション
                         _buildRecommendationsSection(context),
                       ],
                     ),
@@ -306,12 +274,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
           ),
 
-          // --- レイヤー3: メニューを開くためのボタン ---
           Positioned(
             top: 45,
             left: 0,
             child: Builder(
-              // Scaffoldのcontextを正しく取得するためにBuilderで囲む
               builder: (context) {
                 return Material(
                   elevation: 4.0,
@@ -324,7 +290,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                   clipBehavior: Clip.antiAlias,
                   child: IconButton(
-                    icon: const Icon(Icons.menu), // Drawerなので常にmenuアイコン
+                    icon: const Icon(Icons.menu),
                     iconSize: 30,
                     color: const Color.fromARGB(255, 15, 114, 175),
                     tooltip: 'メニューを開く',
@@ -342,7 +308,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  // コンテンツカードを生成するメソッド 文字情報を追加する場合はこれを使える
+  // コンテンツカードを生成するメソッド 文字情報を追加する場合はこれを使えるかもしれない
   /*
   Widget _buildContentCard({required String title, required String content}) {
     return Card(
@@ -366,9 +332,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
   */
 
-  // 最新のお知らせセクションを生成するメソッド
   Widget _buildAnnouncementsSection(BuildContext context) {
-    // お知らせを公開日時が新しい順にソートし、先頭3件を取得
     final latestAnnouncements = (List.of(
       dummyAnnouncements,
     )..sort((a, b) => b.publishedAt.compareTo(a.publishedAt))).take(3).toList();
@@ -388,7 +352,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         Card(
           child: Column(
             children: [
-              // 取得した3件のお知らせをリスト表示
               ...latestAnnouncements.map((announcement) {
                 return ListTile(
                   title: Text(
@@ -410,7 +373,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 );
               }),
               const Divider(height: 1),
-              // お知らせ一覧画面へのリンク
               ListTile(
                 title: const Text(
                   'お知らせ一覧',
@@ -433,7 +395,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  // おすすめ企画セクションを生成するメソッド
   Widget _buildRecommendationsSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -447,7 +408,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
         ),
         const SizedBox(height: 8),
-        // initStateで選ばれた3つの企画のカードを表示
         ..._recommendedEvents.map(
           (event) => EventCard(
             event: event,

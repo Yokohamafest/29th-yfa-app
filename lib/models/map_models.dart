@@ -36,7 +36,6 @@ enum PinType {
   building, // 建物全体を示すピン
 }
 
-// 個々のピンの情報を持つクラス
 class MapPin {
   final String id;
   final MapType mapId; // どのマップに所属するか

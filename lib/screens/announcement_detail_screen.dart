@@ -18,19 +18,16 @@ class AnnouncementDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. タイトル
             Text(
               announcement.title,
               style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            // 2. 公開日時
             Text(
               '公開日時: ${formatter.format(announcement.publishedAt)}',
               style: TextStyle(color: Colors.grey[600]),
             ),
             const Divider(height: 32.0),
-            // 3. 本文
             Text(
               announcement.content,
               style: const TextStyle(fontSize: 16, height: 1.7),

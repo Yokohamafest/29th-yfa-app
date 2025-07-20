@@ -5,7 +5,6 @@ import '../models/event_item.dart';
 import '../widgets/event_card.dart';
 
 class EventListScreen extends StatefulWidget {
-  //お気に入り情報を受け取るための変数
   final Set<String> favoriteEventIds;
   final Function(String) onToggleFavorite;
   final Function(String) onNavigateToMap;
@@ -98,7 +97,6 @@ class _EventListScreenState extends State<EventListScreen> {
     }
 
     if (_startTimeFilter != null || _endTimeFilter != null) {
-      // フィルターの開始時刻を決定（指定がなければ朝4時）
       final filterStart = _startTimeFilter != null
           ? DateTime(
               2025,
@@ -109,7 +107,6 @@ class _EventListScreenState extends State<EventListScreen> {
             )
           : DateTime(2025, 9, 14, 4, 0);
 
-      // フィルターの終了時刻を決定（指定がなければ深夜28時=翌朝4時）
       final filterEnd = _endTimeFilter != null
           ? DateTime(2025, 9, 14, _endTimeFilter!.hour, _endTimeFilter!.minute)
           : DateTime(2025, 9, 15, 4, 0);
@@ -193,14 +190,12 @@ class _EventListScreenState extends State<EventListScreen> {
         actions: [
           Builder(
             builder: (context) {
-              // TextButton.icon を使って、アイコンとテキストをまとめる
               return TextButton.icon(
                 onPressed: () {
                   Scaffold.of(context).openEndDrawer();
                 },
                 icon: const Icon(Icons.filter_list),
                 label: const Text('絞り込み'),
-                // ボタンの文字とアイコンの色をAppBarの他のアイコンと合わせる
                 style: TextButton.styleFrom(
                   foregroundColor:
                       Theme.of(context).appBarTheme.iconTheme?.color ??
@@ -209,40 +204,9 @@ class _EventListScreenState extends State<EventListScreen> {
               );
             },
           ),
-          const SizedBox(width: 8), // 右端に少し余白を追加
+          const SizedBox(width: 8),
         ],
       ),
-      /*
-      endDrawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(color: Color(0xFF54A4DB)),
-              child: Text('検索・絞り込み', style: TextStyle(color: Colors.white, fontSize: 24)),
-            ),
-            // --- キーワード検索 ---
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: TextField(
-                controller: _searchController,
-                decoration: const InputDecoration(
-                  labelText: 'キーワード検索',
-                  prefixIcon: Icon(Icons.search),
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ),
-            // --- 時間帯絞り込み ---
-            _buildTimeFilter(), // 新しい時間帯フィルターUI
-
-            // --- その他のフィルター ---
-            _buildFilterChips<FestivalDay>('開催日', _selectedDays, FestivalDay.values),
-            _buildFilterChips<EventCategory>('カテゴリ', _selectedCategories, EventCategory.values),
-            _buildFilterChips<EventArea>('エリア', _selectedAreas, EventArea.values),
-          ],
-        ),
-      ),*/
       endDrawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
@@ -305,7 +269,6 @@ class _EventListScreenState extends State<EventListScreen> {
 
   Widget _buildTimeFilter() {
     final timeFormatter = DateFormat('HH:mm');
-    // 時刻選択ダイアログを表示するヘルパー関数
     Future<void> selectTime(bool isStartTime) async {
       final initialTime =
           (isStartTime ? _startTimeFilter : _endTimeFilter) ?? TimeOfDay.now();
@@ -340,7 +303,6 @@ class _EventListScreenState extends State<EventListScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // 開始時刻ボタン
               Expanded(
                 child: OutlinedButton(
                   onPressed: () => selectTime(true),
@@ -363,7 +325,6 @@ class _EventListScreenState extends State<EventListScreen> {
                 padding: EdgeInsets.symmetric(horizontal: 8.0),
                 child: Text('〜'),
               ),
-              // 終了時刻ボタン
               Expanded(
                 child: OutlinedButton(
                   onPressed: () => selectTime(false),
@@ -385,7 +346,6 @@ class _EventListScreenState extends State<EventListScreen> {
             ],
           ),
         ),
-        // 時間帯が選択されている場合のみ、クリアボタンとトグルを表示
         if (_startTimeFilter != null || _endTimeFilter != null) ...[
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),

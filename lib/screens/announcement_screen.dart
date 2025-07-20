@@ -1,6 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // SharedPreferencesをインポート
+import 'package:shared_preferences/shared_preferences.dart';
 import '../data/dummy_announcements.dart';
 import '../models/announcement_item.dart';
 import 'announcement_detail_screen.dart';
@@ -27,10 +27,8 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
     _loadReadStatus();
   }
 
-  // スマホのストレージから既読IDリストを読み込む関数
   Future<void> _loadReadStatus() async {
     final prefs = await SharedPreferences.getInstance();
-    // 'read_announcement_ids' というキーで保存されたリストを読み込む
     final readIds = prefs.getStringList('read_announcement_ids');
     if (readIds != null) {
       setState(() {
@@ -39,7 +37,6 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
     }
   }
 
-  // スマホのストレージに既読IDリストを保存する関数
   Future<void> _saveReadStatus() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList('read_announcement_ids', _readAnnouncementIds.toList());
@@ -57,7 +54,6 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
         itemCount: _announcements.length,
         itemBuilder: (context, index) {
           final announcement = _announcements[index];
-          // 【変更点③】既読かどうかを、ダミーデータではなくSetの中身で判断
           final bool isRead = _readAnnouncementIds.contains(announcement.id);
 
           return Card(
@@ -74,7 +70,6 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
               ),
               subtitle: Text(formatter.format(announcement.publishedAt)),
               onTap: () {
-                // 【変更点④】タップされたら、既読リストに追加して保存する
                 if (!isRead) {
                   setState(() {
                     _readAnnouncementIds.add(announcement.id);

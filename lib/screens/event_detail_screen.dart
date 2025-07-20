@@ -2,7 +2,6 @@
 import 'package:intl/intl.dart';
 import '../models/event_item.dart';
 
-// 【変更点①】StatelessWidget から StatefulWidget に変更
 class EventDetailScreen extends StatefulWidget {
   final EventItem event;
   final Set<String> favoriteEventIds;
@@ -23,7 +22,6 @@ class EventDetailScreen extends StatefulWidget {
 }
 
 class _EventDetailScreenState extends State<EventDetailScreen> {
-  // _buildTagと_buildInfoRowはStateクラスの中に移動
   Widget _buildTag(String text, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
@@ -46,7 +44,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     required IconData icon,
     required String title,
     Widget? child,
-    Widget? trailing, // 【変更点】trailing パラメータを追加
+    Widget? trailing,
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,7 +67,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             ],
           ),
         ),
-        // trailingがnullでない場合に表示
         if (trailing != null) trailing,
       ],
     );
@@ -81,7 +78,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     final timeFormatter = DateFormat('HH:mm');
     final dayFormatter = DateFormat('M/d (E)', 'ja_JP');
 
-    // Stateクラスの中なので、widget. をつけてアクセス
     final bool isFavorited = widget.favoriteEventIds.contains(widget.event.id);
 
     return Scaffold(
@@ -94,12 +90,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               color: isFavorited ? Colors.red : null,
             ),
             tooltip: 'お気に入り',
-            // 【変更点②】onPressedの中身を修正
             onPressed: () {
-              // まず、親に状態の変更を通知する（今まで通り）
               widget.onToggleFavorite(widget.event.id);
-              // 次に、この画面自身を再描画するために、ローカルのsetStateを呼ぶ
-              // ※このsetStateは空でOK。目的は再描画のきっかけを作ることだけ。
               setState(() {});
             },
           ),
@@ -109,10 +101,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ... (画像、タイトルなど、全ての event は widget.event に変更)
             Image.asset(
               widget.event.imagePath,
-              width: double.infinity, // 横幅いっぱいに表示
+              width: double.infinity,
               height: 250,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
@@ -170,9 +161,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     trailing: OutlinedButton(
                       child: const Text('マップで見る'),
                       onPressed: () {
-                        // ① マップタブへ移動するよう親（main_scaffold）に通知
                         widget.onNavigateToMap(widget.event.id);
-                        // ② 現在の詳細画面を閉じる
                         Navigator.of(context).pop();
                       },
                     ),

@@ -26,7 +26,6 @@ class _FavoriteNotificationSettingsState
     _loadSettings();
   }
 
-  // ... (_loadSettings, _updateRemindersEnabled, _updateReminderMinutes は変更なし) ...
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
@@ -61,16 +60,13 @@ class _FavoriteNotificationSettingsState
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      // ローディング中は高さを確保するための空のコンテナを返す
       return const SizedBox(height: 50);
     }
 
-    // 【変更点】UIの構造を修正
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 「リマインダー通知」のスイッチ
         SwitchListTile(
           title: const Text('お気に入り企画のリマインダー'),
           subtitle: const Text('企画の開始時刻が近づくと通知します'),
@@ -78,7 +74,6 @@ class _FavoriteNotificationSettingsState
           onChanged: _updateRemindersEnabled,
         ),
 
-        // リマインダーがONの時だけ、タイミング設定を表示
         if (_remindersEnabled)
           Padding(
             padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),

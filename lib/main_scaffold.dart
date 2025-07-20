@@ -19,14 +19,12 @@ class _MainScaffoldState extends State<MainScaffold> {
   final Set<String> _favoriteEventIds = {};
   String? _highlightedEventId;
 
-  // --- ライフサイクルメソッド ---
   @override
   void initState() {
     super.initState();
     _loadFavorites();
   }
 
-  // --- 状態操作メソッド ---
   Future<void> _loadFavorites() async {
     final prefs = await SharedPreferences.getInstance();
     final favoriteIds = prefs.getStringList('favorite_events');
@@ -55,10 +53,9 @@ class _MainScaffoldState extends State<MainScaffold> {
 
   void _navigateToMapAndHighlight(String eventId) {
     setState(() {
-      _selectedIndex = 2; // マップ画面のインデックス
+      _selectedIndex = 2;
       _highlightedEventId = eventId;
     });
-    // マップ表示後、少し経ったらハイライトを解除する
     Future.delayed(const Duration(milliseconds: 500), () {
       if (mounted) {
         setState(() {
@@ -74,10 +71,8 @@ class _MainScaffoldState extends State<MainScaffold> {
     });
   }
 
-  // --- UI構築メソッド ---
   @override
   Widget build(BuildContext context) {
-    // 画面リストの定義をbuildメソッド内で行う
     final List<Widget> screens = [
       HomeScreen(
         favoriteEventIds: _favoriteEventIds,

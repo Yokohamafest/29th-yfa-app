@@ -50,9 +50,7 @@ final List<MapInfo> allMaps = [
   ),
 ];
 
-// 全てのピンのリスト
 final List<MapPin> allPins = [
-  // --- 全体マップ上のピン ---
   MapPin(
     id: 'pin_b3',
     mapId: MapType.campus,
@@ -76,7 +74,6 @@ final List<MapPin> allPins = [
     iconSize: 24,
   ),
 
-  // --- 3号館1階のピン ---
   MapPin(
     id: 'pin_31A',
     mapId: MapType.building3F1,
@@ -102,5 +99,4 @@ final List<MapPin> allPins = [
     title: 'お手洗い',
     parentBuildingId: 'pin_b2',
   ),
-  // ... 他の全てのピン情報を追加 ...
 ];

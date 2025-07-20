@@ -2,11 +2,9 @@
 import '../models/event_item.dart';
 import '../screens/event_detail_screen.dart';
 
-// 一つの企画情報をカード形式で表示するための、再利用可能なウィジェット
 class EventCard extends StatelessWidget {
   final EventItem event;
 
-  // お気に入り状態を管理する変数
   final Set<String> favoriteEventIds;
   final Function(String) onToggleFavorite;
   final Function(String) onNavigateToMap;
@@ -19,12 +17,11 @@ class EventCard extends StatelessWidget {
     required this.onNavigateToMap,
   });
 
-  // タグを生成するためのヘルパーメソッド
   Widget _buildTag(String text, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
       decoration: BoxDecoration(
-        color: color.withAlpha(51), // 少し薄い背景色
+        color: color.withAlpha(51),
         borderRadius: BorderRadius.circular(8.0),
       ),
       child: Text(
@@ -54,20 +51,17 @@ class EventCard extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    // 遷移先の画面としてEventDetailScreenを指定
-                    // eventプロパティに、このカードが持つ企画情報を渡す
                     builder: (context) => EventDetailScreen(event: event, favoriteEventIds: favoriteEventIds, onToggleFavorite: onToggleFavorite, onNavigateToMap: onNavigateToMap,),
                   ),
                 );
               },
 
         child: SizedBox(
-          height: 120, // カードの高さを指定
+          height: 120,
           child: Row(
             children: [
-              // --- 左側：正方形の画像 ---
               AspectRatio(
-                aspectRatio: 1 / 1, // 縦横比を1:1
+                aspectRatio: 1 / 1,
                 child: Image.asset(
                   event.imagePath,
                   fit: BoxFit.cover,
@@ -85,7 +79,6 @@ class EventCard extends StatelessWidget {
                 ),
               ),
 
-              // --- 右側：文字情報エリア ---
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(12, 12, 0, 12),
@@ -96,7 +89,6 @@ class EventCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
-                            // 企画タイトル
                             child: Text(
                               event.title,
                               style: const TextStyle(
@@ -107,7 +99,6 @@ class EventCard extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          // お気に入り登録ボタン
                           IconButton(
                             padding: const EdgeInsets.all(0),
                             constraints: const BoxConstraints(),
@@ -118,13 +109,11 @@ class EventCard extends StatelessWidget {
                               color: isFavorited ? Colors.red : Colors.grey,
                             ),
                             onPressed: () {
-                              // ボタンが押されたら、親から渡された関数を呼び出す
                               onToggleFavorite(event.id);
                             },
                           ),
                         ],
                       ),
-                      // 団体名
                       Text(
                         event.groupName,
                         style: TextStyle(
@@ -132,11 +121,10 @@ class EventCard extends StatelessWidget {
                           color: Colors.grey[700],
                         ),
                       ),
-                      const Spacer(), // 残りのスペースを埋めるスペーサー
-                      // タグ表示エリア
+                      const Spacer(),
                       Wrap(
-                        spacing: 6.0, // タグ間の横スペース
-                        runSpacing: 4.0, // タグ間の縦スペース
+                        spacing: 6.0,
+                        runSpacing: 4.0,
                         children: [
                           ...event.categories.map((category) => _buildTag(category.name, Colors.blue)),
                           _buildTag(event.area.name, Colors.orange),

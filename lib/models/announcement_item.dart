@@ -3,7 +3,7 @@
   final String title;
   final String content;
   final DateTime publishedAt;
-  final bool isRead; // 既読・未読を管理するフラグ
+  final bool isRead;
 
   const AnnouncementItem({
     required this.id,

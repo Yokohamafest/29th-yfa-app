@@ -101,7 +101,6 @@ class TimeSlot {
   const TimeSlot({required this.startTime, required this.endTime});
 }
 
-// 一つの企画が持つ情報を定義するクラス
 class EventItem {
   final String id;
   final String title;
@@ -112,10 +111,10 @@ class EventItem {
   final String
   location; // この文字列によってどこで行われる企画なのかを判定している（タイムテーブル画面とマップ画面）ので、文字は統一するように（「体育館」や「31A」、「32A」など）
   final List<EventCategory> categories;
-  final bool hideFromList; // trueなら企画一覧とお気に入り一覧に表示しない
-  final bool disableDetailsLink; // trueなら詳細ページへの遷移を無効にする
+  final bool hideFromList; // trueなら企画一覧とお気に入り一覧に表示しない デフォルトはfalse
+  final bool disableDetailsLink; // trueなら詳細ページへの遷移を無効にする デフォルトはfalse
   final FestivalDay date;
-  final List<TimeSlot> timeSlots;
+  final List<TimeSlot> timeSlots;    // デフォルトは空のリスト 時間指定のない常時開催企画は、このリストが空になる
 
   const EventItem({
     required this.id,
@@ -126,10 +125,9 @@ class EventItem {
     required this.area,
     required this.location,
     required this.categories,
-    this.hideFromList = false, // デフォルトはfalseに設定
-    this.disableDetailsLink = false, // デフォルトはfalseに設定
+    this.hideFromList = false,
+    this.disableDetailsLink = false,
     required this.date,
-    // デフォルトは空のリスト。時間指定のない常時開催企画は、このリストが空になる
     this.timeSlots = const [],
   });
 }

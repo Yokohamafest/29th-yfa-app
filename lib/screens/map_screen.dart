@@ -25,11 +25,10 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
-  // --- 状態を管理する変数 ---
   MapInfo _currentMap = allMaps.first;
 
   Set<String> _highlightedPinIds = {};
-  String? _blinkingPinId; // 点滅ハイライト用の状態変数
+  String? _blinkingPinId;
 
   MapFilterType _currentFilterType = MapFilterType.event;
   // イベントフィルター
@@ -39,9 +38,9 @@ class _MapScreenState extends State<MapScreen> {
   // サービスフィルター
   final Set<PinType> _selectedServiceTypes = {};
   final Map<String, MapType> _buildingPinToFloorMap = {
-    'pin_b2': MapType.building2F1, // 2号館のピンID -> 2号館1階マップ
-    'pin_b3': MapType.building3F1, // 3号館のピンID -> 3号館1階マップ
-    'pin_b4': MapType.building4F1F2, // 4号館のピンID -> 4号館1,2階マップ
+    'pin_b2': MapType.building2F1,
+    'pin_b3': MapType.building3F1,
+    'pin_b4': MapType.building4F1F2,
     // 体育館（5号館）はフロアマップがないので、ここには含めない
   };
 
@@ -49,7 +48,6 @@ class _MapScreenState extends State<MapScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // 初回表示時にジャンプする場合
       if (widget.highlightedEventId != null) {
         _navigateToEvent(widget.highlightedEventId!);
       }
@@ -61,14 +59,11 @@ class _MapScreenState extends State<MapScreen> {
     super.didUpdateWidget(oldWidget);
     if (widget.highlightedEventId != null &&
         widget.highlightedEventId != oldWidget.highlightedEventId) {
-      // 新しいジャンプ要求が来た場合
       _navigateToEvent(widget.highlightedEventId!);
     }
   }
 
-  // 点滅ハイライトを設定する関数
   void _navigateToEvent(String eventId) {
-    // まず、目的の企画データを取得
     EventItem? targetEvent;
     try {
       targetEvent = dummyEvents.firstWhere((e) => e.id == eventId);
@@ -96,7 +91,6 @@ class _MapScreenState extends State<MapScreen> {
         '4号館': EventArea.building4,
       };
 
-      // 【修正点②】try-catch を使って安全に MapEntry を検索
       MapEntry<String, EventArea>? buildingEntry;
       try {
         buildingEntry = buildingAreaMap.entries.firstWhere(
@@ -139,7 +133,6 @@ class _MapScreenState extends State<MapScreen> {
     });
   }
 
-  // フィルターが適用されたときに、ハイライトするピンを更新する関数
   void _applyFilters() {
     final newHighlightedPinIds = <String>{};
     bool isFilterActive = false;
@@ -150,7 +143,6 @@ class _MapScreenState extends State<MapScreen> {
           _selectedCategories.isNotEmpty ||
           _filterFavorites;
       if (isFilterActive) {
-        // まず、条件に合う企画のリストを取得
         final filteredEvents = dummyEvents.where((event) {
           if (_selectedDays.isNotEmpty) {
             final isDayMatch =
@@ -174,16 +166,13 @@ class _MapScreenState extends State<MapScreen> {
           return true;
         }).toList();
 
-        // 次に、フィルターされた企画に紐づくピンを探し出す
         for (final pin in allPins) {
           bool shouldHighlight = false;
           if (pin.type == PinType.event) {
-            // イベントピンの場合: locationが一致する企画がフィルター結果にあるか
             shouldHighlight = filteredEvents.any(
               (event) => event.location == pin.title,
             );
           } else if (pin.type == PinType.building) {
-            // 建物ピンの場合: areaが一致する企画がフィルター結果にあるか
             const buildingAreaMap = {
               '1号館': EventArea.building1 /* ... */,
               '2号館': EventArea.building2 /* ... */,
@@ -204,16 +193,12 @@ class _MapScreenState extends State<MapScreen> {
         }
       }
     } else {
-      // --- サービスによる絞り込み ---
       isFilterActive = _selectedServiceTypes.isNotEmpty;
       if (isFilterActive) {
         for (final pin in allPins) {
-          // 選択されたサービスピンを見つけたら
           if (_selectedServiceTypes.contains(pin.type)) {
-            // そのサービスピン自身をハイライト対象に追加
             newHighlightedPinIds.add(pin.id);
 
-            // もし親となる建物IDがあれば、その建物ピンもハイライト対象に追加
             if (pin.parentBuildingId != null) {
               newHighlightedPinIds.add(pin.parentBuildingId!);
             }
@@ -223,14 +208,13 @@ class _MapScreenState extends State<MapScreen> {
     }
 
     setState(() {
-      _blinkingPinId = null; // フィルター操作をしたら点滅は解除
+      _blinkingPinId = null;
       _highlightedPinIds = isFilterActive ? newHighlightedPinIds : {};
     });
   }
 
   // --- UIを生成するヘルパーメソッド群 ---
 
-  // 企画のタグを生成
   Widget _buildTag(String text, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 3.0),
@@ -249,7 +233,6 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  // ピンウィジェットを生成
   Widget _buildMapPin(MapPin pin) {
     final bool isHighlighted = _highlightedPinIds.contains(pin.id);
     final bool isBlinking = _blinkingPinId == pin.id;
@@ -263,7 +246,7 @@ class _MapScreenState extends State<MapScreen> {
           onTap: () {
             showModalBottomSheet(
               context: context,
-              isScrollControlled: true, // スクロール可能にする
+              isScrollControlled: true,
               shape: const RoundedRectangleBorder(
                 borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
               ),
@@ -275,9 +258,7 @@ class _MapScreenState extends State<MapScreen> {
                     .where((event) => !event.hideFromList)
                     .toList();
 
-                // もしピンが「建物」タイプなら、areaで絞り込む
                 if (pin.type == PinType.building) {
-                  // PinのtitleとEventAreaのマッピング
                   const buildingAreaMap = {
                     '体育館': EventArea.building5,
                     '2号館': EventArea.building2,
@@ -291,7 +272,6 @@ class _MapScreenState extends State<MapScreen> {
                         .toList();
                   }
                 }
-                // もしピンが「イベント」タイプなら、location(文字列)で絞り込む
                 else if (pin.type == PinType.event) {
                   attachedEvents = visibleEvents
                       .where((event) => event.location == pin.title)
@@ -313,14 +293,12 @@ class _MapScreenState extends State<MapScreen> {
 
                 // --- UI構築 ---
                 return Container(
-                  // モーダルの最大高さを画面の70%に制限
                   constraints: BoxConstraints(
                     maxHeight: MediaQuery.of(context).size.height * 0.7,
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // --- ここからが固定される上部 ---
                       Padding(
                         padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                         child: Column(
@@ -415,9 +393,7 @@ class _MapScreenState extends State<MapScreen> {
                           ],
                         ),
                       ),
-                      // --- ここまでが固定される上部 ---
 
-                      // --- ここからがスクロールする企画一覧 ---
                       if (attachedEvents.isNotEmpty)
                         Expanded(
                           child: ListView.builder(
@@ -570,7 +546,6 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  // 左上のマップ切り替えUI
   Widget _buildMapSwitcher() {
     return Positioned(
       top: 10,
@@ -605,7 +580,7 @@ class _MapScreenState extends State<MapScreen> {
               TextButton(
                 onPressed: () => setState(() {
                   _currentMap = allMaps.first;
-                  _blinkingPinId = null; // マップ切り替えで点滅解除
+                  _blinkingPinId = null;
                 }),
                 child: const Text('全体マップに戻る'),
               ),
@@ -627,7 +602,6 @@ class _MapScreenState extends State<MapScreen> {
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
             ),
-            // イベント / サービス の切り替えボタン
             SegmentedButton<MapFilterType>(
               segments: const [
                 ButtonSegment(
@@ -652,8 +626,8 @@ class _MapScreenState extends State<MapScreen> {
             const Divider(),
             Expanded(
               child: _currentFilterType == MapFilterType.event
-                  ? _buildEventFilterOptions() // イベント絞り込みUI
-                  : _buildServiceFilterOptions(), // サービス絞り込みUI
+                  ? _buildEventFilterOptions()
+                  : _buildServiceFilterOptions(),
             ),
           ],
         ),
@@ -661,12 +635,10 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  // イベント絞り込みのUI
   Widget _buildEventFilterOptions() {
     return ListView(
       padding: const EdgeInsets.all(8.0),
       children: [
-        // --- 開催日のFilterChip ---
         Padding(
           padding: const EdgeInsets.only(left: 16.0, top: 16.0),
           child: Text(
@@ -680,7 +652,6 @@ class _MapScreenState extends State<MapScreen> {
             spacing: 8.0,
             children: FestivalDay.values.map((value) {
               final isSelected = _selectedDays.contains(value);
-              // 【修正点】ここで日本語のnameゲッターを正しく呼び出す
               return FilterChip(
                 label: Text(value.name),
                 selected: isSelected,
@@ -699,7 +670,6 @@ class _MapScreenState extends State<MapScreen> {
           ),
         ),
 
-        // --- カテゴリのFilterChip ---
         Padding(
           padding: const EdgeInsets.only(left: 16.0, top: 16.0),
           child: Text(
@@ -713,7 +683,6 @@ class _MapScreenState extends State<MapScreen> {
             spacing: 8.0,
             children: EventCategory.values.map((value) {
               final isSelected = _selectedCategories.contains(value);
-              // 【修正点】ここでも日本語のnameゲッターを正しく呼び出す
               return FilterChip(
                 label: Text(value.name),
                 selected: isSelected,
@@ -732,7 +701,6 @@ class _MapScreenState extends State<MapScreen> {
           ),
         ),
 
-        // --- お気に入りスイッチ ---
         SwitchListTile(
           title: const Text('お気に入り登録済'),
           value: _filterFavorites,
@@ -747,7 +715,6 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  // サービス絞り込みのUI
   Widget _buildServiceFilterOptions() {
     final serviceTypes = [
       PinType.restroom,
@@ -760,7 +727,7 @@ class _MapScreenState extends State<MapScreen> {
       padding: const EdgeInsets.all(8.0),
       children: serviceTypes.map((type) {
         return CheckboxListTile(
-          title: Text(type.displayName), // 日本語名に変換
+          title: Text(type.displayName),
           value: _selectedServiceTypes.contains(type),
           onChanged: (selected) {
             setState(() {
@@ -779,7 +746,6 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // 現在のマップに所属するピンだけを取得
     final currentPins = allPins
         .where((p) => p.mapId == _currentMap.id)
         .toList();
@@ -796,7 +762,7 @@ class _MapScreenState extends State<MapScreen> {
           ),
         ],
       ),
-      endDrawer: _buildFilterDrawer(), // Drawerを追加
+      endDrawer: _buildFilterDrawer(),
       body: Stack(
         children: [
           InteractiveViewer(
@@ -812,7 +778,6 @@ class _MapScreenState extends State<MapScreen> {
             ),
           ),
 
-          // マップ切り替えUI
           _buildMapSwitcher(),
         ],
       ),
@@ -846,7 +811,7 @@ extension PinTypeExt on PinType {
 class MapPinWidget extends StatefulWidget {
   final MapPin pin;
   final bool isHighlighted;
-  final bool isBlinking; // 点滅するかどうか
+  final bool isBlinking;
   final double? width;
   final double? height;
 
@@ -875,7 +840,6 @@ class _MapPinWidgetState extends State<MapPinWidget>
       duration: const Duration(milliseconds: 700),
     );
 
-    // isBlinkingがtrueの場合のみアニメーションを開始
     if (widget.isBlinking) {
       _animationController.repeat(reverse: true);
     }
@@ -884,13 +848,12 @@ class _MapPinWidgetState extends State<MapPinWidget>
   @override
   void didUpdateWidget(covariant MapPinWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // 点滅状態が変わった場合にアニメーションを制御
     if (widget.isBlinking != oldWidget.isBlinking) {
       if (widget.isBlinking) {
         _animationController.repeat(reverse: true);
       } else {
         _animationController.stop();
-        _animationController.value = 1.0; // 通常表示に戻す
+        _animationController.value = 1.0;
       }
     }
   }
@@ -904,7 +867,6 @@ class _MapPinWidgetState extends State<MapPinWidget>
   @override
   Widget build(BuildContext context) {
     IconData? serviceIcon;
-    // サービスタイプのピンの場合、表示するアイコンを決定
     if (widget.pin.type != PinType.building &&
         widget.pin.type != PinType.event) {
       switch (widget.pin.type) {
@@ -920,7 +882,6 @@ class _MapPinWidgetState extends State<MapPinWidget>
       }
     }
 
-    // アニメーションの値（0.5～1.0）に応じて枠線の色を変化させる
     return AnimatedBuilder(
       animation: _animationController,
       builder: (context, child) {
@@ -957,13 +918,11 @@ class _MapPinWidgetState extends State<MapPinWidget>
             ],
           ),
           child: serviceIcon != null
-              // サービスピンの場合はアイコンを表示
               ? Icon(
                   serviceIcon,
                   color: Colors.blue.shade800,
                   size: widget.pin.iconSize ?? 20,
                 )
-              // 企画・建物ピンの場合はテキストを表示
               : Text(
                   widget.pin.title,
                   textAlign: TextAlign.center,

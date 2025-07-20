@@ -14,7 +14,7 @@ class OptionsScreen extends StatefulWidget {
 class _OptionsScreenState extends State<OptionsScreen> {
   String _appVersion = '';
 
-  bool _generalNotificationsEnabled = true; // お知らせ通知の受け取りの状態を管理する変数
+  bool _generalNotificationsEnabled = true;
 
   @override
   void initState() {
@@ -31,11 +31,9 @@ class _OptionsScreenState extends State<OptionsScreen> {
     });
   }
 
-  // URLをブラウザで開くための関数
   Future<void> _launchURL(String urlString) async {
     final Uri url = Uri.parse(urlString);
     if (!await launchUrl(url)) {
-      //【修正点】awaitの後に、mountedプロパティで生存確認を追加
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
@@ -43,7 +41,6 @@ class _OptionsScreenState extends State<OptionsScreen> {
     }
   }
 
-  // キャッシュをクリアする関数
   void _clearCache() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -63,29 +60,25 @@ class _OptionsScreenState extends State<OptionsScreen> {
       ),
     );
 
-    //【修正点】awaitの後に、mountedプロパティで生存確認を追加
     if (confirmed == true && mounted) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
 
-      if (!mounted) return; // ここでも再度チェック
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('データをリセットしました。アプリを再起動してください。')),
       );
     }
   }
 
-  // 運営からのお知らせ通知設定を読み込む関数
   Future<void> _loadGeneralNotificationSetting() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      // 'general_notifications_enabled'キーで保存された値があればそれを、なければtrueをデフォルト値とする
       _generalNotificationsEnabled =
           prefs.getBool('general_notifications_enabled') ?? true;
     });
   }
 
-  // 運営からのお知らせ通知設定を保存する関数
   Future<void> _updateGeneralNotificationSetting(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('general_notifications_enabled', value);
@@ -100,7 +93,6 @@ class _OptionsScreenState extends State<OptionsScreen> {
       appBar: AppBar(title: const Text('オプション')),
       body: ListView(
         children: [
-          // --- 通知設定 ---
           const ListTile(
             title: Text(
               '通知設定',
@@ -115,7 +107,6 @@ class _OptionsScreenState extends State<OptionsScreen> {
             onChanged: _updateGeneralNotificationSetting,
           ),
 
-          // 共通ウィジェットとして作成した通知設定をここに配置
           const FavoriteNotificationSettings(),
           const Divider(),
 
@@ -134,7 +125,6 @@ class _OptionsScreenState extends State<OptionsScreen> {
           ),
           const Divider(),
 
-          // --- 情報・サポート ---
           const ListTile(
             title: Text(
               '情報・サポート',
@@ -144,7 +134,7 @@ class _OptionsScreenState extends State<OptionsScreen> {
           ListTile(
             leading: const Icon(Icons.info_outline),
             title: const Text('このアプリについて'),
-            subtitle: Text(_appVersion), // 読み込んだバージョン情報を表示
+            subtitle: Text(_appVersion),
             onTap: () {
               // TODO: アプリのクレジットなどを表示するダイアログ
             },

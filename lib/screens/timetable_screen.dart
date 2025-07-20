@@ -6,7 +6,6 @@ import 'event_detail_screen.dart';
 import 'dart:math' as math;
 
 class TimetableScreen extends StatefulWidget {
-  // おkに入りの情報を受け取る変数
   final Set<String> favoriteEventIds;
   final Function(String) onToggleFavorite;
   final Function(String) onNavigateToMap;
@@ -24,8 +23,8 @@ class TimetableScreen extends StatefulWidget {
 
 class _TimetableScreenState extends State<TimetableScreen> {
   FestivalDay _selectedDay = FestivalDay.dayOne;
-  final double _hourHeight = 120.0; // 1時間あたりの高さを定義
-  final double _leftColumnWidth = 50.0; // 左の時間軸の幅を定義
+  final double _hourHeight = 120.0;
+  final double _leftColumnWidth = 50.0;
 
   @override
   Widget build(BuildContext context) {
@@ -33,8 +32,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
       appBar: AppBar(title: const Text('タイムテーブル'), elevation: 1.0),
       body: Column(
         children: [
-          // --- ここからが画面上部に「固定」される部分 ---
-          // 1. 日付切り替えボタン
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
             child: ToggleButtons(
@@ -62,7 +59,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
               ],
             ),
           ),
-          // 2. ステージタイトルヘッダー
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -75,7 +71,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
             ],
           ),
 
-          // --- 3. タイムテーブル本体（ここから下がスクロールする） ---
           Expanded(
             child: SingleChildScrollView(
               child: Stack(
@@ -84,7 +79,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
                   Row(
                     children: [
                       SizedBox(width: _leftColumnWidth),
-                      // 【変更点④】各列に色を渡し、間に隙間を追加
                       _buildStageColumn('体育館', Colors.orange.shade400),
                       const SizedBox(width: 3), // 企画列の間の隙間
                       _buildStageColumn('31A', Colors.green.shade400),
@@ -101,16 +95,12 @@ class _TimetableScreenState extends State<TimetableScreen> {
     );
   }
 
-  // --- 以下、UIを生成するためのヘルパーメソッド ---
-
-  // ステージ名ヘッダーのセル
   Widget _buildHeaderCell(String title, Color backgroundColor) {
     return Expanded(
       child: Column(
         children: [
-          // 四角形のヘッダー本体
           Container(
-            height: 60, // ヘッダーの高さ
+            height: 60,
             color: backgroundColor,
             alignment: Alignment.center,
             child: Text(
@@ -126,13 +116,10 @@ class _TimetableScreenState extends State<TimetableScreen> {
     );
   }
 
-  // 背景グリッドと時間軸を生成
   Widget _buildGridAndTimeAxis() {
     final List<Widget> children = [];
-    // 10時から20時までループ
     for (int hour = 10; hour < 21; hour++) {
       final topPosition = (hour - 10) * _hourHeight;
-      // 時間軸 (10:00, 11:00...)
       children.add(
         Positioned(
           top: topPosition,
@@ -156,7 +143,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
           ),
         ),
       );
-      // 30分ごとの破線 (20時は除く)
+      // 30分ごとの破線
       if (hour < 20) {
         children.add(
           Positioned(
@@ -181,12 +168,11 @@ class _TimetableScreenState extends State<TimetableScreen> {
       }
     }
     return SizedBox(
-      height: (21 - 10) * _hourHeight, // 全体の高さを定義
+      height: (21 - 10) * _hourHeight,
       child: Stack(children: children),
     );
   }
 
-  // 各ステージの列（企画カード）を生成
   Widget _buildStageColumn(String locationName, Color backgroundColor) {
     final eventsForStage = dummyEvents.where((event) {
       final isSameLocation = event.location == locationName;
@@ -197,11 +183,9 @@ class _TimetableScreenState extends State<TimetableScreen> {
     final List<Widget> cards = [];
     for (final event in eventsForStage) {
       for (final timeSlot in event.timeSlots) {
-        // 表示中の日付と、タイムスロットの日付が一致するかチェック
-        // （両日開催の企画が、両方の日に表示されるようにするため）
         if (timeSlot.startTime.day !=
             (_selectedDay == FestivalDay.dayOne ? 14 : 15)) {
-          continue; // 日付が違えばスキップ
+          continue;
         }
 
         final start = timeSlot.startTime;
@@ -220,7 +204,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
             left: 0,
             right: 0,
             height: cardHeight,
-            // 渡すeventオブジェクトは元のままでOK
             child: _TimetableEventCard(
               event: event,
               timeSlot: timeSlot,
@@ -241,7 +224,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
         child: SizedBox(
           height: (21 - 10) * _hourHeight,
           child: Stack(
-            children: cards, // 生成したカードのリストを配置
+            children: cards,
           ),
         ),
       ),
@@ -249,7 +232,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
   }
 }
 
-// --- タイムテーブル専用の企画カードウィジェット ---
 class _TimetableEventCard extends StatelessWidget {
   final EventItem event;
   final TimeSlot timeSlot;
@@ -276,12 +258,10 @@ class _TimetableEventCard extends StatelessWidget {
     int titleMaxLines;
     int groupNameMaxLines;
 
-    // まず、カードが極端に短い場合（オーバーフロー対策）
     if (cardHeight < 65) {
       titleMaxLines = 1;
       groupNameMaxLines = 1;
     }
-    // カードに十分な高さがある場合は、企画の長さに応じて行数を増やす
     else {
       final durationInMinutes = timeSlot.endTime
           .difference(timeSlot.startTime)
