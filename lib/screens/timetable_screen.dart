@@ -9,9 +9,14 @@ class TimetableScreen extends StatefulWidget {
   // おkに入りの情報を受け取る変数
   final Set<String> favoriteEventIds;
   final Function(String) onToggleFavorite;
+  final Function(String) onNavigateToMap;
 
-  const TimetableScreen({super.key, required this.favoriteEventIds,
+
+  const TimetableScreen({
+    super.key,
+    required this.favoriteEventIds,
     required this.onToggleFavorite,
+    required this.onNavigateToMap,
 });
 
   @override
@@ -224,6 +229,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
               cardColor: backgroundColor,
               favoriteEventIds: widget.favoriteEventIds,
               onToggleFavorite: widget.onToggleFavorite,
+              onNavigateToMap: widget.onNavigateToMap,
             ),
           ),
         );
@@ -252,7 +258,7 @@ class _TimetableEventCard extends StatelessWidget {
   final Color cardColor;
   final Set<String> favoriteEventIds;
   final Function(String) onToggleFavorite;
-
+  final Function(String) onNavigateToMap;
 
   const _TimetableEventCard({
     required this.event,
@@ -261,6 +267,7 @@ class _TimetableEventCard extends StatelessWidget {
     required this.cardColor,
     required this.favoriteEventIds,
     required this.onToggleFavorite,
+    required this.onNavigateToMap,
   });
 
   @override
@@ -298,9 +305,7 @@ class _TimetableEventCard extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => EventDetailScreen(event: event, favoriteEventIds: favoriteEventIds,
-                      onToggleFavorite: onToggleFavorite,
-),
+                    builder: (context) => EventDetailScreen(event: event, favoriteEventIds: favoriteEventIds, onToggleFavorite: onToggleFavorite, onNavigateToMap: onNavigateToMap,),
                   ),
                 );
               },

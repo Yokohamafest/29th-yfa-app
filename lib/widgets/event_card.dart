@@ -9,12 +9,14 @@ class EventCard extends StatelessWidget {
   // お気に入り状態を管理する変数
   final Set<String> favoriteEventIds;
   final Function(String) onToggleFavorite;
+  final Function(String) onNavigateToMap;
 
   const EventCard({
     super.key,
     required this.event,
     required this.favoriteEventIds,
     required this.onToggleFavorite,
+    required this.onNavigateToMap,
   });
 
   // タグを生成するためのヘルパーメソッド
@@ -54,9 +56,7 @@ class EventCard extends StatelessWidget {
                   MaterialPageRoute(
                     // 遷移先の画面としてEventDetailScreenを指定
                     // eventプロパティに、このカードが持つ企画情報を渡す
-                    builder: (context) => EventDetailScreen(event: event, favoriteEventIds: favoriteEventIds,
-                onToggleFavorite: onToggleFavorite,
-),
+                    builder: (context) => EventDetailScreen(event: event, favoriteEventIds: favoriteEventIds, onToggleFavorite: onToggleFavorite, onNavigateToMap: onNavigateToMap,),
                   ),
                 );
               },

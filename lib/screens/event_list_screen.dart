@@ -7,11 +7,14 @@ class EventListScreen extends StatefulWidget {
   //お気に入り情報を受け取るための変数
   final Set<String> favoriteEventIds;
   final Function(String) onToggleFavorite;
+  final Function(String) onNavigateToMap;
+
 
   const EventListScreen({
     super.key,
     required this.favoriteEventIds,
     required this.onToggleFavorite,
+    required this.onNavigateToMap,
   });
 
   @override
@@ -226,6 +229,7 @@ class _EventListScreenState extends State<EventListScreen> {
             event: event,
             favoriteEventIds: widget.favoriteEventIds,
             onToggleFavorite: widget.onToggleFavorite,
+            onNavigateToMap: widget.onNavigateToMap,
           );
         },
       ),

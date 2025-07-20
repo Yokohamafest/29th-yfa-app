@@ -14,11 +14,13 @@ class ScheduleEntry {
 class FavoritesScreen extends StatefulWidget {
   final Set<String> favoriteEventIds;
   final Function(String) onToggleFavorite;
+  final Function(String) onNavigateToMap;
 
   const FavoritesScreen({
     super.key,
     required this.favoriteEventIds,
     required this.onToggleFavorite,
+    required this.onNavigateToMap,
   });
 
   @override
@@ -58,6 +60,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           event: currentEntry.event,
           favoriteEventIds: widget.favoriteEventIds,
           onToggleFavorite: widget.onToggleFavorite,
+          onNavigateToMap: widget.onNavigateToMap,
         ),
       );
     }
@@ -164,6 +167,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                       event: event,
                       favoriteEventIds: widget.favoriteEventIds,
                       onToggleFavorite: widget.onToggleFavorite,
+                      onNavigateToMap: widget.onNavigateToMap,
                     ),
                   ),
                   const Divider(height: 32, thickness: 1),

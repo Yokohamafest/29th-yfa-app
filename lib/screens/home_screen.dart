@@ -11,11 +11,13 @@ import 'announcement_detail_screen.dart';
 class HomeScreen extends StatefulWidget {
   final Set<String> favoriteEventIds;
   final Function(String) onToggleFavorite;
+  final Function(String) onNavigateToMap;
 
   const HomeScreen({
     super.key,
     required this.favoriteEventIds,
     required this.onToggleFavorite,
+    required this.onNavigateToMap,
   });
 
   @override
@@ -23,16 +25,11 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
-  // 2つのAnimationController
-  late final AnimationController _slideInController; // スライドイン用
+   AnimationController? _slideInController; // スライドイン用
   late final AnimationController _rockingController; // 揺れ用
-
-  late final Animation<double> _xAnimation;
-
+  Animation<double>? _xAnimation;
   bool _isAnimationInitialized = false;
-
   bool _isMenuOpen = false;
-
   List<EventItem> _recommendedEvents = [];
 
   // メニューの開閉を切り替える関数
@@ -46,13 +43,41 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   void initState() {
     super.initState();
 
-    // 画面サイズに依存しないアニメーションはここで初期化してOK
+    // 画面サイズに依存しないアニメーションはここで初期化
     _rockingController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 4),
     )..repeat(reverse: true);
     _selectRecommendedEvents();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => _initSlideAnimation());
   }
+
+  void _initSlideAnimation() {
+    // この関数が呼ばれる時点ではcontextは有効
+    if (!mounted) return;
+    //final screenWidth = MediaQuery.of(context).size.width;
+
+    _slideInController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    );
+    _xAnimation = Tween<double>(
+      begin: -200.0,
+      end: 20.0,
+    ).animate(
+      //【修正点①】_slideInControllerがnullでないことを'!'で保証
+      CurvedAnimation(parent: _slideInController!, curve: Curves.easeOut),
+    );
+    //【修正点②】_slideInControllerがnullでないことを'!'で保証
+    _slideInController!.forward();
+
+    // 初期化が完了したことを画面に通知するためにsetStateを呼ぶ
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
 
   void _selectRecommendedEvents() {
     // 企画一覧に表示される企画のみを抽出
@@ -68,41 +93,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-    // アニメーションがまだ初期化されていなければ実行する
-    // このフラグチェックにより、処理が一度しか実行されないことを保証する
-    if (!_isAnimationInitialized) {
-      // 画面サイズを取得
-      final screenWidth = MediaQuery.of(context).size.width;
-
-      // --- スライドイン用アニメーションの準備 ---
-      _slideInController = AnimationController(
-        vsync: this,
-        duration: const Duration(seconds: 2),
-      );
-
-      // 取得した画面幅を使ってTweenの値を設定
-      _xAnimation =
-          Tween<double>(
-            begin: screenWidth * 1.5,
-            end: screenWidth * 0.475,
-          ).animate(
-            CurvedAnimation(parent: _slideInController, curve: Curves.easeOut),
-          );
-
-      _slideInController.forward();
-
-      // 初期化が完了したことをマーク
-      _isAnimationInitialized = true;
-    }
-  }
-
-  @override
   void dispose() {
     // 両方のコントローラーを破棄する
-    _slideInController.dispose();
+    _slideInController?.dispose();
     _rockingController.dispose();
     super.dispose();
   }
@@ -112,6 +105,28 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     //final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
     const double menuWidth = 250; // サイドメニューの幅を定義
+
+    if (!_isAnimationInitialized) {
+      _isAnimationInitialized = true;
+      // このコールバックは、最初のフレームが描画された直後に一度だけ実行される
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        // このタイミングなら、screenWidthは常に正しい値
+        _slideInController = AnimationController(
+          vsync: this,
+          duration: const Duration(seconds: 2),
+        );
+        _xAnimation = Tween<double>(
+          begin: -200.0, // 画面の左外側からスタート
+          end: 20.0,     // 最終的に停止する左からの位置
+        ).animate(
+        CurvedAnimation(parent: _slideInController!, curve: Curves.easeOut),
+        );
+        // buildメソッドが完了した後にアニメーションを開始
+        _slideInController!.forward();
+      });
+    }
+
+
 
     return Scaffold(
       body: Stack(
@@ -199,38 +214,31 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ),
 
                     // 船のアニメーション（ヘッダーエリア内の絶対位置に配置）
-                    AnimatedBuilder(
-                      animation: _slideInController,
-                      builder: (context, slideInChild) {
-                        return Positioned(
-                          right: _xAnimation.value,
-                          top: 140, //screenHeight * 0.19,
-                          child: slideInChild!,
-                        );
-                      },
-                      child: AnimatedBuilder(
+                    if (_slideInController != null && _xAnimation != null)
+                      AnimatedBuilder(
+                        animation: _slideInController!, // non-nullであることを保証
+                        builder: (context, slideInChild) {
+                          return Positioned(
+                            left: _xAnimation!.value,
+                            top: 140,
+                            child: slideInChild!,
+                          );
+                        },
+                        child: AnimatedBuilder(
                         animation: _rockingController,
                         builder: (context, rockingChild) {
-                          final rockingValue = math.sin(
-                            _rockingController.value * 2 * math.pi,
-                          );
+                          final rockingValue = math.sin(_rockingController.value * 2 * math.pi);
                           return Transform(
-                            transform: Matrix4.translationValues(
-                              0,
-                              rockingValue * 5,
-                              0,
-                            )..rotateZ(rockingValue * 0.05),
+                            transform: Matrix4.translationValues(0, rockingValue * 5, 0)
+                              ..rotateZ(rockingValue * 0.05),
                             alignment: Alignment.center,
                             child: rockingChild,
                           );
                         },
-                        child: Image.asset(
-                          'assets/images/ship.png',
-                          //height: screenHeight * 0.27,
-                          width: 180,
-                        ),
+                        child: Image.asset('assets/images/ship.png', width: 180),
                       ),
                     ),
+
 
                     // 波の画像
                     Positioned(
@@ -278,7 +286,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             // _isMenuOpenの値に応じて、leftの位置を変更する
             left: _isMenuOpen ? 0 : -menuWidth, // 開いている時は0、閉じている時は画面外
             top: 0,
-            height: 250,
+            height: 300,
             width: menuWidth,
             child: Material(
               // 影や背景色をつけるためにMaterialで囲む
@@ -478,6 +486,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             event: event,
             favoriteEventIds: widget.favoriteEventIds,
             onToggleFavorite: widget.onToggleFavorite,
+            onNavigateToMap: widget.onNavigateToMap,
           ),
         ),
       ],

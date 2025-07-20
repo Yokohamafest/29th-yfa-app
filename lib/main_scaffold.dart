@@ -14,18 +14,21 @@ class MainScaffold extends StatefulWidget {
 }
 
 class _MainScaffoldState extends State<MainScaffold> {
+  // --- 状態変数 ---
   int _selectedIndex = 0;
   final Set<String> _favoriteEventIds = {};
+  String? _highlightedEventId;
 
+  // --- ライフサイクルメソッド ---
   @override
   void initState() {
     super.initState();
     _loadFavorites();
   }
 
+  // --- 状態操作メソッド ---
   Future<void> _loadFavorites() async {
     final prefs = await SharedPreferences.getInstance();
-    // 'favorite_events' というキーで保存されたリストを読み込む
     final favoriteIds = prefs.getStringList('favorite_events');
     if (favoriteIds != null) {
       setState(() {
@@ -36,7 +39,6 @@ class _MainScaffoldState extends State<MainScaffold> {
 
   Future<void> _saveFavorites() async {
     final prefs = await SharedPreferences.getInstance();
-    // 'favorite_events' というキーで、現在のSetをListに変換して保存
     await prefs.setStringList('favorite_events', _favoriteEventIds.toList());
   }
 
@@ -47,8 +49,22 @@ class _MainScaffoldState extends State<MainScaffold> {
       } else {
         _favoriteEventIds.add(eventId);
       }
-      // 状態を変更した直後に、保存処理を呼び出す
       _saveFavorites();
+    });
+  }
+
+  void _navigateToMapAndHighlight(String eventId) {
+    setState(() {
+      _selectedIndex = 2; // マップ画面のインデックス
+      _highlightedEventId = eventId;
+    });
+    // マップ表示後、少し経ったらハイライトを解除する
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        setState(() {
+          _highlightedEventId = null;
+        });
+      }
     });
   }
 
@@ -58,31 +74,41 @@ class _MainScaffoldState extends State<MainScaffold> {
     });
   }
 
+  // --- UI構築メソッド ---
   @override
   Widget build(BuildContext context) {
-    // 【変更点②】画面リストの定義と初期化を、buildメソッドの中に移動
+    // 画面リストの定義をbuildメソッド内で行う
     final List<Widget> screens = [
-      HomeScreen(        favoriteEventIds: _favoriteEventIds,
+      HomeScreen(
+        favoriteEventIds: _favoriteEventIds,
         onToggleFavorite: _toggleFavorite,
-),
+        onNavigateToMap: _navigateToMapAndHighlight,
+      ),
       TimetableScreen(
         favoriteEventIds: _favoriteEventIds,
         onToggleFavorite: _toggleFavorite,
+        onNavigateToMap: _navigateToMapAndHighlight,
       ),
-      MapScreen(),
+      MapScreen(
+        highlightedEventId: _highlightedEventId,
+        favoriteEventIds: _favoriteEventIds,
+        onToggleFavorite: _toggleFavorite,
+        onNavigateToMap: _navigateToMapAndHighlight,
+      ),
       EventListScreen(
         favoriteEventIds: _favoriteEventIds,
         onToggleFavorite: _toggleFavorite,
+        onNavigateToMap: _navigateToMapAndHighlight,
       ),
       FavoritesScreen(
         favoriteEventIds: _favoriteEventIds,
         onToggleFavorite: _toggleFavorite,
+        onNavigateToMap: _navigateToMapAndHighlight,
       ),
     ];
 
     return Scaffold(
-      // 【変更点③】ローカル変数 screens を使うように変更
-      body: screens[_selectedIndex],
+      body: IndexedStack(index: _selectedIndex, children: screens),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'ホーム'),
@@ -92,7 +118,7 @@ class _MainScaffoldState extends State<MainScaffold> {
           BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'お気に入り'),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.amber[800],
+        selectedItemColor: Colors.orange.shade700,
         unselectedItemColor: Colors.grey,
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,

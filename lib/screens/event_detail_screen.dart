@@ -7,12 +7,15 @@ class EventDetailScreen extends StatefulWidget {
   final EventItem event;
   final Set<String> favoriteEventIds;
   final Function(String) onToggleFavorite;
+  final Function(String) onNavigateToMap;
+
 
   const EventDetailScreen({
     super.key,
     required this.event,
     required this.favoriteEventIds,
     required this.onToggleFavorite,
+    required this.onNavigateToMap,
   });
 
   @override
@@ -43,6 +46,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     required IconData icon,
     required String title,
     Widget? child,
+    Widget? trailing, // 【変更点】trailing パラメータを追加
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -61,15 +65,16 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 ),
               ),
               const SizedBox(height: 4.0),
-
               if (child != null) child,
             ],
           ),
         ),
+        // trailingがnullでない場合に表示
+        if (trailing != null) trailing,
       ],
     );
-
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -161,6 +166,15 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     child: Text(
                       '${widget.event.area.name} / ${widget.event.location}',
                       style: const TextStyle(fontSize: 16),
+                    ),
+                    trailing: OutlinedButton(
+                      child: const Text('マップで見る'),
+                      onPressed: () {
+                        // ① マップタブへ移動するよう親（main_scaffold）に通知
+                        widget.onNavigateToMap(widget.event.id);
+                        // ② 現在の詳細画面を閉じる
+                        Navigator.of(context).pop();
+                      },
                     ),
                   ),
                   const Divider(height: 32.0),
