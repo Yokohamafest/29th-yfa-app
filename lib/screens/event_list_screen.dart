@@ -1,4 +1,5 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../data/dummy_events.dart';
 import '../models/event_item.dart';
 import '../widgets/event_card.dart';
@@ -8,7 +9,6 @@ class EventListScreen extends StatefulWidget {
   final Set<String> favoriteEventIds;
   final Function(String) onToggleFavorite;
   final Function(String) onNavigateToMap;
-
 
   const EventListScreen({
     super.key,
@@ -28,6 +28,9 @@ class _EventListScreenState extends State<EventListScreen> {
   final Set<EventCategory> _selectedCategories = {};
   final Set<EventArea> _selectedAreas = {};
   final Set<FestivalDay> _selectedDays = {};
+  TimeOfDay? _startTimeFilter;
+  TimeOfDay? _endTimeFilter;
+  bool _hideAllDayEvents = false;
 
   @override
   void initState() {
@@ -59,9 +62,13 @@ class _EventListScreenState extends State<EventListScreen> {
     }
 
     if (_selectedCategories.isNotEmpty) {
-      results = results.where((event) =>
-        event.categories.any((category) => _selectedCategories.contains(category))
-      ).toList();
+      results = results
+          .where(
+            (event) => event.categories.any(
+              (category) => _selectedCategories.contains(category),
+            ),
+          )
+          .toList();
     }
 
     if (_selectedAreas.isNotEmpty) {
@@ -87,6 +94,34 @@ class _EventListScreenState extends State<EventListScreen> {
           return true;
         }
         return false;
+      }).toList();
+    }
+
+    if (_startTimeFilter != null || _endTimeFilter != null) {
+      // フィルターの開始時刻を決定（指定がなければ朝4時）
+      final filterStart = _startTimeFilter != null
+          ? DateTime(
+              2025,
+              9,
+              14,
+              _startTimeFilter!.hour,
+              _startTimeFilter!.minute,
+            )
+          : DateTime(2025, 9, 14, 4, 0);
+
+      // フィルターの終了時刻を決定（指定がなければ深夜28時=翌朝4時）
+      final filterEnd = _endTimeFilter != null
+          ? DateTime(2025, 9, 14, _endTimeFilter!.hour, _endTimeFilter!.minute)
+          : DateTime(2025, 9, 15, 4, 0);
+
+      results = results.where((event) {
+        if (event.timeSlots.isEmpty) {
+          return !_hideAllDayEvents;
+        }
+        return event.timeSlots.any((slot) {
+          return slot.startTime.isBefore(filterEnd) &&
+              slot.endTime.isAfter(filterStart);
+        });
       }).toList();
     }
 
@@ -177,20 +212,16 @@ class _EventListScreenState extends State<EventListScreen> {
           const SizedBox(width: 8), // 右端に少し余白を追加
         ],
       ),
+      /*
       endDrawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
             const DrawerHeader(
-              decoration: BoxDecoration(
-                color: Color(0xFF54A4DB), // ヘッダーの色
-              ),
-              child: Text(
-                '検索・絞り込み',
-                style: TextStyle(color: Colors.white, fontSize: 24),
-              ),
+              decoration: BoxDecoration(color: Color(0xFF54A4DB)),
+              child: Text('検索・絞り込み', style: TextStyle(color: Colors.white, fontSize: 24)),
             ),
-            // --- 検索・絞り込みコントロール ---
+            // --- キーワード検索 ---
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: TextField(
@@ -202,6 +233,41 @@ class _EventListScreenState extends State<EventListScreen> {
                 ),
               ),
             ),
+            // --- 時間帯絞り込み ---
+            _buildTimeFilter(), // 新しい時間帯フィルターUI
+
+            // --- その他のフィルター ---
+            _buildFilterChips<FestivalDay>('開催日', _selectedDays, FestivalDay.values),
+            _buildFilterChips<EventCategory>('カテゴリ', _selectedCategories, EventCategory.values),
+            _buildFilterChips<EventArea>('エリア', _selectedAreas, EventArea.values),
+          ],
+        ),
+      ),*/
+      endDrawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            const DrawerHeader(
+              decoration: BoxDecoration(color: Color(0xFF54A4DB)),
+              child: Text(
+                '検索・絞り込み',
+                style: TextStyle(color: Colors.white, fontSize: 24),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: TextField(
+                controller: _searchController,
+                decoration: const InputDecoration(
+                  labelText: 'キーワード検索',
+                  prefixIcon: Icon(Icons.search),
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ),
+
+            _buildTimeFilter(),
+
             _buildFilterChips<FestivalDay>(
               '開催日',
               _selectedDays,
@@ -220,6 +286,7 @@ class _EventListScreenState extends State<EventListScreen> {
           ],
         ),
       ),
+
       body: ListView.builder(
         padding: const EdgeInsets.all(8.0),
         itemCount: _filteredEvents.length,
@@ -233,6 +300,119 @@ class _EventListScreenState extends State<EventListScreen> {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildTimeFilter() {
+    final timeFormatter = DateFormat('HH:mm');
+    // 時刻選択ダイアログを表示するヘルパー関数
+    Future<void> selectTime(bool isStartTime) async {
+      final initialTime =
+          (isStartTime ? _startTimeFilter : _endTimeFilter) ?? TimeOfDay.now();
+      final TimeOfDay? picked = await showTimePicker(
+        context: context,
+        initialTime: initialTime,
+      );
+      if (picked != null) {
+        setState(() {
+          if (isStartTime) {
+            _startTimeFilter = picked;
+          } else {
+            _endTimeFilter = picked;
+          }
+          _runFilter();
+        });
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 16.0, top: 8.0),
+          child: Text(
+            '時間帯',
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // 開始時刻ボタン
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => selectTime(true),
+                  child: Text(
+                    _startTimeFilter != null
+                        ? timeFormatter.format(
+                            DateTime(
+                              2025,
+                              1,
+                              1,
+                              _startTimeFilter!.hour,
+                              _startTimeFilter!.minute,
+                            ),
+                          )
+                        : '開始時刻',
+                  ),
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8.0),
+                child: Text('〜'),
+              ),
+              // 終了時刻ボタン
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => selectTime(false),
+                  child: Text(
+                    _endTimeFilter != null
+                        ? timeFormatter.format(
+                            DateTime(
+                              2025,
+                              1,
+                              1,
+                              _endTimeFilter!.hour,
+                              _endTimeFilter!.minute,
+                            ),
+                          )
+                        : '終了時刻',
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        // 時間帯が選択されている場合のみ、クリアボタンとトグルを表示
+        if (_startTimeFilter != null || _endTimeFilter != null) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: TextButton(
+              child: const Text('時間指定をクリア'),
+              onPressed: () {
+                setState(() {
+                  _startTimeFilter = null;
+                  _endTimeFilter = null;
+                  _hideAllDayEvents = false;
+                  _runFilter();
+                });
+              },
+            ),
+          ),
+          SwitchListTile(
+            title: const Text('常時開催企画を非表示'),
+            value: _hideAllDayEvents,
+            onChanged: (bool value) {
+              setState(() {
+                _hideAllDayEvents = value;
+                _runFilter();
+              });
+            },
+          ),
+        ],
+      ],
     );
   }
 }
