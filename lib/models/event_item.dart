@@ -49,7 +49,7 @@ extension EventAreaExt on EventArea {
         return '4号館';
 
       case EventArea.building5:
-        return '5号館（体育館）';
+        return '体育館';
 
       case EventArea.outdoor:
         return '屋外';
@@ -101,7 +101,6 @@ class TimeSlot {
   const TimeSlot({required this.startTime, required this.endTime});
 }
 
-
 // 一つの企画が持つ情報を定義するクラス
 class EventItem {
   final String id;
@@ -111,12 +110,11 @@ class EventItem {
   final String imagePath;
   final EventArea area;
   final String location;
-  final EventCategory category;
+  final List<EventCategory> categories;
   final bool hideFromList; // trueなら企画一覧とお気に入り一覧に表示しない
   final bool disableDetailsLink; // trueなら詳細ページへの遷移を無効にする
   final FestivalDay date;
   final List<TimeSlot> timeSlots;
-
 
   const EventItem({
     required this.id,
@@ -126,7 +124,7 @@ class EventItem {
     required this.imagePath,
     required this.area,
     required this.location,
-    required this.category,
+    required this.categories,
     this.hideFromList = false, // デフォルトはfalseに設定
     this.disableDetailsLink = false, // デフォルトはfalseに設定
     required this.date,

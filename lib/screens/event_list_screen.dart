@@ -59,9 +59,9 @@ class _EventListScreenState extends State<EventListScreen> {
     }
 
     if (_selectedCategories.isNotEmpty) {
-      results = results
-          .where((event) => _selectedCategories.contains(event.category))
-          .toList();
+      results = results.where((event) =>
+        event.categories.any((category) => _selectedCategories.contains(category))
+      ).toList();
     }
 
     if (_selectedAreas.isNotEmpty) {

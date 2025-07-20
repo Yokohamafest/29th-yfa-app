@@ -138,7 +138,7 @@ class EventCard extends StatelessWidget {
                         spacing: 6.0, // タグ間の横スペース
                         runSpacing: 4.0, // タグ間の縦スペース
                         children: [
-                          _buildTag(event.category.name, Colors.blue),
+                          ...event.categories.map((category) => _buildTag(category.name, Colors.blue)),
                           _buildTag(event.area.name, Colors.orange),
                           _buildTag(event.date.name, Colors.green),
                         ],

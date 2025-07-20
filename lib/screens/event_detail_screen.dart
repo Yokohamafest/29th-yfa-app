@@ -138,7 +138,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   Wrap(
                     // ...
                     children: [
-                      _buildTag(widget.event.category.name, Colors.blue),
+                      ...widget.event.categories.map((category) => _buildTag(category.name, Colors.blue)),
                       _buildTag(widget.event.area.name, Colors.orange),
                       _buildTag(widget.event.date.name, Colors.green),
                     ],

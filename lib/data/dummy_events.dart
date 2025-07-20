@@ -10,7 +10,7 @@ final List<EventItem> dummyEvents = [
     imagePath: 'assets/images/sample_event_1.png',
     area: EventArea.building5,
     location: '体育館',
-    category: EventCategory.stage,
+    categories: [EventCategory.stage],
     date: FestivalDay.dayTwo,
     timeSlots: [
       TimeSlot(
@@ -27,7 +27,7 @@ final List<EventItem> dummyEvents = [
     imagePath: 'assets/images/sample_event_1.png',
     area: EventArea.building3,
     location: '32A',
-    category: EventCategory.stage,
+    categories: [EventCategory.stage],
     date: FestivalDay.dayTwo,
     timeSlots: [
       TimeSlot(
@@ -44,7 +44,7 @@ final List<EventItem> dummyEvents = [
     imagePath: 'assets/images/sample_event_1.png',
     area: EventArea.building5,
     location: '体育館',
-    category: EventCategory.stage,
+    categories: [EventCategory.stage],
     date: FestivalDay.dayOne,
     timeSlots: [
       TimeSlot(
@@ -61,7 +61,7 @@ final List<EventItem> dummyEvents = [
     imagePath: 'assets/images/sample_event_1.png',
     area: EventArea.building5,
     location: '体育館',
-    category: EventCategory.stage,
+    categories: [EventCategory.stage],
     date: FestivalDay.dayOne,
     timeSlots: [
       TimeSlot(
@@ -78,7 +78,7 @@ final List<EventItem> dummyEvents = [
     imagePath: 'assets/images/sample_event_1.png',
     area: EventArea.building5,
     location: '体育館',
-    category: EventCategory.stage,
+    categories: [EventCategory.stage],
     date: FestivalDay.dayOne,
     timeSlots: [
       TimeSlot(
@@ -95,7 +95,7 @@ final List<EventItem> dummyEvents = [
     imagePath: 'assets/images/sample_event_1.png',
     area: EventArea.building5,
     location: '体育館',
-    category: EventCategory.stage,
+    categories: [EventCategory.stage],
     date: FestivalDay.dayOne,
     timeSlots: [
       TimeSlot(
@@ -112,7 +112,7 @@ final List<EventItem> dummyEvents = [
     imagePath: 'assets/images/sample_event_1.png',
     area: EventArea.building5,
     location: '体育館',
-    category: EventCategory.stage,
+    categories: [EventCategory.stage],
     date: FestivalDay.dayOne,
     timeSlots: [
       TimeSlot(
@@ -129,7 +129,7 @@ final List<EventItem> dummyEvents = [
     imagePath: 'assets/images/sample_event_1.png',
     area: EventArea.building5,
     location: '体育館ステージ',
-    category: EventCategory.stage,
+    categories: [EventCategory.stage, EventCategory.handsOn],
     date: FestivalDay.dayOne,
     timeSlots: [
       TimeSlot(
@@ -150,7 +150,7 @@ final List<EventItem> dummyEvents = [
     imagePath: 'assets/images/sample_event_1.png',
     area: EventArea.building5,
     location: '体育館',
-    category: EventCategory.stage,
+    categories: [EventCategory.stage],
     date: FestivalDay.dayOne,
     timeSlots: [
       TimeSlot(
@@ -167,7 +167,7 @@ final List<EventItem> dummyEvents = [
     imagePath: 'assets/images/sample_event_1.png',
     area: EventArea.building5,
     location: '体育館',
-    category: EventCategory.stage,
+    categories: [EventCategory.stage],
     date: FestivalDay.dayOne,
     timeSlots: [
       TimeSlot(
@@ -184,7 +184,7 @@ final List<EventItem> dummyEvents = [
     imagePath: 'assets/images/sample_event_1.png',
     area: EventArea.building3,
     location: '31A',
-    category: EventCategory.stage,
+    categories: [EventCategory.stage, EventCategory.game],
     date: FestivalDay.dayOne,
     timeSlots: [
       TimeSlot(
@@ -205,7 +205,7 @@ final List<EventItem> dummyEvents = [
     imagePath: 'assets/images/sample_event_1.png',
     area: EventArea.building5,
     location: '体育館',
-    category: EventCategory.stage,
+    categories: [EventCategory.stage],
     date: FestivalDay.dayTwo,
     timeSlots: [
       TimeSlot(
@@ -222,7 +222,7 @@ final List<EventItem> dummyEvents = [
     imagePath: 'assets/images/sample_event_1.png',
     area: EventArea.building5,
     location: '体育館',
-    category: EventCategory.stage,
+    categories: [EventCategory.stage],
     date: FestivalDay.dayTwo,
     timeSlots: [
       TimeSlot(
@@ -239,7 +239,7 @@ final List<EventItem> dummyEvents = [
     imagePath: 'assets/images/sample_event_1.png',
     area: EventArea.building5,
     location: '体育館',
-    category: EventCategory.stage,
+    categories: [EventCategory.stage],
     date: FestivalDay.dayTwo,
     timeSlots: [
       TimeSlot(
@@ -257,7 +257,7 @@ final List<EventItem> dummyEvents = [
     imagePath: 'assets/images/sample_event_1.png',
     area: EventArea.building3,
     location: '32A',
-    category: EventCategory.stage,
+    categories: [EventCategory.stage],
     date: FestivalDay.dayTwo,
     timeSlots: [
       TimeSlot(
@@ -274,7 +274,7 @@ final List<EventItem> dummyEvents = [
     imagePath: 'assets/images/sample_event_1.png',
     area: EventArea.building3,
     location: '32A',
-    category: EventCategory.stage,
+    categories: [EventCategory.stage],
     date: FestivalDay.dayTwo,
     timeSlots: [
       TimeSlot(
@@ -291,7 +291,7 @@ final List<EventItem> dummyEvents = [
     imagePath: 'assets/images/sample_event_2.png',
     area: EventArea.building3,
     location: '31A',
-    category: EventCategory.exhibit,
+    categories: [EventCategory.exhibit],
     date: FestivalDay.dayOne,
     timeSlots: [],
   ),
@@ -303,7 +303,7 @@ final List<EventItem> dummyEvents = [
     imagePath: 'assets/images/sample_event_3.png',
     area: EventArea.outdoor,
     location: '模擬店エリア',
-    category: EventCategory.food,
+    categories: [EventCategory.food],
     date: FestivalDay.both,
     timeSlots: [],
   ),
@@ -315,7 +315,7 @@ final List<EventItem> dummyEvents = [
     imagePath: 'assets/images/sample_event_1.png',
     area: EventArea.building5,
     location: '体育館',
-    category: EventCategory.stage,
+    categories: [EventCategory.stage],
     date: FestivalDay.dayOne,
     timeSlots: [
       TimeSlot(
@@ -334,7 +334,7 @@ final List<EventItem> dummyEvents = [
     imagePath: 'assets/images/sample_event_1.png',
     area: EventArea.building5,
     location: '体育館',
-    category: EventCategory.stage,
+    categories: [EventCategory.stage],
     date: FestivalDay.dayTwo,
     timeSlots: [
       TimeSlot(

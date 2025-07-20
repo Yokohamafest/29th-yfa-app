@@ -163,7 +163,9 @@ class _MapScreenState extends State<MapScreen> {
             if (!isDayMatch) return false;
           }
           if (_selectedCategories.isNotEmpty &&
-              !_selectedCategories.contains(event.category)) {
+              !event.categories.any(
+                (category) => _selectedCategories.contains(category),
+              )) {
             return false;
           }
           if (_filterFavorites && !widget.favoriteEventIds.contains(event.id)) {
@@ -446,8 +448,9 @@ class _MapScreenState extends State<MapScreen> {
                                 }
                                 if (matches &&
                                     _selectedCategories.isNotEmpty &&
-                                    !_selectedCategories.contains(
-                                      event.category,
+                                    !event.categories.any(
+                                      (category) => _selectedCategories
+                                          .contains(category),
                                     )) {
                                   matches = false;
                                 }
@@ -524,9 +527,11 @@ class _MapScreenState extends State<MapScreen> {
                                                 spacing: 6.0,
                                                 runSpacing: 4.0,
                                                 children: [
-                                                  _buildTag(
-                                                    event.category.name,
-                                                    Colors.blue,
+                                                  ...event.categories.map(
+                                                    (category) => _buildTag(
+                                                      category.name,
+                                                      Colors.blue,
+                                                    ),
                                                   ),
                                                   _buildTag(
                                                     event.date.name,
