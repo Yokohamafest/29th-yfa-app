@@ -68,32 +68,56 @@ class _MapScreenState extends State<MapScreen> {
 
   // 点滅ハイライトを設定する関数
   void _navigateToEvent(String eventId) {
-    MapPin? targetPin;
-
-    // 【変更点】検索を2段階に分ける
+    // まず、目的の企画データを取得
+    EventItem? targetEvent;
     try {
-      // ステップ1: まず、建物ではない、より詳細なピンを探す
+      targetEvent = dummyEvents.firstWhere((e) => e.id == eventId);
+    } catch (e) {
+      targetEvent = null;
+    }
+
+    if (targetEvent == null) return;
+
+    MapPin? targetPin;
+    try {
       targetPin = allPins.firstWhere(
-        (pin) => pin.eventIds.contains(eventId) && pin.type != PinType.building,
+        (pin) =>
+            pin.type == PinType.event && pin.title == targetEvent!.location,
       );
     } catch (e) {
-      // 見つからなかった場合、次のステップへ
       targetPin = null;
     }
 
-    // ステップ2: もし詳細なピンが見つからなければ、建物ピンを探す
     if (targetPin == null) {
+      const buildingAreaMap = {
+        '体育館': EventArea.building5,
+        '2号館': EventArea.building2,
+        '3号館': EventArea.building3,
+        '4号館': EventArea.building4,
+      };
+
+      // 【修正点②】try-catch を使って安全に MapEntry を検索
+      MapEntry<String, EventArea>? buildingEntry;
       try {
-        targetPin = allPins.firstWhere(
-          (pin) =>
-              pin.eventIds.contains(eventId) && pin.type == PinType.building,
+        buildingEntry = buildingAreaMap.entries.firstWhere(
+          (entry) => entry.value == targetEvent!.area,
         );
       } catch (e) {
-        targetPin = null;
+        buildingEntry = null;
+      }
+
+      if (buildingEntry != null) {
+        final buildingTitle = buildingEntry.key;
+        try {
+          targetPin = allPins.firstWhere(
+            (pin) => pin.type == PinType.building && pin.title == buildingTitle,
+          );
+        } catch (e) {
+          targetPin = null;
+        }
       }
     }
 
-    // 最終的にピンが見つからなければ処理を終了
     if (targetPin == null) return;
 
     final MapInfo targetMap = allMaps.firstWhere(
@@ -103,11 +127,10 @@ class _MapScreenState extends State<MapScreen> {
     setState(() {
       _currentMap = targetMap;
       _blinkingPinId = targetPin!.id;
-      _highlightedPinIds = {targetPin.id};
+      _highlightedPinIds = {};
     });
 
-    // 点滅ハイライトは一定時間後に解除する
-    Future.delayed(const Duration(seconds: 10), () {
+    Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
         setState(() {
           _blinkingPinId = null;
@@ -119,7 +142,7 @@ class _MapScreenState extends State<MapScreen> {
   // フィルターが適用されたときに、ハイライトするピンを更新する関数
   void _applyFilters() {
     final newHighlightedPinIds = <String>{};
-    bool isFilterActive = false; // いずれかのフィルターが有効かどうかのフラグ
+    bool isFilterActive = false;
 
     if (_currentFilterType == MapFilterType.event) {
       isFilterActive =
@@ -127,33 +150,50 @@ class _MapScreenState extends State<MapScreen> {
           _selectedCategories.isNotEmpty ||
           _filterFavorites;
       if (isFilterActive) {
-        final filteredEvents = dummyEvents
-            .where((event) {
-              if (_selectedDays.isNotEmpty) {
-                final isDayMatch =
-                    (_selectedDays.contains(FestivalDay.dayOne) &&
-                        (event.date == FestivalDay.dayOne ||
-                            event.date == FestivalDay.both)) ||
-                    (_selectedDays.contains(FestivalDay.dayTwo) &&
-                        (event.date == FestivalDay.dayTwo ||
-                            event.date == FestivalDay.both));
-                if (!isDayMatch) return false;
-              }
-              if (_selectedCategories.isNotEmpty &&
-                  !_selectedCategories.contains(event.category)) {
-                return false;
-              }
-              if (_filterFavorites &&
-                  !widget.favoriteEventIds.contains(event.id)) {
-                return false;
-              }
-              return true;
-            })
-            .map((e) => e.id)
-            .toSet();
+        // まず、条件に合う企画のリストを取得
+        final filteredEvents = dummyEvents.where((event) {
+          if (_selectedDays.isNotEmpty) {
+            final isDayMatch =
+                (_selectedDays.contains(FestivalDay.dayOne) &&
+                    (event.date == FestivalDay.dayOne ||
+                        event.date == FestivalDay.both)) ||
+                (_selectedDays.contains(FestivalDay.dayTwo) &&
+                    (event.date == FestivalDay.dayTwo ||
+                        event.date == FestivalDay.both));
+            if (!isDayMatch) return false;
+          }
+          if (_selectedCategories.isNotEmpty &&
+              !_selectedCategories.contains(event.category)) {
+            return false;
+          }
+          if (_filterFavorites && !widget.favoriteEventIds.contains(event.id)) {
+            return false;
+          }
+          return true;
+        }).toList();
 
+        // 次に、フィルターされた企画に紐づくピンを探し出す
         for (final pin in allPins) {
-          if (pin.eventIds.any((eventId) => filteredEvents.contains(eventId))) {
+          bool shouldHighlight = false;
+          if (pin.type == PinType.event) {
+            // イベントピンの場合: locationが一致する企画がフィルター結果にあるか
+            shouldHighlight = filteredEvents.any(
+              (event) => event.location == pin.title,
+            );
+          } else if (pin.type == PinType.building) {
+            // 建物ピンの場合: areaが一致する企画がフィルター結果にあるか
+            const buildingAreaMap = {
+              '体育館': EventArea.building5,
+              '3号館': EventArea.building3 /* ... */,
+            }; // TODO: 建物ピンの種類を追加
+            final targetArea = buildingAreaMap[pin.title];
+            if (targetArea != null) {
+              shouldHighlight = filteredEvents.any(
+                (event) => event.area == targetArea,
+              );
+            }
+          }
+          if (shouldHighlight) {
             newHighlightedPinIds.add(pin.id);
           }
         }
@@ -224,14 +264,42 @@ class _MapScreenState extends State<MapScreen> {
               ),
               builder: (context) {
                 // --- データ準備 ---
-                final attachedEvents = dummyEvents
-                    .where((event) => pin.eventIds.contains(event.id))
+                List<EventItem> attachedEvents = [];
+
+                final visibleEvents = dummyEvents
+                    .where((event) => !event.hideFromList)
                     .toList();
+
+                // もしピンが「建物」タイプなら、areaで絞り込む
+                if (pin.type == PinType.building) {
+                  // PinのtitleとEventAreaのマッピング
+                  const buildingAreaMap = {
+                    '体育館': EventArea.building5,
+                    '2号館': EventArea.building2,
+                    '3号館': EventArea.building3,
+                    '4号館': EventArea.building4,
+                  };
+                  final targetArea = buildingAreaMap[pin.title];
+                  if (targetArea != null) {
+                    attachedEvents = visibleEvents
+                        .where((event) => event.area == targetArea)
+                        .toList();
+                  }
+                }
+                // もしピンが「イベント」タイプなら、location(文字列)で絞り込む
+                else if (pin.type == PinType.event) {
+                  attachedEvents = visibleEvents
+                      .where((event) => event.location == pin.title)
+                      .toList();
+                }
+                // --- 検索ロジックここまで ---
+
                 final servicesInBuilding = allPins
                     .where(
                       (servicePin) => servicePin.parentBuildingId == pin.id,
                     )
                     .toList();
+
                 final bool isEventFilterActive =
                     _currentFilterType == MapFilterType.event &&
                     (_selectedDays.isNotEmpty ||

@@ -43,7 +43,6 @@ class MapPin {
   final Offset position; // マップ画像上のXY座標 (左上が0,0)
   final PinType type;
   final String title;
-  final List<String> eventIds; // 関連する企画IDのリスト
   final String? parentBuildingId; // どの建物に属しているかを示すID (屋外ならnull)
   final double? fontSize;
   final double? iconSize;
@@ -55,7 +54,6 @@ class MapPin {
     required this.position,
     required this.type,
     required this.title,
-    this.eventIds = const [],
     this.parentBuildingId,
     this.fontSize,
     this.iconSize,

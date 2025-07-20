@@ -59,7 +59,6 @@ final List<MapPin> allPins = [
     position: Offset(200, 80),
     type: PinType.building,
     title: '3号館',
-    eventIds: ['event_002', 'event_011', 'event_018'],
   ),
   MapPin(
     id: 'pin_gym',
@@ -67,7 +66,6 @@ final List<MapPin> allPins = [
     position: Offset(80, 100),
     type: PinType.building,
     title: '体育館',
-    eventIds: ['event_001', 'event_003'],
   ),
   MapPin(
     id: 'pin_restroom_1',
@@ -85,7 +83,6 @@ final List<MapPin> allPins = [
     position: Offset(361, 124),
     type: PinType.event,
     title: '31A',
-    eventIds: ['event_011'],
   ),
   MapPin(
     id: 'pin_restroom_2',
