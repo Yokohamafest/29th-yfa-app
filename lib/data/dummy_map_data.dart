@@ -59,7 +59,7 @@ final List<MapPin> allPins = [
     position: Offset(200, 80),
     type: PinType.building,
     title: '3号館',
-    eventIds: ['event_011', 'event_016'],
+    eventIds: ['event_002', 'event_011', 'event_018'],
   ),
   MapPin(
     id: 'pin_gym',
@@ -72,27 +72,30 @@ final List<MapPin> allPins = [
   MapPin(
     id: 'pin_restroom_1',
     mapId: MapType.campus,
-    position: Offset(150, 350),
+    position: Offset(150, 200),
     type: PinType.restroom,
     title: 'お手洗い',
+    iconSize: 24,
   ),
 
   // --- 3号館1階のピン ---
   MapPin(
     id: 'pin_31A',
     mapId: MapType.building3F1,
-    position: Offset(50, 80),
+    position: Offset(361, 124),
     type: PinType.event,
     title: '31A',
-    eventIds: ['event_099'],
+    eventIds: ['event_011'],
   ),
   MapPin(
     id: 'pin_restroom_2',
     mapId: MapType.building3F1,
-    position: Offset(120, 100),
+    position: Offset(243, 133),
     type: PinType.restroom,
     title: 'お手洗い',
     parentBuildingId: 'pin_b3',
+    iconSize: 14,
+    padding: const EdgeInsets.symmetric(horizontal: 3.0, vertical: 3.0),
   ),
   MapPin(
     id: 'pin_restroom_1',

@@ -9,7 +9,7 @@ final List<EventItem> dummyEvents = [
     description: '大好評のお笑いライブを今年も開催!ヤーレンズ、ZAZY、生ファラオの豪華3組のゲストとお送りする盛りだくさんの90分!',
     imagePath: 'assets/images/sample_event_1.png',
     area: EventArea.building5,
-    location: '体育館ステージ',
+    location: '体育館',
     category: EventCategory.stage,
     date: FestivalDay.dayTwo,
     timeSlots: [
@@ -26,7 +26,7 @@ final List<EventItem> dummyEvents = [
     description: '大好評のお笑いライブを今年も開催!ヤーレンズ、ZAZY、生ファラオの豪華3組のゲストとお送りする盛りだくさんの90分!',
     imagePath: 'assets/images/sample_event_1.png',
     area: EventArea.building3,
-    location: '32Aステージ',
+    location: '32A',
     category: EventCategory.stage,
     date: FestivalDay.dayTwo,
     timeSlots: [
@@ -43,7 +43,7 @@ final List<EventItem> dummyEvents = [
     description: 'texttexttext...',
     imagePath: 'assets/images/sample_event_1.png',
     area: EventArea.building5,
-    location: '体育館ステージ',
+    location: '体育館',
     category: EventCategory.stage,
     date: FestivalDay.dayOne,
     timeSlots: [
@@ -60,7 +60,7 @@ final List<EventItem> dummyEvents = [
     description: 'texttexttext...',
     imagePath: 'assets/images/sample_event_1.png',
     area: EventArea.building5,
-    location: '体育館ステージ',
+    location: '体育館',
     category: EventCategory.stage,
     date: FestivalDay.dayOne,
     timeSlots: [
@@ -77,7 +77,7 @@ final List<EventItem> dummyEvents = [
     description: 'texttexttext...',
     imagePath: 'assets/images/sample_event_1.png',
     area: EventArea.building5,
-    location: '体育館ステージ',
+    location: '体育館',
     category: EventCategory.stage,
     date: FestivalDay.dayOne,
     timeSlots: [
@@ -94,7 +94,7 @@ final List<EventItem> dummyEvents = [
     description: 'texttexttext...',
     imagePath: 'assets/images/sample_event_1.png',
     area: EventArea.building5,
-    location: '体育館ステージ',
+    location: '体育館',
     category: EventCategory.stage,
     date: FestivalDay.dayOne,
     timeSlots: [
@@ -111,7 +111,7 @@ final List<EventItem> dummyEvents = [
     description: 'texttexttext...',
     imagePath: 'assets/images/sample_event_1.png',
     area: EventArea.building5,
-    location: '体育館ステージ',
+    location: '体育館',
     category: EventCategory.stage,
     date: FestivalDay.dayOne,
     timeSlots: [
@@ -149,7 +149,7 @@ final List<EventItem> dummyEvents = [
     description: 'texttexttext...',
     imagePath: 'assets/images/sample_event_1.png',
     area: EventArea.building5,
-    location: '体育館ステージ',
+    location: '体育館',
     category: EventCategory.stage,
     date: FestivalDay.dayOne,
     timeSlots: [
@@ -166,7 +166,7 @@ final List<EventItem> dummyEvents = [
     description: 'texttexttext...',
     imagePath: 'assets/images/sample_event_1.png',
     area: EventArea.building5,
-    location: '体育館ステージ',
+    location: '体育館',
     category: EventCategory.stage,
     date: FestivalDay.dayOne,
     timeSlots: [
@@ -183,7 +183,7 @@ final List<EventItem> dummyEvents = [
     description: 'texttexttext...',
     imagePath: 'assets/images/sample_event_1.png',
     area: EventArea.building3,
-    location: '31Aステージ',
+    location: '31A',
     category: EventCategory.stage,
     date: FestivalDay.dayOne,
     timeSlots: [
@@ -204,7 +204,7 @@ final List<EventItem> dummyEvents = [
     description: 'texttexttext...',
     imagePath: 'assets/images/sample_event_1.png',
     area: EventArea.building5,
-    location: '体育館ステージ',
+    location: '体育館',
     category: EventCategory.stage,
     date: FestivalDay.dayTwo,
     timeSlots: [
@@ -221,7 +221,7 @@ final List<EventItem> dummyEvents = [
     description: 'texttexttext...',
     imagePath: 'assets/images/sample_event_1.png',
     area: EventArea.building5,
-    location: '体育館ステージ',
+    location: '体育館',
     category: EventCategory.stage,
     date: FestivalDay.dayTwo,
     timeSlots: [
@@ -238,7 +238,7 @@ final List<EventItem> dummyEvents = [
     description: 'texttexttext...',
     imagePath: 'assets/images/sample_event_1.png',
     area: EventArea.building5,
-    location: '体育館ステージ',
+    location: '体育館',
     category: EventCategory.stage,
     date: FestivalDay.dayTwo,
     timeSlots: [
@@ -256,7 +256,7 @@ final List<EventItem> dummyEvents = [
     description: 'texttexttext...',
     imagePath: 'assets/images/sample_event_1.png',
     area: EventArea.building3,
-    location: '32Aステージ',
+    location: '32A',
     category: EventCategory.stage,
     date: FestivalDay.dayTwo,
     timeSlots: [
@@ -273,7 +273,7 @@ final List<EventItem> dummyEvents = [
     description: 'texttexttext...',
     imagePath: 'assets/images/sample_event_1.png',
     area: EventArea.building3,
-    location: '32Aステージ',
+    location: '32A',
     category: EventCategory.stage,
     date: FestivalDay.dayTwo,
     timeSlots: [
@@ -290,7 +290,7 @@ final List<EventItem> dummyEvents = [
     description: 'texttexttext...',
     imagePath: 'assets/images/sample_event_2.png',
     area: EventArea.building3,
-    location: '31A教室',
+    location: '31A',
     category: EventCategory.exhibit,
     date: FestivalDay.dayOne,
     timeSlots: [],
@@ -314,7 +314,7 @@ final List<EventItem> dummyEvents = [
     description: 'texttexttext...',
     imagePath: 'assets/images/sample_event_1.png',
     area: EventArea.building5,
-    location: '体育館ステージ',
+    location: '体育館',
     category: EventCategory.stage,
     date: FestivalDay.dayOne,
     timeSlots: [
@@ -333,7 +333,7 @@ final List<EventItem> dummyEvents = [
     description: 'texttexttext...',
     imagePath: 'assets/images/sample_event_1.png',
     area: EventArea.building5,
-    location: '体育館ステージ',
+    location: '体育館',
     category: EventCategory.stage,
     date: FestivalDay.dayTwo,
     timeSlots: [

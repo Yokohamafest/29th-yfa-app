@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import '../data/dummy_map_data.dart';
 import '../models/map_models.dart';
@@ -24,16 +24,13 @@ class MapScreen extends StatefulWidget {
   State<MapScreen> createState() => _MapScreenState();
 }
 
-enum MapFilterType { event, service }
-
 class _MapScreenState extends State<MapScreen> {
   // --- 状態を管理する変数 ---
   MapInfo _currentMap = allMaps.first;
-  // InteractiveViewerをプログラムから操作するためのコントローラー
-  final TransformationController _transformationController =
-      TransformationController();
 
   Set<String> _highlightedPinIds = {};
+  String? _blinkingPinId; // 点滅ハイライト用の状態変数
+
   MapFilterType _currentFilterType = MapFilterType.event;
   // イベントフィルター
   final Set<FestivalDay> _selectedDays = {};
@@ -52,44 +49,70 @@ class _MapScreenState extends State<MapScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _jumpToEventLocation(widget.highlightedEventId);
+      // 初回表示時にジャンプする場合
+      if (widget.highlightedEventId != null) {
+        _navigateToEvent(widget.highlightedEventId!);
+      }
     });
   }
 
-  void _jumpToEventLocation(String? eventId) {
-    if (eventId == null) return;
+  @override
+  void didUpdateWidget(covariant MapScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.highlightedEventId != null &&
+        widget.highlightedEventId != oldWidget.highlightedEventId) {
+      // 新しいジャンプ要求が来た場合
+      _navigateToEvent(widget.highlightedEventId!);
+    }
+  }
 
-    // 渡されたeventIdを持つピンを探す
-    // ignore: unnecessary_nullable_for_final_variable_declarations
-    final MapPin? targetPin = allPins.firstWhere(
-      (pin) => pin.eventIds.contains(eventId),
-    );
+  // 点滅ハイライトを設定する関数
+  void _navigateToEvent(String eventId) {
+    MapPin? targetPin;
+
+    // 【変更点】検索を2段階に分ける
+    try {
+      // ステップ1: まず、建物ではない、より詳細なピンを探す
+      targetPin = allPins.firstWhere(
+        (pin) => pin.eventIds.contains(eventId) && pin.type != PinType.building,
+      );
+    } catch (e) {
+      // 見つからなかった場合、次のステップへ
+      targetPin = null;
+    }
+
+    // ステップ2: もし詳細なピンが見つからなければ、建物ピンを探す
+    if (targetPin == null) {
+      try {
+        targetPin = allPins.firstWhere(
+          (pin) =>
+              pin.eventIds.contains(eventId) && pin.type == PinType.building,
+        );
+      } catch (e) {
+        targetPin = null;
+      }
+    }
+
+    // 最終的にピンが見つからなければ処理を終了
     if (targetPin == null) return;
 
-    // そのピンが所属するマップを探す
     final MapInfo targetMap = allMaps.firstWhere(
-      (map) => map.id == targetPin.mapId,
+      (map) => map.id == targetPin!.mapId,
     );
 
-    // 画面の中心座標を取得
-    final screenCenter = Offset(
-      MediaQuery.of(context).size.width / 2,
-      MediaQuery.of(context).size.height / 2,
-    );
-    final zoomLevel = 3.0; // 3倍にズーム
-
-    // ピンが画面の中心に来るように、表示を移動・ズーム
-    final matrix = Matrix4.identity()
-      ..translate(screenCenter.dx, screenCenter.dy)
-      ..scale(zoomLevel)
-      ..translate(-targetPin.position.dx, -targetPin.position.dy);
-
-    _transformationController.value = matrix;
-
-    // 状態を更新して、正しいマップとハイライトを表示
     setState(() {
       _currentMap = targetMap;
+      _blinkingPinId = targetPin!.id;
       _highlightedPinIds = {targetPin.id};
+    });
+
+    // 点滅ハイライトは一定時間後に解除する
+    Future.delayed(const Duration(seconds: 10), () {
+      if (mounted) {
+        setState(() {
+          _blinkingPinId = null;
+        });
+      }
     });
   }
 
@@ -155,7 +178,7 @@ class _MapScreenState extends State<MapScreen> {
     }
 
     setState(() {
-      // フィルターがアクティブでなければ、ハイライトを空にする
+      _blinkingPinId = null; // フィルター操作をしたら点滅は解除
       _highlightedPinIds = isFilterActive ? newHighlightedPinIds : {};
     });
   }
@@ -184,308 +207,288 @@ class _MapScreenState extends State<MapScreen> {
   // ピンウィジェットを生成
   Widget _buildMapPin(MapPin pin) {
     final bool isHighlighted = _highlightedPinIds.contains(pin.id);
-    IconData iconData;
-    Color iconColor;
-
-    switch (pin.type) {
-      case PinType.event:
-      case PinType.building:
-        iconData = Icons.place;
-        iconColor = Colors.red;
-        break;
-      case PinType.restroom:
-        iconData = Icons.wc;
-        iconColor = Colors.blue;
-        break;
-      // ... 他のピンタイプ ...
-      default:
-        iconData = Icons.circle;
-        iconColor = Colors.grey;
-    }
+    final bool isBlinking = _blinkingPinId == pin.id;
 
     return Positioned(
-      left: pin.position.dx - 18, // アイコンの中心が座標に来るように調整
-      top: pin.position.dy - 36,
-      child: InkWell(
-        onTap: () {
-          showModalBottomSheet(
-            context: context,
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-            ),
-            builder: (context) {
-              // --- モーダルの中身をここから構築 ---
+      left: pin.position.dx,
+      top: pin.position.dy,
+      child: FractionalTranslation(
+        translation: const Offset(-0.5, -0.5),
+        child: InkWell(
+          onTap: () {
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true, // スクロール可能にする
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+              ),
+              builder: (context) {
+                // --- データ準備 ---
+                final attachedEvents = dummyEvents
+                    .where((event) => pin.eventIds.contains(event.id))
+                    .toList();
+                final servicesInBuilding = allPins
+                    .where(
+                      (servicePin) => servicePin.parentBuildingId == pin.id,
+                    )
+                    .toList();
+                final bool isEventFilterActive =
+                    _currentFilterType == MapFilterType.event &&
+                    (_selectedDays.isNotEmpty ||
+                        _selectedCategories.isNotEmpty ||
+                        _filterFavorites);
 
-              // このピンに関連する企画のリストを取得
-              final attachedEvents = dummyEvents
-                  .where((event) => pin.eventIds.contains(event.id))
-                  .toList();
-
-              // この建物に含まれるサービスピンのリストを取得
-              final servicesInBuilding = allPins
-                  .where((servicePin) => servicePin.parentBuildingId == pin.id)
-                  .toList();
-
-              final bool isEventFilterActive =
-                  _currentFilterType == MapFilterType.event &&
-                  (_selectedDays.isNotEmpty ||
-                      _selectedCategories.isNotEmpty ||
-                      _filterFavorites);
-
-              return Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 1. ピンのタイトル
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // タイトル（長くなる可能性があるのでExpandedで囲む）
-                        Expanded(
-                          child: Text(
-                            pin.title,
-                            style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        // フロアマップへの遷移ボタン
-                        if (pin.type == PinType.building &&
-                            _buildingPinToFloorMap.containsKey(pin.id))
-                          ElevatedButton(
-                            child: Text("${pin.title}フロアマップ"),
-                            onPressed: () {
-                              final targetMapId =
-                                  _buildingPinToFloorMap[pin.id];
-                              if (targetMapId != null) {
-                                setState(() {
-                                  _currentMap = allMaps.firstWhere(
-                                    (map) => map.id == targetMapId,
-                                  );
-                                });
-                              }
-                              Navigator.of(context).pop();
-                            },
-                          ),
-                      ],
-                    ),
-                    const Divider(height: 24),
-
-                    // --- 2. 館内設備の表示 (建物ピンの場合) ---
-                    if (pin.type == PinType.building &&
-                        servicesInBuilding.isNotEmpty) ...[
-                      const Text(
-                        '館内設備',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(height: 8.0),
-                      Wrap(
-                        spacing: 16.0,
-                        runSpacing: 8.0,
-                        children: servicesInBuilding.map((servicePin) {
-                          IconData serviceIcon;
-                          switch (servicePin.type) {
-                            case PinType.restroom:
-                              serviceIcon = Icons.wc;
-                              break;
-                            case PinType.vendingMachine:
-                              serviceIcon = Icons.local_drink;
-                              break;
-                            case PinType.smokingArea:
-                              serviceIcon = Icons.smoking_rooms;
-                              break;
-                            case PinType.bikeParking:
-                              serviceIcon = Icons.pedal_bike;
-                              break;
-                            case PinType.recyclingStation:
-                              serviceIcon = Icons.recycling;
-                              break;
-                            default:
-                              serviceIcon = Icons.info;
-                          }
-                          return Chip(
-                            avatar: Icon(serviceIcon, size: 16),
-                            label: Text(servicePin.title),
-                          );
-                        }).toList(),
-                      ),
-                      const SizedBox(height: 24.0), // 企画一覧との間にスペース
-                    ],
-
-                    // --- 3. 企画一覧の表示 (企画があるピンの場合) ---
-                    if (attachedEvents.isNotEmpty) ...[
-                      const Text(
-                        '開催企画', // 見出しを追加
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(height: 8.0),
-                      Column(
-                        children: attachedEvents.map((event) {
-                          bool shouldHighlight = false;
-                          if (isEventFilterActive) {
-                            bool matches = true;
-                            // 日付フィルター
-                            if (_selectedDays.isNotEmpty) {
-                              final isDayMatch =
-                                  (_selectedDays.contains(FestivalDay.dayOne) &&
-                                      (event.date == FestivalDay.dayOne ||
-                                          event.date == FestivalDay.both)) ||
-                                  (_selectedDays.contains(FestivalDay.dayTwo) &&
-                                      (event.date == FestivalDay.dayTwo ||
-                                          event.date == FestivalDay.both));
-                              if (!isDayMatch) matches = false;
-                            }
-                            // カテゴリフィルター
-                            if (matches &&
-                                _selectedCategories.isNotEmpty &&
-                                !_selectedCategories.contains(event.category)) {
-                              matches = false;
-                            }
-                            // お気に入りフィルター
-                            if (matches &&
-                                _filterFavorites &&
-                                !widget.favoriteEventIds.contains(event.id)) {
-                              matches = false;
-                            }
-                            shouldHighlight = matches;
-                          }
-
-                          // 各企画をContainerで囲み、背景色とタップ機能を設定
-                          return Container(
-                            margin: const EdgeInsets.only(
-                              bottom: 8.0,
-                            ), // カード間の余白
-                            decoration: BoxDecoration(
-                              color: shouldHighlight
-                                  ? Colors.orange.shade100
-                                  : const Color.fromARGB(
-                                      22,
-                                      128,
-                                      127,
-                                      127,
-                                    ), // 薄いグレーの背景
-                              borderRadius: BorderRadius.circular(8.0),
-                            ),
-                            child: InkWell(
-                              onTap: () {
-                                Navigator.of(context).pop(); // モーダルを閉じる
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => EventDetailScreen(
-                                      event: event,
-                                      favoriteEventIds: widget.favoriteEventIds,
-                                      onToggleFavorite: widget.onToggleFavorite,
-                                      onNavigateToMap: widget.onNavigateToMap,
+                // --- UI構築 ---
+                return Container(
+                  // モーダルの最大高さを画面の70%に制限
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(context).size.height * 0.7,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // --- ここからが固定される上部 ---
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    pin.title,
+                                    style: const TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                );
-                              },
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12.0,
-                                  horizontal: 16.0,
                                 ),
-                                // Rowを使って、コンテンツと「>」アイコンを横に並べる
-                                child: Row(
-                                  children: [
-                                    // 左側のコンテンツ部分（Expandedで幅いっぱいまで広げる）
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            event.title,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                          if (event.groupName.isNotEmpty &&
-                                              event.groupName != ' ')
-                                            Text(
-                                              event.groupName,
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.grey[700],
-                                              ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          const SizedBox(height: 4.0),
-                                          Wrap(
-                                            spacing: 6.0,
-                                            runSpacing: 4.0,
+                                if (pin.type == PinType.building &&
+                                    _buildingPinToFloorMap.containsKey(pin.id))
+                                  ElevatedButton(
+                                    child: const Text('フロアマップ'),
+                                    onPressed: () {
+                                      final targetMapId =
+                                          _buildingPinToFloorMap[pin.id];
+                                      if (targetMapId != null) {
+                                        setState(() {
+                                          _currentMap = allMaps.firstWhere(
+                                            (map) => map.id == targetMapId,
+                                          );
+                                        });
+                                      }
+                                      Navigator.of(context).pop();
+                                    },
+                                  ),
+                              ],
+                            ),
+                            const Divider(height: 24),
+                            if (pin.type == PinType.building &&
+                                servicesInBuilding.isNotEmpty) ...[
+                              const Text(
+                                '館内設備',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              const SizedBox(height: 8.0),
+                              Wrap(
+                                spacing: 16.0,
+                                runSpacing: 8.0,
+                                children: servicesInBuilding.map((servicePin) {
+                                  IconData serviceIcon;
+                                  switch (servicePin.type) {
+                                    case PinType.restroom:
+                                      serviceIcon = Icons.wc;
+                                      break;
+                                    case PinType.vendingMachine:
+                                      serviceIcon = Icons.local_drink;
+                                      break;
+                                    case PinType.smokingArea:
+                                      serviceIcon = Icons.smoking_rooms;
+                                      break;
+                                    case PinType.bikeParking:
+                                      serviceIcon = Icons.pedal_bike;
+                                      break;
+                                    case PinType.recyclingStation:
+                                      serviceIcon = Icons.recycling;
+                                      break;
+                                    default:
+                                      serviceIcon = Icons.info;
+                                  }
+                                  return Chip(
+                                    avatar: Icon(serviceIcon, size: 16),
+                                    label: Text(servicePin.title),
+                                  );
+                                }).toList(),
+                              ),
+                              const SizedBox(height: 16.0),
+                            ],
+                            if (attachedEvents.isNotEmpty)
+                              const Text(
+                                '開催企画',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      // --- ここまでが固定される上部 ---
+
+                      // --- ここからがスクロールする企画一覧 ---
+                      if (attachedEvents.isNotEmpty)
+                        Expanded(
+                          child: ListView.builder(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16.0,
+                              vertical: 8.0,
+                            ),
+                            itemCount: attachedEvents.length,
+                            itemBuilder: (context, index) {
+                              final event = attachedEvents[index];
+                              bool shouldHighlight = false;
+                              if (isEventFilterActive) {
+                                bool matches = true;
+                                if (_selectedDays.isNotEmpty) {
+                                  final isDayMatch =
+                                      (_selectedDays.contains(
+                                            FestivalDay.dayOne,
+                                          ) &&
+                                          (event.date == FestivalDay.dayOne ||
+                                              event.date ==
+                                                  FestivalDay.both)) ||
+                                      (_selectedDays.contains(
+                                            FestivalDay.dayTwo,
+                                          ) &&
+                                          (event.date == FestivalDay.dayTwo ||
+                                              event.date == FestivalDay.both));
+                                  if (!isDayMatch) matches = false;
+                                }
+                                if (matches &&
+                                    _selectedCategories.isNotEmpty &&
+                                    !_selectedCategories.contains(
+                                      event.category,
+                                    )) {
+                                  matches = false;
+                                }
+                                if (matches &&
+                                    _filterFavorites &&
+                                    !widget.favoriteEventIds.contains(
+                                      event.id,
+                                    )) {
+                                  matches = false;
+                                }
+                                shouldHighlight = matches;
+                              }
+
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 8.0),
+                                decoration: BoxDecoration(
+                                  color: shouldHighlight
+                                      ? Colors.orange.shade100
+                                      : const Color.fromARGB(22, 128, 127, 127),
+                                  borderRadius: BorderRadius.circular(8.0),
+                                ),
+                                child: InkWell(
+                                  onTap: () {
+                                    Navigator.of(context).pop();
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => EventDetailScreen(
+                                          event: event,
+                                          favoriteEventIds:
+                                              widget.favoriteEventIds,
+                                          onToggleFavorite:
+                                              widget.onToggleFavorite,
+                                          onNavigateToMap:
+                                              widget.onNavigateToMap,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12.0,
+                                      horizontal: 16.0,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
-                                              _buildTag(
-                                                event.category.name,
-                                                Colors.blue,
+                                              Text(
+                                                event.title,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
                                               ),
-                                              _buildTag(
-                                                event.date.name,
-                                                Colors.green,
+                                              if (event.groupName.isNotEmpty &&
+                                                  event.groupName != ' ')
+                                                Text(
+                                                  event.groupName,
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.grey[700],
+                                                  ),
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              const SizedBox(height: 4.0),
+                                              Wrap(
+                                                spacing: 6.0,
+                                                runSpacing: 4.0,
+                                                children: [
+                                                  _buildTag(
+                                                    event.category.name,
+                                                    Colors.blue,
+                                                  ),
+                                                  _buildTag(
+                                                    event.date.name,
+                                                    Colors.green,
+                                                  ),
+                                                ],
                                               ),
                                             ],
                                           ),
-                                        ],
-                                      ),
+                                        ),
+                                        Icon(
+                                          Icons.chevron_right,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ],
                                     ),
-                                    // 右端の「>」アイコン
-                                    Icon(
-                                      Icons.chevron_right,
-                                      color: Colors.grey[600],
-                                    ),
-                                  ],
+                                  ),
                                 ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
+                              );
+                            },
+                          ),
+                        ),
                     ],
-
-                    const SizedBox(height: 20),
-                  ],
-                ),
-              );
-            },
-          );
-        },
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: isHighlighted
-                    ? Colors.yellow.withAlpha(204)
-                    : Colors.transparent,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(iconData, color: iconColor, size: 36),
-            ),
-            Text(
-              pin.title,
-              style: const TextStyle(
-                fontSize: 10,
-                color: Colors.black,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
+                  ),
+                );
+              },
+            );
+          },
+          child: MapPinWidget(
+            pin: pin,
+            isHighlighted: isHighlighted,
+            isBlinking: isBlinking,
+          ),
         ),
       ),
     );
@@ -509,10 +512,10 @@ class _MapScreenState extends State<MapScreen> {
               value: _currentMap.id,
               onChanged: (MapType? newMap) {
                 if (newMap != null) {
-                  setState(
-                    () =>
-                        _currentMap = allMaps.firstWhere((m) => m.id == newMap),
-                  );
+                  setState(() {
+                    _currentMap = allMaps.firstWhere((m) => m.id == newMap);
+                    _blinkingPinId = null; // マップ切り替えで点滅解除
+                  });
                 }
               },
               items: allMaps
@@ -524,7 +527,10 @@ class _MapScreenState extends State<MapScreen> {
             ),
             if (_currentMap.id != MapType.campus)
               TextButton(
-                onPressed: () => setState(() => _currentMap = allMaps.first),
+                onPressed: () => setState(() {
+                  _currentMap = allMaps.first;
+                  _blinkingPinId = null; // マップ切り替えで点滅解除
+                }),
                 child: const Text('全体マップに戻る'),
               ),
           ],
@@ -718,7 +724,6 @@ class _MapScreenState extends State<MapScreen> {
       body: Stack(
         children: [
           InteractiveViewer(
-            transformationController: _transformationController,
             minScale: 0.5,
             maxScale: 5.0,
             child: Center(
@@ -739,6 +744,8 @@ class _MapScreenState extends State<MapScreen> {
   }
 }
 
+enum MapFilterType { event, service }
+
 extension PinTypeExt on PinType {
   String get displayName {
     switch (this) {
@@ -757,5 +764,141 @@ extension PinTypeExt on PinType {
       case PinType.building:
         return '建物';
     }
+  }
+}
+
+class MapPinWidget extends StatefulWidget {
+  final MapPin pin;
+  final bool isHighlighted;
+  final bool isBlinking; // 点滅するかどうか
+  final double? width;
+  final double? height;
+
+  const MapPinWidget({
+    super.key,
+    required this.pin,
+    this.isHighlighted = false,
+    this.isBlinking = false,
+    this.width,
+    this.height,
+  });
+
+  @override
+  State<MapPinWidget> createState() => _MapPinWidgetState();
+}
+
+class _MapPinWidgetState extends State<MapPinWidget>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _animationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
+
+    // isBlinkingがtrueの場合のみアニメーションを開始
+    if (widget.isBlinking) {
+      _animationController.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant MapPinWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 点滅状態が変わった場合にアニメーションを制御
+    if (widget.isBlinking != oldWidget.isBlinking) {
+      if (widget.isBlinking) {
+        _animationController.repeat(reverse: true);
+      } else {
+        _animationController.stop();
+        _animationController.value = 1.0; // 通常表示に戻す
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    IconData? serviceIcon;
+    // サービスタイプのピンの場合、表示するアイコンを決定
+    if (widget.pin.type != PinType.building &&
+        widget.pin.type != PinType.event) {
+      switch (widget.pin.type) {
+        case PinType.restroom:
+          serviceIcon = Icons.wc;
+          break;
+        case PinType.vendingMachine:
+          serviceIcon = Icons.local_drink;
+          break;
+        // ... TODO:他のサービスピンも同様に追加 ...
+        default:
+          serviceIcon = Icons.info;
+      }
+    }
+
+    // アニメーションの値（0.5～1.0）に応じて枠線の色を変化させる
+    return AnimatedBuilder(
+      animation: _animationController,
+      builder: (context, child) {
+        final borderColor = widget.isBlinking
+            ? Color.lerp(
+                Colors.red.shade700,
+                Colors.yellow.shade700,
+                _animationController.value,
+              )!
+            : (widget.isHighlighted
+                  ? Colors.yellow.shade700
+                  : Colors.grey.shade400);
+
+        final borderWidth = widget.isBlinking || widget.isHighlighted
+            ? 3.0
+            : 1.0;
+
+        return Container(
+          width: widget.width,
+          height: widget.height,
+          padding:
+              widget.pin.padding ??
+              const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8.0),
+            border: Border.all(color: borderColor, width: borderWidth),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 4,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          child: serviceIcon != null
+              // サービスピンの場合はアイコンを表示
+              ? Icon(
+                  serviceIcon,
+                  color: Colors.blue.shade800,
+                  size: widget.pin.iconSize ?? 20,
+                )
+              // 企画・建物ピンの場合はテキストを表示
+              : Text(
+                  widget.pin.title,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: widget.pin.fontSize ?? 10,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+        );
+      },
+    );
   }
 }
