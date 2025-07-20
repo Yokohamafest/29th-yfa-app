@@ -183,9 +183,12 @@ class _MapScreenState extends State<MapScreen> {
           } else if (pin.type == PinType.building) {
             // 建物ピンの場合: areaが一致する企画がフィルター結果にあるか
             const buildingAreaMap = {
-              '体育館': EventArea.building5,
+              '1号館': EventArea.building1 /* ... */,
+              '2号館': EventArea.building2 /* ... */,
               '3号館': EventArea.building3 /* ... */,
-            }; // TODO: 建物ピンの種類を追加
+              '4号館': EventArea.building4 /* ... */,
+              '体育館': EventArea.building5,
+            };
             final targetArea = buildingAreaMap[pin.title];
             if (targetArea != null) {
               shouldHighlight = filteredEvents.any(
@@ -906,7 +909,7 @@ class _MapPinWidgetState extends State<MapPinWidget>
         case PinType.vendingMachine:
           serviceIcon = Icons.local_drink;
           break;
-        // ... TODO:他のサービスピンも同様に追加 ...
+        // TODO:他のサービスピンも同様に追加 ...
         default:
           serviceIcon = Icons.info;
       }
