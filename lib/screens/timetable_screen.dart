@@ -11,13 +11,12 @@ class TimetableScreen extends StatefulWidget {
   final Function(String) onToggleFavorite;
   final Function(String) onNavigateToMap;
 
-
   const TimetableScreen({
     super.key,
     required this.favoriteEventIds,
     required this.onToggleFavorite,
     required this.onNavigateToMap,
-});
+  });
 
   @override
   State<TimetableScreen> createState() => _TimetableScreenState();
@@ -86,11 +85,11 @@ class _TimetableScreenState extends State<TimetableScreen> {
                     children: [
                       SizedBox(width: _leftColumnWidth),
                       // 【変更点④】各列に色を渡し、間に隙間を追加
-                      _buildStageColumn('体育館ステージ', Colors.orange.shade400),
+                      _buildStageColumn('体育館', Colors.orange.shade400),
                       const SizedBox(width: 3), // 企画列の間の隙間
-                      _buildStageColumn('31Aステージ', Colors.green.shade400),
+                      _buildStageColumn('31A', Colors.green.shade400),
                       const SizedBox(width: 3), // 企画列の間の隙間
-                      _buildStageColumn('32Aステージ', Colors.blue.shade400),
+                      _buildStageColumn('32A', Colors.blue.shade400),
                     ],
                   ),
                 ],
@@ -305,7 +304,12 @@ class _TimetableEventCard extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => EventDetailScreen(event: event, favoriteEventIds: favoriteEventIds, onToggleFavorite: onToggleFavorite, onNavigateToMap: onNavigateToMap,),
+                    builder: (context) => EventDetailScreen(
+                      event: event,
+                      favoriteEventIds: favoriteEventIds,
+                      onToggleFavorite: onToggleFavorite,
+                      onNavigateToMap: onNavigateToMap,
+                    ),
                   ),
                 );
               },

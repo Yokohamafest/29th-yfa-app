@@ -109,7 +109,8 @@ class EventItem {
   final String description;
   final String imagePath;
   final EventArea area;
-  final String location;
+  final String
+  location; // この文字列によってどこで行われる企画なのかを判定している（タイムテーブル画面とマップ画面）ので、文字は統一するように（「体育館」や「31A」、「32A」など）
   final List<EventCategory> categories;
   final bool hideFromList; // trueなら企画一覧とお気に入り一覧に表示しない
   final bool disableDetailsLink; // trueなら詳細ページへの遷移を無効にする
