@@ -89,16 +89,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           vsync: this,
           duration: const Duration(seconds: 2),
         );
-        _xAnimation =
-            Tween<double>(
-              begin: -200.0,
-              end: 20.0,
-            ).animate(
-              CurvedAnimation(
-                parent: _slideInController!,
-                curve: Curves.easeOut,
-              ),
-            );
+        _xAnimation = Tween<double>(begin: -200.0, end: 20.0).animate(
+          CurvedAnimation(parent: _slideInController!, curve: Curves.easeOut),
+        );
         _slideInController!.forward();
       });
     }
@@ -109,9 +102,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           padding: EdgeInsets.zero,
           children: [
             const DrawerHeader(
-              decoration: BoxDecoration(
-                color: Color(0xFF54A4DB),
-              ),
+              decoration: BoxDecoration(color: Color(0xFF54A4DB)),
               child: Text(
                 'メニュー',
                 style: TextStyle(fontSize: 24, color: Colors.white),
@@ -164,9 +155,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               children: [
                 Stack(
                   children: [
-                    SizedBox(
-                      height: 420,
-                    ),
+                    SizedBox(height: 420),
 
                     Container(
                       height: 250, //screenHeight * 0.4,
@@ -174,10 +163,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
-                          colors: [
-                            Color(0xFF54A4DB),
-                            Colors.white,
-                          ],
+                          colors: [Color(0xFF54A4DB), Colors.white],
                         ),
                       ),
                     ),
@@ -193,14 +179,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     Positioned(
                       top: 100,
                       left: screenWidth * 0.55,
-                      child: Image.asset(
-                        'assets/images/title.png',
-                        width: 150,
-                      ),
+                      child: Image.asset('assets/images/title.png', width: 150),
                     ),
                     Positioned(
                       top: 0,
-                      right: screenWidth * 0.05,
+                      left: screenWidth * 0.55,
                       child: Image.asset(
                         'assets/images/voyage_logo.png',
                         width: 150,
