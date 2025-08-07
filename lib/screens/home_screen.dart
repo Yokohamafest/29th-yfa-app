@@ -1,12 +1,17 @@
 ﻿import 'dart:math' as math;
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'announcement_screen.dart';
 import 'options_screen.dart';
+import 'event_detail_screen.dart';
 import '../data/dummy_events.dart';
 import '../models/event_item.dart';
 import '../widgets/event_card.dart';
 import '../data/dummy_announcements.dart';
 import 'announcement_detail_screen.dart';
+import '../models/spotlight_item.dart';
+import '../data/dummy_spotlights.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HomeScreen extends StatefulWidget {
   final Set<String> favoriteEventIds;
@@ -31,6 +36,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   bool _isAnimationInitialized = false;
   List<EventItem> _recommendedEvents = [];
 
+  static const int _initialPage = 5000;
+  late final PageController _pageController;
+  Timer? _autoPlayTimer;
+
   @override
   void initState() {
     super.initState();
@@ -39,14 +48,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       vsync: this,
       duration: const Duration(seconds: 4),
     )..repeat(reverse: true);
-    _selectRecommendedEvents();
 
+    _pageController = PageController(
+      viewportFraction: 0.85,
+      initialPage: _initialPage,
+    );
+
+    _selectRecommendedEvents();
     WidgetsBinding.instance.addPostFrameCallback((_) => _initSlideAnimation());
+    _startAutoPlay();
   }
 
   void _initSlideAnimation() {
     if (!mounted) return;
-
     _slideInController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
@@ -55,7 +69,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       CurvedAnimation(parent: _slideInController!, curve: Curves.easeOut),
     );
     _slideInController!.forward();
-
     if (mounted) {
       setState(() {});
     }
@@ -71,10 +84,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     });
   }
 
+  void _startAutoPlay() {
+    _autoPlayTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (!mounted || !_pageController.hasClients) return;
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
   @override
   void dispose() {
     _slideInController?.dispose();
     _rockingController.dispose();
+    _pageController.dispose();
+    _autoPlayTimer?.cancel();
     super.dispose();
   }
 
@@ -248,6 +273,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       children: [
                         _buildAnnouncementsSection(context),
                         const SizedBox(height: 32),
+                        _buildSpotlightCarousel(context),
+                        const SizedBox(height: 32),
                         _buildRecommendationsSection(context),
                       ],
                     ),
@@ -399,6 +426,95 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             onNavigateToMap: widget.onNavigateToMap,
           ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildSpotlightCarousel(BuildContext context) {
+    final visibleSpotlights = dummySpotlights
+        .where((s) => s.isVisible)
+        .toList();
+
+    if (visibleSpotlights.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      children: [
+        const Text(
+          '注目企画',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: (MediaQuery.of(context).size.width * 0.9) * 9 / 16,
+          child: PageView.builder(
+            controller: _pageController,
+            itemCount: 10000,
+            onPageChanged: (page) {
+              setState(() {});
+            },
+            itemBuilder: (context, index) {
+              // 本当のインデックスを計算
+              final realIndex = index % visibleSpotlights.length;
+              final spotlight = visibleSpotlights[realIndex];
+
+              return Card(
+                margin: const EdgeInsets.symmetric(horizontal: 8.0),
+                clipBehavior: Clip.antiAlias,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+                child: InkWell(
+                  onTap: () async {
+                    if (spotlight.actionType == SpotlightActionType.event) {
+                      final String eventId = spotlight.actionValue;
+                      EventItem? targetEvent;
+                      try {
+                        targetEvent = dummyEvents.firstWhere(
+                          (e) => e.id == eventId,
+                        );
+                      } catch (e) {
+                        targetEvent = null;
+                      }
+                      if (targetEvent != null) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EventDetailScreen(
+                              event: targetEvent!,
+                              favoriteEventIds: widget.favoriteEventIds,
+                              onToggleFavorite: widget.onToggleFavorite,
+                              onNavigateToMap: widget.onNavigateToMap,
+                            ),
+                          ),
+                        );
+                      }
+                    } else if (spotlight.actionType ==
+                        SpotlightActionType.url) {
+                      final url = Uri.parse(spotlight.actionValue);
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url);
+                      }
+                    }
+                  },
+                  child: Image.asset(
+                    spotlight.imagePath,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Center(child: Text('画像読込エラー'));
+                    },
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 12),
       ],
     );
   }
