@@ -8,7 +8,6 @@ class EventDetailScreen extends StatefulWidget {
   final Function(String) onToggleFavorite;
   final Function(String) onNavigateToMap;
 
-
   const EventDetailScreen({
     super.key,
     required this.event,
@@ -72,7 +71,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     final timeFormatter = DateFormat('HH:mm');
@@ -113,25 +111,33 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   child: const Center(child: Icon(Icons.image_not_supported)),
                 );
               },
-
             ),
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(widget.event.title, style: const TextStyle(
+                  Text(
+                    widget.event.title,
+                    style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                    ),),
-                  Text(widget.event.groupName, style: TextStyle(fontSize: 16, color: Colors.grey[700]),),
+                    ),
+                  ),
+                  Text(
+                    widget.event.groupName,
+                    style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+                  ),
                   const SizedBox(height: 16.0),
                   Wrap(
-                    // ...
+                    spacing: 8.0,
+                    runSpacing: 4.0,
                     children: [
-                      ...widget.event.categories.map((category) => _buildTag(category.name, Colors.blue)),
-                      _buildTag(widget.event.area.name, Colors.orange),
                       _buildTag(widget.event.date.name, Colors.green),
+                      _buildTag(widget.event.area.name, Colors.orange),
+                      ...widget.event.categories.map(
+                        (category) => _buildTag(category.name, Colors.blue),
+                      ),
                     ],
                   ),
                   const Divider(height: 32.0),
@@ -168,7 +174,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   ),
                   const Divider(height: 32.0),
                   // ...
-                  Text(widget.event.description, /* ... */),
+                  Text(widget.event.description /* ... */),
                 ],
               ),
             ),
