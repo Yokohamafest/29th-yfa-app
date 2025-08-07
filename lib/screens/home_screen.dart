@@ -410,7 +410,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'おすすめ企画',
+          'おすすめ企画（削除予定）',
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.bold,
@@ -440,6 +440,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+
       children: [
         const Text(
           '注目企画',
