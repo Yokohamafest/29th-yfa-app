@@ -63,7 +63,7 @@ final List<MapPin> allPins = [
     mapId: MapType.campus,
     position: Offset(80, 100),
     type: PinType.building,
-    title: '体育館',
+    title: '5号館',
   ),
   MapPin(
     id: 'pin_restroom_1',

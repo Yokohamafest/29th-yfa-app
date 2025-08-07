@@ -85,7 +85,7 @@ class _MapScreenState extends State<MapScreen> {
 
     if (targetPin == null) {
       const buildingAreaMap = {
-        '体育館': EventArea.building5,
+        '5号館': EventArea.building5,
         '2号館': EventArea.building2,
         '3号館': EventArea.building3,
         '4号館': EventArea.building4,
@@ -178,7 +178,7 @@ class _MapScreenState extends State<MapScreen> {
               '2号館': EventArea.building2 /* ... */,
               '3号館': EventArea.building3 /* ... */,
               '4号館': EventArea.building4 /* ... */,
-              '体育館': EventArea.building5,
+              '5号館': EventArea.building5,
             };
             final targetArea = buildingAreaMap[pin.title];
             if (targetArea != null) {
@@ -260,7 +260,7 @@ class _MapScreenState extends State<MapScreen> {
 
                 if (pin.type == PinType.building) {
                   const buildingAreaMap = {
-                    '体育館': EventArea.building5,
+                    '5号館': EventArea.building5,
                     '2号館': EventArea.building2,
                     '3号館': EventArea.building3,
                     '4号館': EventArea.building4,
@@ -271,8 +271,7 @@ class _MapScreenState extends State<MapScreen> {
                         .where((event) => event.area == targetArea)
                         .toList();
                   }
-                }
-                else if (pin.type == PinType.event) {
+                } else if (pin.type == PinType.event) {
                   attachedEvents = visibleEvents
                       .where((event) => event.location == pin.title)
                       .toList();
@@ -503,15 +502,15 @@ class _MapScreenState extends State<MapScreen> {
                                                 spacing: 6.0,
                                                 runSpacing: 4.0,
                                                 children: [
+                                                  _buildTag(
+                                                    event.date.name,
+                                                    Colors.green,
+                                                  ),
                                                   ...event.categories.map(
                                                     (category) => _buildTag(
                                                       category.name,
                                                       Colors.blue,
                                                     ),
-                                                  ),
-                                                  _buildTag(
-                                                    event.date.name,
-                                                    Colors.green,
                                                   ),
                                                 ],
                                               ),

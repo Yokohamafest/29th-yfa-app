@@ -39,9 +39,9 @@ class EventCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool isFavorited = favoriteEventIds.contains(event.id);
     final allTags = [
-      ...event.categories.map((c) => {'text': c.name, 'color': Colors.blue}),
-      {'text': event.area.name, 'color': Colors.orange},
       {'text': event.date.name, 'color': Colors.green},
+      {'text': event.area.name, 'color': Colors.orange},
+      ...event.categories.map((c) => {'text': c.name, 'color': Colors.blue}),
     ];
 
     return Card(
