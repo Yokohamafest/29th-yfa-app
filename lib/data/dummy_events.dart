@@ -10,7 +10,14 @@ final List<EventItem> dummyEvents = [
     imagePath: 'assets/images/sample_event_1.png',
     area: EventArea.building5,
     location: '体育館',
-    categories: [EventCategory.stage],
+    categories: [
+      EventCategory.stage,
+      EventCategory.exhibit,
+      EventCategory.food,
+      EventCategory.handsOn,
+      EventCategory.game,
+      EventCategory.other,
+    ],
     date: FestivalDay.dayTwo,
     timeSlots: [
       TimeSlot(
