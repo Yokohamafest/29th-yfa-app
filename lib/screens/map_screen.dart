@@ -41,7 +41,7 @@ class _MapScreenState extends State<MapScreen> {
     'pin_b2': MapType.building2F1,
     'pin_b3': MapType.building3F1,
     'pin_b4': MapType.building4F1F2,
-    // 体育館（5号館）はフロアマップがないので、ここには含めない
+    // 1号館および体育館（5号館）はフロアマップがないので、ここには含めない
   };
 
   @override
@@ -85,10 +85,11 @@ class _MapScreenState extends State<MapScreen> {
 
     if (targetPin == null) {
       const buildingAreaMap = {
-        '5号館': EventArea.building5,
+        '1号館': EventArea.building1,
         '2号館': EventArea.building2,
         '3号館': EventArea.building3,
         '4号館': EventArea.building4,
+        '5号館': EventArea.building5,
       };
 
       MapEntry<String, EventArea>? buildingEntry;
@@ -174,10 +175,10 @@ class _MapScreenState extends State<MapScreen> {
             );
           } else if (pin.type == PinType.building) {
             const buildingAreaMap = {
-              '1号館': EventArea.building1 /* ... */,
-              '2号館': EventArea.building2 /* ... */,
-              '3号館': EventArea.building3 /* ... */,
-              '4号館': EventArea.building4 /* ... */,
+              '1号館': EventArea.building1,
+              '2号館': EventArea.building2,
+              '3号館': EventArea.building3,
+              '4号館': EventArea.building4,
               '5号館': EventArea.building5,
             };
             final targetArea = buildingAreaMap[pin.title];
@@ -260,10 +261,11 @@ class _MapScreenState extends State<MapScreen> {
 
                 if (pin.type == PinType.building) {
                   const buildingAreaMap = {
-                    '5号館': EventArea.building5,
+                    '1号館': EventArea.building1,
                     '2号館': EventArea.building2,
                     '3号館': EventArea.building3,
                     '4号館': EventArea.building4,
+                    '5号館': EventArea.building5,
                   };
                   final targetArea = buildingAreaMap[pin.title];
                   if (targetArea != null) {
@@ -597,7 +599,7 @@ class _MapScreenState extends State<MapScreen> {
             const Padding(
               padding: EdgeInsets.all(16.0),
               child: Text(
-                'マップピン絞り込み',
+                'マップピン検索',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
             ),
@@ -754,10 +756,20 @@ class _MapScreenState extends State<MapScreen> {
         title: Text("マップ"),
         actions: [
           Builder(
-            builder: (context) => IconButton(
-              icon: const Icon(Icons.filter_list),
-              onPressed: () => Scaffold.of(context).openEndDrawer(),
-            ),
+            builder: (context) {
+              return TextButton.icon(
+                onPressed: () {
+                  Scaffold.of(context).openEndDrawer();
+                },
+                icon: const Icon(Icons.search),
+                label: const Text('マップピン検索'),
+                style: TextButton.styleFrom(
+                  foregroundColor:
+                      Theme.of(context).appBarTheme.iconTheme?.color ??
+                      Colors.black,
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -875,7 +887,15 @@ class _MapPinWidgetState extends State<MapPinWidget>
         case PinType.vendingMachine:
           serviceIcon = Icons.local_drink;
           break;
-        // TODO:他のサービスピンも同様に追加 ...
+        case PinType.bikeParking:
+          serviceIcon = Icons.pedal_bike;
+          break;
+        case PinType.smokingArea:
+          serviceIcon = Icons.smoking_rooms_rounded;
+          break;
+        case PinType.recyclingStation:
+          serviceIcon = Icons.delete;
+          break;
         default:
           serviceIcon = Icons.info;
       }
