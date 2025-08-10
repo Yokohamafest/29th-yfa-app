@@ -80,7 +80,12 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.event.title),
+        title: Text(
+          widget.event.title,
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Color.fromARGB(255, 84, 164, 219),
+        foregroundColor: Colors.white,
         actions: [
           IconButton(
             icon: Icon(

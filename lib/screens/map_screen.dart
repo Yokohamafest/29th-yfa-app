@@ -753,7 +753,7 @@ class _MapScreenState extends State<MapScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("マップ"),
+        title: Text("マップ", style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
           Builder(
             builder: (context) {
@@ -762,16 +762,24 @@ class _MapScreenState extends State<MapScreen> {
                   Scaffold.of(context).openEndDrawer();
                 },
                 icon: const Icon(Icons.search),
-                label: const Text('マップピン検索'),
+                label: const Text(
+                  'マップピン検索',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 style: TextButton.styleFrom(
+                  side: const BorderSide(color: Colors.white, width: 0.8),
+                  backgroundColor: Color.fromARGB(255, 72, 151, 209),
                   foregroundColor:
                       Theme.of(context).appBarTheme.iconTheme?.color ??
-                      Colors.black,
+                      Colors.white,
+                  shadowColor: Colors.black,
                 ),
               );
             },
           ),
         ],
+        backgroundColor: Color.fromARGB(255, 84, 164, 219),
+        foregroundColor: Colors.white,
       ),
       endDrawer: _buildFilterDrawer(),
       body: Stack(

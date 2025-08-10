@@ -90,7 +90,15 @@ class _OptionsScreenState extends State<OptionsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('オプション')),
+      appBar: AppBar(
+        title: const Text(
+          'オプション',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Color.fromARGB(255, 84, 164, 219),
+        foregroundColor: Colors.white,
+      ),
+
       body: ListView(
         children: [
           const ListTile(

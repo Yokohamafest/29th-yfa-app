@@ -12,7 +12,14 @@ class AnnouncementDetailScreen extends StatelessWidget {
     final formatter = DateFormat('M/d(E) HH:mm', 'ja_JP');
 
     return Scaffold(
-      appBar: AppBar(title: const Text('お知らせ詳細')),
+      appBar: AppBar(
+        title: const Text(
+          'お知らせ詳細',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Color.fromARGB(255, 84, 164, 219),
+        foregroundColor: Colors.white,
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(

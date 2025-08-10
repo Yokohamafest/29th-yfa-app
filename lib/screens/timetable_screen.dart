@@ -29,7 +29,14 @@ class _TimetableScreenState extends State<TimetableScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('タイムテーブル'), elevation: 1.0),
+      appBar: AppBar(
+        title: const Text(
+          'タイムテーブル',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Color.fromARGB(255, 84, 164, 219),
+        foregroundColor: Colors.white,
+      ),
       body: Column(
         children: [
           Padding(
@@ -223,9 +230,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
         color: backgroundColor.withAlpha(25),
         child: SizedBox(
           height: (21 - 10) * _hourHeight,
-          child: Stack(
-            children: cards,
-          ),
+          child: Stack(children: cards),
         ),
       ),
     );
@@ -261,8 +266,7 @@ class _TimetableEventCard extends StatelessWidget {
     if (cardHeight < 65) {
       titleMaxLines = 1;
       groupNameMaxLines = 1;
-    }
-    else {
+    } else {
       final durationInMinutes = timeSlot.endTime
           .difference(timeSlot.startTime)
           .inMinutes;

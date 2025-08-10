@@ -92,9 +92,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         .toList();
 
     final List<ScheduleEntry> scheduleItems = [];
-    final dayToFilter = _selectedDay == FestivalDay.dayOne
-        ? 14
-        : 15;
+    final dayToFilter = _selectedDay == FestivalDay.dayOne ? 14 : 15;
 
     for (final event in favoritedEvents) {
       for (final slot in event.timeSlots) {
@@ -110,7 +108,10 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('お気に入り企画'),
+        title: const Text(
+          'お気に入り企画',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         actions: [
           Builder(
             builder: (context) {
@@ -129,17 +130,25 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   );
                 },
                 icon: const Icon(Icons.notifications_active_outlined),
-                label: const Text('通知設定'),
+                label: const Text(
+                  '通知設定',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 style: TextButton.styleFrom(
+                  side: const BorderSide(color: Colors.white, width: 0.8),
+                  backgroundColor: Color.fromARGB(255, 72, 151, 209),
                   foregroundColor:
                       Theme.of(context).appBarTheme.iconTheme?.color ??
-                      Colors.black,
+                      Colors.white,
+                  shadowColor: Colors.black,
                 ),
               );
             },
           ),
           const SizedBox(width: 8),
         ],
+        backgroundColor: Color.fromARGB(255, 84, 164, 219),
+        foregroundColor: Colors.white,
       ),
       body: favoritedEvents.isEmpty
           ? const Center(child: Text('お気に入りに登録した企画はありません'))

@@ -184,9 +184,10 @@ class _EventListScreenState extends State<EventListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('企画一覧'),
-        backgroundColor: Colors.white,
-        elevation: 1.0,
+        title: const Text(
+          '企画一覧',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         actions: [
           Builder(
             builder: (context) {
@@ -195,17 +196,25 @@ class _EventListScreenState extends State<EventListScreen> {
                   Scaffold.of(context).openEndDrawer();
                 },
                 icon: const Icon(Icons.filter_list),
-                label: const Text('絞り込み'),
+                label: const Text(
+                  '絞り込み',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 style: TextButton.styleFrom(
+                  side: const BorderSide(color: Colors.white, width: 0.8),
+                  backgroundColor: Color.fromARGB(255, 72, 151, 209),
                   foregroundColor:
                       Theme.of(context).appBarTheme.iconTheme?.color ??
-                      Colors.black,
+                      Colors.white,
+                  shadowColor: Colors.black,
                 ),
               );
             },
           ),
           const SizedBox(width: 8),
         ],
+        backgroundColor: Color.fromARGB(255, 84, 164, 219),
+        foregroundColor: Colors.white,
       ),
       endDrawer: Drawer(
         child: ListView(
