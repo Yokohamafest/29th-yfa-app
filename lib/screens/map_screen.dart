@@ -593,17 +593,22 @@ class _MapScreenState extends State<MapScreen> {
 
   Widget _buildFilterDrawer() {
     return Drawer(
-      child: SafeArea(
-        child: Column(
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Text(
-                'マップピン検索',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          const DrawerHeader(
+            decoration: BoxDecoration(color: Color(0xFF54A4DB)),
+            child: Text(
+              'マップピン検索',
+              style: TextStyle(color: Colors.white, fontSize: 24),
             ),
-            SegmentedButton<MapFilterType>(
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 8.0,
+            ),
+            child: SegmentedButton<MapFilterType>(
               segments: const [
                 ButtonSegment(
                   value: MapFilterType.event,
@@ -624,21 +629,19 @@ class _MapScreenState extends State<MapScreen> {
                 });
               },
             ),
-            const Divider(),
-            Expanded(
-              child: _currentFilterType == MapFilterType.event
-                  ? _buildEventFilterOptions()
-                  : _buildServiceFilterOptions(),
-            ),
-          ],
-        ),
+          ),
+          const Divider(),
+          _currentFilterType == MapFilterType.event
+              ? _buildEventFilterOptions()
+              : _buildServiceFilterOptions(),
+        ],
       ),
     );
   }
 
   Widget _buildEventFilterOptions() {
-    return ListView(
-      padding: const EdgeInsets.all(8.0),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.only(left: 16.0, top: 16.0),
@@ -702,15 +705,30 @@ class _MapScreenState extends State<MapScreen> {
           ),
         ),
 
-        SwitchListTile(
-          title: const Text('お気に入り登録済'),
-          value: _filterFavorites,
-          onChanged: (value) {
-            setState(() {
-              _filterFavorites = value;
-              _applyFilters();
-            });
-          },
+        Padding(
+          padding: const EdgeInsets.only(left: 16.0, top: 16.0),
+          child: Text(
+            "その他",
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: Wrap(
+            spacing: 8.0,
+            children: [
+              FilterChip(
+                label: const Text('お気に入り登録済'),
+                selected: _filterFavorites,
+                onSelected: (bool selected) {
+                  setState(() {
+                    _filterFavorites = selected;
+                    _applyFilters();
+                  });
+                },
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -724,8 +742,7 @@ class _MapScreenState extends State<MapScreen> {
       PinType.bikeParking,
       PinType.recyclingStation,
     ];
-    return ListView(
-      padding: const EdgeInsets.all(8.0),
+    return Column(
       children: serviceTypes.map((type) {
         return CheckboxListTile(
           title: Text(type.displayName),
