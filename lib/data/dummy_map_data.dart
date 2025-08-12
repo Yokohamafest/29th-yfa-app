@@ -59,11 +59,17 @@ final List<MapPin> allPins = [
     title: '3号館',
   ),
   MapPin(
-    id: 'pin_gym',
+    id: 'pin_b5',
     mapId: MapType.campus,
     position: Offset(80, 100),
     type: PinType.building,
     title: '5号館',
+    detailText: '5号館（体育館）です。多くのステージ企画が開催されます。',
+    link: PinLink(
+      text: 'ステージ企画のタイムテーブルを見る',
+      actionType: PinLinkActionType.timetable,
+      actionValue: '', // 画面遷移だけなので値は不要
+    ),
   ),
   MapPin(
     id: 'pin_restroom_1',
@@ -80,6 +86,11 @@ final List<MapPin> allPins = [
     position: Offset(361, 124),
     type: PinType.event,
     title: '31A',
+    link: PinLink(
+      text: 'VALORANT ドラフト杯の詳細はこちら',
+      actionType: PinLinkActionType.eventDetail,
+      actionValue: 'event_011', // 遷移先の企画ID
+    ),
   ),
   MapPin(
     id: 'pin_restroom_2',
