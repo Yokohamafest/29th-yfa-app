@@ -71,6 +71,12 @@ class _MainScaffoldState extends State<MainScaffold> {
     });
   }
 
+  void changeTab(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final List<Widget> screens = [
@@ -78,27 +84,32 @@ class _MainScaffoldState extends State<MainScaffold> {
         favoriteEventIds: _favoriteEventIds,
         onToggleFavorite: _toggleFavorite,
         onNavigateToMap: _navigateToMapAndHighlight,
+        changeTab: changeTab,
       ),
       TimetableScreen(
         favoriteEventIds: _favoriteEventIds,
         onToggleFavorite: _toggleFavorite,
         onNavigateToMap: _navigateToMapAndHighlight,
+        changeTab: changeTab,
       ),
       MapScreen(
         highlightedEventId: _highlightedEventId,
         favoriteEventIds: _favoriteEventIds,
         onToggleFavorite: _toggleFavorite,
         onNavigateToMap: _navigateToMapAndHighlight,
+        changeTab: changeTab,
       ),
       EventListScreen(
         favoriteEventIds: _favoriteEventIds,
         onToggleFavorite: _toggleFavorite,
         onNavigateToMap: _navigateToMapAndHighlight,
+        changeTab: changeTab,
       ),
       FavoritesScreen(
         favoriteEventIds: _favoriteEventIds,
         onToggleFavorite: _toggleFavorite,
         onNavigateToMap: _navigateToMapAndHighlight,
+        changeTab: changeTab,
       ),
     ];
 
