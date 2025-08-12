@@ -1,16 +1,22 @@
 ﻿import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_app_yfa/data/dummy_announcements.dart';
 import '../data/dummy_map_data.dart';
 import '../models/map_models.dart';
 import '../data/dummy_events.dart';
 import '../models/event_item.dart';
 import 'event_detail_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../models/announcement_item.dart';
+import 'announcement_detail_screen.dart';
+import 'options_screen.dart';
 
 class MapScreen extends StatefulWidget {
   final String? highlightedEventId;
   final Set<String> favoriteEventIds;
   final Function(String) onToggleFavorite;
   final Function(String) onNavigateToMap;
+  final Function(int) changeTab;
 
   const MapScreen({
     super.key,
@@ -18,6 +24,7 @@ class MapScreen extends StatefulWidget {
     required this.favoriteEventIds,
     required this.onToggleFavorite,
     required this.onNavigateToMap,
+    required this.changeTab,
   });
 
   @override
@@ -52,6 +59,15 @@ class _MapScreenState extends State<MapScreen> {
         _navigateToEvent(widget.highlightedEventId!);
       }
     });
+  }
+
+  Future<void> _launchURL(Uri url) async {
+    if (!await launchUrl(url)) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('${url.toString()} を開けませんでした')));
+    }
   }
 
   @override
@@ -338,7 +354,127 @@ class _MapScreenState extends State<MapScreen> {
                                   ),
                               ],
                             ),
+
+                          if ((pin.detailText != null || pin.link != null) && pin.showDetailText) ...[
                             const Divider(height: 24),
+                            if (pin.detailText != null)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 8.0),
+                                child: Text(
+                                  pin.detailText!,
+                                  style: const TextStyle(fontSize: 14),
+                                ),
+                              ),
+                              if (pin.link != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 8.0),
+                                  child: TextButton(
+                                    child: Text(pin.link!.text),
+                                    onPressed: () {
+                                      final link = pin.link!;
+                                      switch (link.actionType) {
+                                        case PinLinkActionType.url:
+                                          final url = Uri.parse(
+                                            link.actionValue,
+                                          );
+                                          _launchURL(url);
+                                          break;
+                                        case PinLinkActionType.eventDetail:
+                                          final eventId = link.actionValue;
+                                          EventItem? targetEvent;
+                                          try {
+                                            targetEvent = dummyEvents
+                                                .firstWhere(
+                                                  (e) => e.id == eventId,
+                                                );
+                                          } catch (e) {
+                                            targetEvent = null;
+                                          }
+
+                                          if (targetEvent != null) {
+                                            Navigator.of(context).pop();
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    EventDetailScreen(
+                                                      event: targetEvent!,
+                                                      favoriteEventIds: widget
+                                                          .favoriteEventIds,
+                                                      onToggleFavorite: widget
+                                                          .onToggleFavorite,
+                                                      onNavigateToMap: widget
+                                                          .onNavigateToMap,
+                                                    ),
+                                              ),
+                                            );
+                                          }
+                                          break;
+                                        case PinLinkActionType
+                                            .announcementDetail:
+                                          final announcementId =
+                                              link.actionValue;
+                                          AnnouncementItem? targetAnnouncement;
+                                          try {
+                                            targetAnnouncement =
+                                                dummyAnnouncements.firstWhere(
+                                                  (announcement) =>
+                                                      announcement.id ==
+                                                      announcementId,
+                                                );
+                                          } catch (e) {
+                                            targetAnnouncement = null;
+                                          }
+                                          if (targetAnnouncement != null) {
+                                            Navigator.of(context).pop();
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    AnnouncementDetailScreen(
+                                                      announcement: targetAnnouncement!,
+                                                    ),
+                                              ),
+                                            );
+                                          }
+                                          break;
+                                        case PinLinkActionType.option:
+                                          Navigator.of(context).pop();
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => const OptionsScreen(),
+                                            ),
+                                          );
+                                          break;
+                                        case PinLinkActionType.map:
+                                          final mapIdString = link.actionValue;
+                                          MapInfo? targetMap;
+                                          try {
+                                            final targetMapType = MapType.values.byName(mapIdString);
+                                            targetMap = allMaps.firstWhere((map) => map.id == targetMapType);
+                                          } catch (e) {
+                                            targetMap = null;
+                                          }
+
+                                          if (targetMap != null) {
+                                            setState(() {
+                                              _currentMap = targetMap!;
+                                            });
+                                          }
+                                          Navigator.of(context).pop();
+                                          break;
+                                        case PinLinkActionType.timetable:
+                                          Navigator.of(context).pop();
+                                          widget.changeTab(1);
+                                      }
+                                    },
+                                  ),
+                                ),
+                            ],
+
+                            const Divider(height: 24),
+
                             if (pin.type == PinType.building &&
                                 servicesInBuilding.isNotEmpty) ...[
                               const Text(

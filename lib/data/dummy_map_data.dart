@@ -78,6 +78,7 @@ final List<MapPin> allPins = [
     type: PinType.restroom,
     title: 'お手洗い',
     iconSize: 24,
+    detailText: 'トイレです'
   ),
 
   MapPin(
@@ -87,7 +88,7 @@ final List<MapPin> allPins = [
     type: PinType.event,
     title: '31A',
     link: PinLink(
-      text: 'VALORANT ドラフト杯の詳細はこちら',
+      text: 'VALORANT ドラフト杯の企画詳細ページへ移動（テスト用）',
       actionType: PinLinkActionType.eventDetail,
       actionValue: 'event_011', // 遷移先の企画ID
     ),
@@ -109,5 +110,47 @@ final List<MapPin> allPins = [
     type: PinType.restroom,
     title: 'お手洗い',
     parentBuildingId: 'pin_b2',
+  ),
+  MapPin(
+    id: 'pin_link_test1',
+    mapId: MapType.campus,
+    position: Offset(100, 150),
+    type: PinType.event,
+    title: 'テスト用ピン',
+    detailText: 'このピンのリンクをタップすると、2号館1階に移動',
+    link: PinLink(
+      text: '2号館1階のフロアマップへ',
+      actionType: PinLinkActionType.map,
+      // 遷移先のMapTypeのenumの要素名を文字列で指定
+      actionValue: 'building2F1',
+    ),
+  ),
+  MapPin(
+    id: 'pin_link_test2',
+    mapId: MapType.campus,
+    position: Offset(150, 150),
+    type: PinType.vendingMachine,
+    title: 'テスト用ピン',
+    detailText: 'このピンのリンクをタップすると、オプション画面に移動',
+    link: PinLink(
+      text: 'オプション画面へ',
+      actionType: PinLinkActionType.option,
+      // 遷移先のMapTypeのenumの要素名を文字列で指定
+      actionValue: '',
+    ),
+  ),
+  MapPin(
+    id: 'pin_link_test3',
+    mapId: MapType.campus,
+    position: Offset(200, 150),
+    type: PinType.recyclingStation,
+    title: 'テスト用ピン',
+    detailText: 'このピンのリンクをタップすると、横浜祭ホームページに移動',
+    link: PinLink(
+      text: 'ホームページへ',
+      actionType: PinLinkActionType.url,
+      // 遷移先のMapTypeのenumの要素名を文字列で指定
+      actionValue: 'https://yokohama-fest.net/29th',
+    ),
   ),
 ];
