@@ -1,6 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../data/dummy_events.dart';
+import '../data/shuffled_events.dart';
 import '../models/event_item.dart';
 import '../widgets/event_card.dart';
 
@@ -34,9 +34,7 @@ class _EventListScreenState extends State<EventListScreen> {
   @override
   void initState() {
     super.initState();
-    _filteredEvents = dummyEvents
-        .where((event) => !event.hideFromList)
-        .toList();
+    _filteredEvents = shuffledDummyEvents;
     _searchController.addListener(_runFilter);
   }
 
@@ -47,9 +45,7 @@ class _EventListScreenState extends State<EventListScreen> {
   }
 
   void _runFilter() {
-    List<EventItem> results = dummyEvents
-        .where((event) => !event.hideFromList)
-        .toList();
+    List<EventItem> results = List.of(shuffledDummyEvents);
     final searchQuery = _searchController.text.toLowerCase();
 
     if (searchQuery.isNotEmpty) {
