@@ -24,9 +24,24 @@ class TimetableScreen extends StatefulWidget {
 }
 
 class _TimetableScreenState extends State<TimetableScreen> {
-  FestivalDay _selectedDay = FestivalDay.dayOne;
+  late FestivalDay _selectedDay;
   final double _hourHeight = 120.0;
   final double _leftColumnWidth = 50.0;
+
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedDay = _getInitialSelectedDay();
+  }
+
+  FestivalDay _getInitialSelectedDay() {
+    final now = DateTime.now();
+    if (now.year == 2025 && now.month == 9 && now.day == 15) {
+      return FestivalDay.dayTwo;
+    }
+    return FestivalDay.dayOne;
+  }
 
   @override
   Widget build(BuildContext context) {
