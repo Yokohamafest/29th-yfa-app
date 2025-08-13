@@ -30,9 +30,23 @@ class FavoritesScreen extends StatefulWidget {
 }
 
 class _FavoritesScreenState extends State<FavoritesScreen> {
-  FestivalDay _selectedDay = FestivalDay.dayOne;
+  late FestivalDay _selectedDay;
 
   static final timeFormatter = DateFormat('HH:mm');
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedDay = _getInitialSelectedDay();
+  }
+
+  FestivalDay _getInitialSelectedDay() {
+    final now = DateTime.now();
+    if (now.year == 2025 && now.month == 9 && now.day == 15) {
+      return FestivalDay.dayTwo;
+    }
+    return FestivalDay.dayOne;
+  }
 
   List<Widget> _buildScheduleWidgets(List<ScheduleEntry> scheduleEntries) {
     if (scheduleEntries.isEmpty) {
