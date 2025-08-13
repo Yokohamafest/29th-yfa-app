@@ -39,7 +39,10 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
 
   Future<void> _saveReadStatus() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList('read_announcement_ids', _readAnnouncementIds.toList());
+    await prefs.setStringList(
+      'read_announcement_ids',
+      _readAnnouncementIds.toList(),
+    );
   }
 
   @override
@@ -48,8 +51,14 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('お知らせ'),
+        title: const Text(
+          'お知らせ',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Color.fromARGB(255, 84, 164, 219),
+        foregroundColor: Colors.white,
       ),
+
       body: ListView.builder(
         itemCount: _announcements.length,
         itemBuilder: (context, index) {
@@ -80,7 +89,8 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => AnnouncementDetailScreen(announcement: announcement),
+                    builder: (context) =>
+                        AnnouncementDetailScreen(announcement: announcement),
                   ),
                 );
               },

@@ -15,12 +15,14 @@ class FavoritesScreen extends StatefulWidget {
   final Set<String> favoriteEventIds;
   final Function(String) onToggleFavorite;
   final Function(String) onNavigateToMap;
+  final Function(int) changeTab;
 
   const FavoritesScreen({
     super.key,
     required this.favoriteEventIds,
     required this.onToggleFavorite,
     required this.onNavigateToMap,
+    required this.changeTab,
   });
 
   @override
@@ -28,9 +30,23 @@ class FavoritesScreen extends StatefulWidget {
 }
 
 class _FavoritesScreenState extends State<FavoritesScreen> {
-  FestivalDay _selectedDay = FestivalDay.dayOne;
+  late FestivalDay _selectedDay;
 
   static final timeFormatter = DateFormat('HH:mm');
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedDay = _getInitialSelectedDay();
+  }
+
+  FestivalDay _getInitialSelectedDay() {
+    final now = DateTime.now();
+    if (now.year == 2025 && now.month == 9 && now.day == 15) {
+      return FestivalDay.dayTwo;
+    }
+    return FestivalDay.dayOne;
+  }
 
   List<Widget> _buildScheduleWidgets(List<ScheduleEntry> scheduleEntries) {
     if (scheduleEntries.isEmpty) {
@@ -92,9 +108,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         .toList();
 
     final List<ScheduleEntry> scheduleItems = [];
-    final dayToFilter = _selectedDay == FestivalDay.dayOne
-        ? 14
-        : 15;
+    final dayToFilter = _selectedDay == FestivalDay.dayOne ? 14 : 15;
 
     for (final event in favoritedEvents) {
       for (final slot in event.timeSlots) {
@@ -110,7 +124,10 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('お気に入り企画'),
+        title: const Text(
+          'お気に入り企画',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         actions: [
           Builder(
             builder: (context) {
@@ -129,17 +146,25 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   );
                 },
                 icon: const Icon(Icons.notifications_active_outlined),
-                label: const Text('通知設定'),
+                label: const Text(
+                  '通知設定',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 style: TextButton.styleFrom(
+                  side: const BorderSide(color: Colors.white, width: 0.8),
+                  backgroundColor: Color.fromARGB(255, 72, 151, 209),
                   foregroundColor:
                       Theme.of(context).appBarTheme.iconTheme?.color ??
-                      Colors.black,
+                      Colors.white,
+                  shadowColor: Colors.black,
                 ),
               );
             },
           ),
           const SizedBox(width: 8),
         ],
+        backgroundColor: Color.fromARGB(255, 84, 164, 219),
+        foregroundColor: Colors.white,
       ),
       body: favoritedEvents.isEmpty
           ? const Center(child: Text('お気に入りに登録した企画はありません'))

@@ -9,12 +9,14 @@ class TimetableScreen extends StatefulWidget {
   final Set<String> favoriteEventIds;
   final Function(String) onToggleFavorite;
   final Function(String) onNavigateToMap;
+  final Function(int) changeTab;
 
   const TimetableScreen({
     super.key,
     required this.favoriteEventIds,
     required this.onToggleFavorite,
     required this.onNavigateToMap,
+    required this.changeTab,
   });
 
   @override
@@ -22,14 +24,36 @@ class TimetableScreen extends StatefulWidget {
 }
 
 class _TimetableScreenState extends State<TimetableScreen> {
-  FestivalDay _selectedDay = FestivalDay.dayOne;
+  late FestivalDay _selectedDay;
   final double _hourHeight = 120.0;
   final double _leftColumnWidth = 50.0;
+
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedDay = _getInitialSelectedDay();
+  }
+
+  FestivalDay _getInitialSelectedDay() {
+    final now = DateTime.now();
+    if (now.year == 2025 && now.month == 9 && now.day == 15) {
+      return FestivalDay.dayTwo;
+    }
+    return FestivalDay.dayOne;
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('タイムテーブル'), elevation: 1.0),
+      appBar: AppBar(
+        title: const Text(
+          'タイムテーブル',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Color.fromARGB(255, 84, 164, 219),
+        foregroundColor: Colors.white,
+      ),
       body: Column(
         children: [
           Padding(
@@ -223,9 +247,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
         color: backgroundColor.withAlpha(25),
         child: SizedBox(
           height: (21 - 10) * _hourHeight,
-          child: Stack(
-            children: cards,
-          ),
+          child: Stack(children: cards),
         ),
       ),
     );
@@ -261,8 +283,7 @@ class _TimetableEventCard extends StatelessWidget {
     if (cardHeight < 65) {
       titleMaxLines = 1;
       groupNameMaxLines = 1;
-    }
-    else {
+    } else {
       final durationInMinutes = timeSlot.endTime
           .difference(timeSlot.startTime)
           .inMinutes;

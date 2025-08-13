@@ -1,16 +1,22 @@
 ﻿import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_app_yfa/data/dummy_announcements.dart';
 import '../data/dummy_map_data.dart';
 import '../models/map_models.dart';
 import '../data/dummy_events.dart';
 import '../models/event_item.dart';
 import 'event_detail_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../models/announcement_item.dart';
+import 'announcement_detail_screen.dart';
+import 'options_screen.dart';
 
 class MapScreen extends StatefulWidget {
   final String? highlightedEventId;
   final Set<String> favoriteEventIds;
   final Function(String) onToggleFavorite;
   final Function(String) onNavigateToMap;
+  final Function(int) changeTab;
 
   const MapScreen({
     super.key,
@@ -18,6 +24,7 @@ class MapScreen extends StatefulWidget {
     required this.favoriteEventIds,
     required this.onToggleFavorite,
     required this.onNavigateToMap,
+    required this.changeTab,
   });
 
   @override
@@ -41,7 +48,7 @@ class _MapScreenState extends State<MapScreen> {
     'pin_b2': MapType.building2F1,
     'pin_b3': MapType.building3F1,
     'pin_b4': MapType.building4F1F2,
-    // 体育館（5号館）はフロアマップがないので、ここには含めない
+    // 1号館および体育館（5号館）はフロアマップがないので、ここには含めない
   };
 
   @override
@@ -52,6 +59,15 @@ class _MapScreenState extends State<MapScreen> {
         _navigateToEvent(widget.highlightedEventId!);
       }
     });
+  }
+
+  Future<void> _launchURL(Uri url) async {
+    if (!await launchUrl(url)) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('${url.toString()} を開けませんでした')));
+    }
   }
 
   @override
@@ -85,10 +101,11 @@ class _MapScreenState extends State<MapScreen> {
 
     if (targetPin == null) {
       const buildingAreaMap = {
-        '体育館': EventArea.building5,
+        '1号館': EventArea.building1,
         '2号館': EventArea.building2,
         '3号館': EventArea.building3,
         '4号館': EventArea.building4,
+        '5号館': EventArea.building5,
       };
 
       MapEntry<String, EventArea>? buildingEntry;
@@ -174,11 +191,11 @@ class _MapScreenState extends State<MapScreen> {
             );
           } else if (pin.type == PinType.building) {
             const buildingAreaMap = {
-              '1号館': EventArea.building1 /* ... */,
-              '2号館': EventArea.building2 /* ... */,
-              '3号館': EventArea.building3 /* ... */,
-              '4号館': EventArea.building4 /* ... */,
-              '体育館': EventArea.building5,
+              '1号館': EventArea.building1,
+              '2号館': EventArea.building2,
+              '3号館': EventArea.building3,
+              '4号館': EventArea.building4,
+              '5号館': EventArea.building5,
             };
             final targetArea = buildingAreaMap[pin.title];
             if (targetArea != null) {
@@ -260,10 +277,11 @@ class _MapScreenState extends State<MapScreen> {
 
                 if (pin.type == PinType.building) {
                   const buildingAreaMap = {
-                    '体育館': EventArea.building5,
+                    '1号館': EventArea.building1,
                     '2号館': EventArea.building2,
                     '3号館': EventArea.building3,
                     '4号館': EventArea.building4,
+                    '5号館': EventArea.building5,
                   };
                   final targetArea = buildingAreaMap[pin.title];
                   if (targetArea != null) {
@@ -271,8 +289,7 @@ class _MapScreenState extends State<MapScreen> {
                         .where((event) => event.area == targetArea)
                         .toList();
                   }
-                }
-                else if (pin.type == PinType.event) {
+                } else if (pin.type == PinType.event) {
                   attachedEvents = visibleEvents
                       .where((event) => event.location == pin.title)
                       .toList();
@@ -337,7 +354,127 @@ class _MapScreenState extends State<MapScreen> {
                                   ),
                               ],
                             ),
+
+                          if ((pin.detailText != null || pin.link != null) && pin.showDetailText) ...[
                             const Divider(height: 24),
+                            if (pin.detailText != null)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 8.0),
+                                child: Text(
+                                  pin.detailText!,
+                                  style: const TextStyle(fontSize: 14),
+                                ),
+                              ),
+                              if (pin.link != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 8.0),
+                                  child: TextButton(
+                                    child: Text(pin.link!.text),
+                                    onPressed: () {
+                                      final link = pin.link!;
+                                      switch (link.actionType) {
+                                        case PinLinkActionType.url:
+                                          final url = Uri.parse(
+                                            link.actionValue,
+                                          );
+                                          _launchURL(url);
+                                          break;
+                                        case PinLinkActionType.eventDetail:
+                                          final eventId = link.actionValue;
+                                          EventItem? targetEvent;
+                                          try {
+                                            targetEvent = dummyEvents
+                                                .firstWhere(
+                                                  (e) => e.id == eventId,
+                                                );
+                                          } catch (e) {
+                                            targetEvent = null;
+                                          }
+
+                                          if (targetEvent != null) {
+                                            Navigator.of(context).pop();
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    EventDetailScreen(
+                                                      event: targetEvent!,
+                                                      favoriteEventIds: widget
+                                                          .favoriteEventIds,
+                                                      onToggleFavorite: widget
+                                                          .onToggleFavorite,
+                                                      onNavigateToMap: widget
+                                                          .onNavigateToMap,
+                                                    ),
+                                              ),
+                                            );
+                                          }
+                                          break;
+                                        case PinLinkActionType
+                                            .announcementDetail:
+                                          final announcementId =
+                                              link.actionValue;
+                                          AnnouncementItem? targetAnnouncement;
+                                          try {
+                                            targetAnnouncement =
+                                                dummyAnnouncements.firstWhere(
+                                                  (announcement) =>
+                                                      announcement.id ==
+                                                      announcementId,
+                                                );
+                                          } catch (e) {
+                                            targetAnnouncement = null;
+                                          }
+                                          if (targetAnnouncement != null) {
+                                            Navigator.of(context).pop();
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    AnnouncementDetailScreen(
+                                                      announcement: targetAnnouncement!,
+                                                    ),
+                                              ),
+                                            );
+                                          }
+                                          break;
+                                        case PinLinkActionType.option:
+                                          Navigator.of(context).pop();
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => const OptionsScreen(),
+                                            ),
+                                          );
+                                          break;
+                                        case PinLinkActionType.map:
+                                          final mapIdString = link.actionValue;
+                                          MapInfo? targetMap;
+                                          try {
+                                            final targetMapType = MapType.values.byName(mapIdString);
+                                            targetMap = allMaps.firstWhere((map) => map.id == targetMapType);
+                                          } catch (e) {
+                                            targetMap = null;
+                                          }
+
+                                          if (targetMap != null) {
+                                            setState(() {
+                                              _currentMap = targetMap!;
+                                            });
+                                          }
+                                          Navigator.of(context).pop();
+                                          break;
+                                        case PinLinkActionType.timetable:
+                                          Navigator.of(context).pop();
+                                          widget.changeTab(1);
+                                      }
+                                    },
+                                  ),
+                                ),
+                            ],
+
+                            const Divider(height: 24),
+
                             if (pin.type == PinType.building &&
                                 servicesInBuilding.isNotEmpty) ...[
                               const Text(
@@ -503,15 +640,15 @@ class _MapScreenState extends State<MapScreen> {
                                                 spacing: 6.0,
                                                 runSpacing: 4.0,
                                                 children: [
+                                                  _buildTag(
+                                                    event.date.name,
+                                                    Colors.green,
+                                                  ),
                                                   ...event.categories.map(
                                                     (category) => _buildTag(
                                                       category.name,
                                                       Colors.blue,
                                                     ),
-                                                  ),
-                                                  _buildTag(
-                                                    event.date.name,
-                                                    Colors.green,
                                                   ),
                                                 ],
                                               ),
@@ -592,17 +729,22 @@ class _MapScreenState extends State<MapScreen> {
 
   Widget _buildFilterDrawer() {
     return Drawer(
-      child: SafeArea(
-        child: Column(
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Text(
-                'マップピン絞り込み',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          const DrawerHeader(
+            decoration: BoxDecoration(color: Color(0xFF54A4DB)),
+            child: Text(
+              'マップピン検索',
+              style: TextStyle(color: Colors.white, fontSize: 24),
             ),
-            SegmentedButton<MapFilterType>(
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 8.0,
+            ),
+            child: SegmentedButton<MapFilterType>(
               segments: const [
                 ButtonSegment(
                   value: MapFilterType.event,
@@ -623,21 +765,19 @@ class _MapScreenState extends State<MapScreen> {
                 });
               },
             ),
-            const Divider(),
-            Expanded(
-              child: _currentFilterType == MapFilterType.event
-                  ? _buildEventFilterOptions()
-                  : _buildServiceFilterOptions(),
-            ),
-          ],
-        ),
+          ),
+          const Divider(),
+          _currentFilterType == MapFilterType.event
+              ? _buildEventFilterOptions()
+              : _buildServiceFilterOptions(),
+        ],
       ),
     );
   }
 
   Widget _buildEventFilterOptions() {
-    return ListView(
-      padding: const EdgeInsets.all(8.0),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.only(left: 16.0, top: 16.0),
@@ -701,15 +841,30 @@ class _MapScreenState extends State<MapScreen> {
           ),
         ),
 
-        SwitchListTile(
-          title: const Text('お気に入り登録済'),
-          value: _filterFavorites,
-          onChanged: (value) {
-            setState(() {
-              _filterFavorites = value;
-              _applyFilters();
-            });
-          },
+        Padding(
+          padding: const EdgeInsets.only(left: 16.0, top: 16.0),
+          child: Text(
+            "その他",
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: Wrap(
+            spacing: 8.0,
+            children: [
+              FilterChip(
+                label: const Text('お気に入り登録済'),
+                selected: _filterFavorites,
+                onSelected: (bool selected) {
+                  setState(() {
+                    _filterFavorites = selected;
+                    _applyFilters();
+                  });
+                },
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -723,8 +878,7 @@ class _MapScreenState extends State<MapScreen> {
       PinType.bikeParking,
       PinType.recyclingStation,
     ];
-    return ListView(
-      padding: const EdgeInsets.all(8.0),
+    return Column(
       children: serviceTypes.map((type) {
         return CheckboxListTile(
           title: Text(type.displayName),
@@ -752,15 +906,33 @@ class _MapScreenState extends State<MapScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("マップ"),
+        title: Text("マップ", style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
           Builder(
-            builder: (context) => IconButton(
-              icon: const Icon(Icons.filter_list),
-              onPressed: () => Scaffold.of(context).openEndDrawer(),
-            ),
+            builder: (context) {
+              return TextButton.icon(
+                onPressed: () {
+                  Scaffold.of(context).openEndDrawer();
+                },
+                icon: const Icon(Icons.search),
+                label: const Text(
+                  'マップピン検索',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                style: TextButton.styleFrom(
+                  side: const BorderSide(color: Colors.white, width: 0.8),
+                  backgroundColor: Color.fromARGB(255, 72, 151, 209),
+                  foregroundColor:
+                      Theme.of(context).appBarTheme.iconTheme?.color ??
+                      Colors.white,
+                  shadowColor: Colors.black,
+                ),
+              );
+            },
           ),
         ],
+        backgroundColor: Color.fromARGB(255, 84, 164, 219),
+        foregroundColor: Colors.white,
       ),
       endDrawer: _buildFilterDrawer(),
       body: Stack(
@@ -876,7 +1048,15 @@ class _MapPinWidgetState extends State<MapPinWidget>
         case PinType.vendingMachine:
           serviceIcon = Icons.local_drink;
           break;
-        // TODO:他のサービスピンも同様に追加 ...
+        case PinType.bikeParking:
+          serviceIcon = Icons.pedal_bike;
+          break;
+        case PinType.smokingArea:
+          serviceIcon = Icons.smoking_rooms_rounded;
+          break;
+        case PinType.recyclingStation:
+          serviceIcon = Icons.delete;
+          break;
         default:
           serviceIcon = Icons.info;
       }

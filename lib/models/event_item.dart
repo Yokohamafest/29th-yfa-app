@@ -49,7 +49,7 @@ extension EventAreaExt on EventArea {
         return '4号館';
 
       case EventArea.building5:
-        return '体育館';
+        return '5号館';
 
       case EventArea.outdoor:
         return '屋外';

@@ -4,7 +4,6 @@ import '../screens/event_detail_screen.dart';
 
 class EventCard extends StatelessWidget {
   final EventItem event;
-
   final Set<String> favoriteEventIds;
   final Function(String) onToggleFavorite;
   final Function(String) onNavigateToMap;
@@ -17,9 +16,10 @@ class EventCard extends StatelessWidget {
     required this.onNavigateToMap,
   });
 
+  // タグの見た目を作るヘルパーウィジェット
   Widget _buildTag(String text, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+      padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 3.0),
       decoration: BoxDecoration(
         color: color.withAlpha(51),
         borderRadius: BorderRadius.circular(8.0),
@@ -38,6 +38,11 @@ class EventCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isFavorited = favoriteEventIds.contains(event.id);
+    final allTags = [
+      {'text': event.date.name, 'color': Colors.green},
+      {'text': event.area.name, 'color': Colors.orange},
+      ...event.categories.map((c) => {'text': c.name, 'color': Colors.blue}),
+    ];
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
@@ -51,11 +56,15 @@ class EventCard extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => EventDetailScreen(event: event, favoriteEventIds: favoriteEventIds, onToggleFavorite: onToggleFavorite, onNavigateToMap: onNavigateToMap,),
+                    builder: (context) => EventDetailScreen(
+                      event: event,
+                      favoriteEventIds: favoriteEventIds,
+                      onToggleFavorite: onToggleFavorite,
+                      onNavigateToMap: onNavigateToMap,
+                    ),
                   ),
                 );
               },
-
         child: SizedBox(
           height: 120,
           child: Row(
@@ -78,10 +87,9 @@ class EventCard extends StatelessWidget {
                   },
                 ),
               ),
-
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 12, 0, 12),
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -100,7 +108,7 @@ class EventCard extends StatelessWidget {
                             ),
                           ),
                           IconButton(
-                            padding: const EdgeInsets.all(0),
+                            padding: const EdgeInsets.only(left: 8.0),
                             constraints: const BoxConstraints(),
                             icon: Icon(
                               isFavorited
@@ -122,14 +130,62 @@ class EventCard extends StatelessWidget {
                         ),
                       ),
                       const Spacer(),
-                      Wrap(
-                        spacing: 6.0,
-                        runSpacing: 4.0,
-                        children: [
-                          ...event.categories.map((category) => _buildTag(category.name, Colors.blue)),
-                          _buildTag(event.area.name, Colors.orange),
-                          _buildTag(event.date.name, Colors.green),
-                        ],
+
+                      // 【変更点】タグ表示エリアをLayoutBuilderで囲む
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          var tagWidgets = <Widget>[];
+                          double currentWidth = 0;
+
+                          // "+n"タグのおおよその幅を確保
+                          final plusNTagsWidth = 40.0;
+
+                          for (var tagData in allTags) {
+                            final tag = _buildTag(
+                              tagData['text'] as String,
+                              tagData['color'] as Color,
+                            );
+
+                            // 各タグの幅を、TextPainterを使って事前に計測
+                            final painter = TextPainter(
+                              text: TextSpan(
+                                text: tagData['text'] as String,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10,
+                                ),
+                              ),
+                              textDirection: TextDirection.ltr,
+                            )..layout();
+
+                            // padding(6*2=12)とmargin(6)を加味したおおよその幅
+                            final tagWidth = painter.width + 12 + 6;
+
+                            if (currentWidth + tagWidth <
+                                constraints.maxWidth - plusNTagsWidth) {
+                              tagWidgets.add(
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 6.0),
+                                  child: tag,
+                                ),
+                              );
+                              currentWidth += tagWidth;
+                            } else {
+                              break;
+                            }
+                          }
+
+                          final hiddenCount =
+                              allTags.length - tagWidgets.length;
+
+                          return Row(
+                            children: [
+                              ...tagWidgets,
+                              if (hiddenCount > 0)
+                                _buildTag('+$hiddenCount', Colors.grey),
+                            ],
+                          );
+                        },
                       ),
                     ],
                   ),

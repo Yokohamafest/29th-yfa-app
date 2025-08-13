@@ -36,6 +36,20 @@ enum PinType {
   building, // 建物全体を示すピン
 }
 
+enum PinLinkActionType { url, map, eventDetail, announcementDetail, option, timetable}
+
+class PinLink {
+  final String text;
+  final PinLinkActionType actionType;
+  final String actionValue;
+
+  const PinLink({
+    required this.text,
+    required this.actionType,
+    required this.actionValue,
+  });
+}
+
 class MapPin {
   final String id;
   final MapType mapId; // どのマップに所属するか
@@ -46,6 +60,10 @@ class MapPin {
   final double? fontSize;
   final double? iconSize;
   final EdgeInsets? padding;
+  final String? detailText;
+  final bool showDetailText;
+  final PinLink? link;
+
 
   const MapPin({
     required this.id,
@@ -57,5 +75,8 @@ class MapPin {
     this.fontSize,
     this.iconSize,
     this.padding,
+    this.detailText,
+    this.showDetailText = true,
+    this.link,
   });
 }

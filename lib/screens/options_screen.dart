@@ -46,7 +46,7 @@ class _OptionsScreenState extends State<OptionsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('データの初期化'),
-        content: const Text('お気に入りや既読の情報など、保存されたデータがすべてリセットされます。よろしいですか？'),
+        content: const Text('お気に入りや既読の情報など、保存されたデータがすべてリセットされます。'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -90,7 +90,15 @@ class _OptionsScreenState extends State<OptionsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('オプション')),
+      appBar: AppBar(
+        title: const Text(
+          'オプション',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Color.fromARGB(255, 84, 164, 219),
+        foregroundColor: Colors.white,
+      ),
+
       body: ListView(
         children: [
           const ListTile(
@@ -120,7 +128,7 @@ class _OptionsScreenState extends State<OptionsScreen> {
           ListTile(
             leading: const Icon(Icons.delete_outline),
             title: const Text('キャッシュをクリアする'),
-            subtitle: const Text('お気に入りや既読の情報をリセットします'),
+            subtitle: const Text('お気に入りや既読の情報をリセットする。\n（デバッグ用のため、削除予定）'),
             onTap: _clearCache,
           ),
           const Divider(),

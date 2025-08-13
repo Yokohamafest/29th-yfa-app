@@ -1,6 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../data/dummy_events.dart';
+import '../data/shuffled_events.dart';
 import '../models/event_item.dart';
 import '../widgets/event_card.dart';
 
@@ -8,12 +8,14 @@ class EventListScreen extends StatefulWidget {
   final Set<String> favoriteEventIds;
   final Function(String) onToggleFavorite;
   final Function(String) onNavigateToMap;
+  final Function(int) changeTab;
 
   const EventListScreen({
     super.key,
     required this.favoriteEventIds,
     required this.onToggleFavorite,
     required this.onNavigateToMap,
+    required this.changeTab,
   });
 
   @override
@@ -34,9 +36,7 @@ class _EventListScreenState extends State<EventListScreen> {
   @override
   void initState() {
     super.initState();
-    _filteredEvents = dummyEvents
-        .where((event) => !event.hideFromList)
-        .toList();
+    _filteredEvents = shuffledDummyEvents;
     _searchController.addListener(_runFilter);
   }
 
@@ -47,9 +47,7 @@ class _EventListScreenState extends State<EventListScreen> {
   }
 
   void _runFilter() {
-    List<EventItem> results = dummyEvents
-        .where((event) => !event.hideFromList)
-        .toList();
+    List<EventItem> results = List.of(shuffledDummyEvents);
     final searchQuery = _searchController.text.toLowerCase();
 
     if (searchQuery.isNotEmpty) {
@@ -184,9 +182,10 @@ class _EventListScreenState extends State<EventListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('企画一覧'),
-        backgroundColor: Colors.white,
-        elevation: 1.0,
+        title: const Text(
+          '企画一覧',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         actions: [
           Builder(
             builder: (context) {
@@ -195,17 +194,25 @@ class _EventListScreenState extends State<EventListScreen> {
                   Scaffold.of(context).openEndDrawer();
                 },
                 icon: const Icon(Icons.filter_list),
-                label: const Text('絞り込み'),
+                label: const Text(
+                  '絞り込み',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 style: TextButton.styleFrom(
+                  side: const BorderSide(color: Colors.white, width: 0.8),
+                  backgroundColor: Color.fromARGB(255, 72, 151, 209),
                   foregroundColor:
                       Theme.of(context).appBarTheme.iconTheme?.color ??
-                      Colors.black,
+                      Colors.white,
+                  shadowColor: Colors.black,
                 ),
               );
             },
           ),
           const SizedBox(width: 8),
         ],
+        backgroundColor: Color.fromARGB(255, 84, 164, 219),
+        foregroundColor: Colors.white,
       ),
       endDrawer: Drawer(
         child: ListView(
