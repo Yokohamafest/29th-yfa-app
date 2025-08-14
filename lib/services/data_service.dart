@@ -6,7 +6,6 @@ import '../models/announcement_item.dart';
 import '../models/event_item.dart';
 import '../models/map_models.dart';
 import '../models/spotlight_item.dart';
-import '../data/shuffled_events.dart';
 
 // アプリの全てのデータ供給を担当するクラス
 class DataService {
@@ -19,9 +18,10 @@ class DataService {
   }
 
   // シャッフル済みの企画情報を取得する
+  // データ取得の処理は上のgetEventsを利用している
   Future<List<EventItem>> getShuffledEvents() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    return shuffledDummyEvents;
+    final allEvents = await getEvents();
+    return allEvents.where((event) => !event.hideFromList).toList()..shuffle();
   }
 
   // お知らせ情報を取得する
