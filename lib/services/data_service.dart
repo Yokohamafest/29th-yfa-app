@@ -2,10 +2,12 @@
 import '../data/dummy_events.dart';
 import '../data/dummy_map_data.dart';
 import '../data/dummy_spotlights.dart';
+import '../data/dummy_info_links.dart';
 import '../models/announcement_item.dart';
 import '../models/event_item.dart';
 import '../models/map_models.dart';
 import '../models/spotlight_item.dart';
+import '../models/info_link_item.dart';
 
 // アプリの全てのデータ供給を担当するクラス
 class DataService {
@@ -44,5 +46,11 @@ class DataService {
   // ピンの情報を取得する
   Future<List<MapPin>> getPins() async {
     return Future.value(allPins);
+  }
+
+  // オプション画面の情報・サポートのリンクを取得する
+  Future<List<InfoLinkItem>> getInfoLinks() async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    return dummyInfoLinks;
   }
 }

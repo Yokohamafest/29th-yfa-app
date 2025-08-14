@@ -1,8 +1,10 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:flutter_app_yfa/models/info_link_item.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../widgets/favorite_notification_settings.dart';
+import '../services/data_service.dart';
 
 class OptionsScreen extends StatefulWidget {
   const OptionsScreen({super.key});
@@ -12,15 +14,19 @@ class OptionsScreen extends StatefulWidget {
 }
 
 class _OptionsScreenState extends State<OptionsScreen> {
+  final DataService _dataService = DataService();
   String _appVersion = '';
 
   bool _generalNotificationsEnabled = true;
+
+  late Future<List<InfoLinkItem>> _infoLinksFuture;
 
   @override
   void initState() {
     super.initState();
     _loadAppVersion();
     _loadGeneralNotificationSetting();
+    _infoLinksFuture = _dataService.getInfoLinks();
   }
 
   // アプリのバージョン情報を読み込む
@@ -87,6 +93,19 @@ class _OptionsScreenState extends State<OptionsScreen> {
     });
   }
 
+  IconData _getIconForName(String name) {
+    switch (name) {
+      case 'public':
+        return Icons.public;
+      case 'feedback_outlined':
+        return Icons.feedback_outlined;
+      case 'privacy_tip_outlined':
+        return Icons.privacy_tip_outlined;
+      default:
+        return Icons.info_outline;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -144,25 +163,51 @@ class _OptionsScreenState extends State<OptionsScreen> {
             title: const Text('このアプリについて'),
             subtitle: Text(_appVersion),
             onTap: () {
-              // TODO: アプリのクレジットなどを表示するダイアログ
+              showAboutDialog(
+                context: context,
+                applicationIcon: Image.asset(
+                  'assets/icon/app_icon.png',
+                  width: 50,
+                  height: 50,
+                ),
+                // アプリ名
+                applicationName: '横浜祭2025 公式アプリ', // あなたのアプリ名
+                // アプリのバージョン
+                applicationVersion: _appVersion,
+                // アプリの著作権情報
+                applicationLegalese: '© 2025 横浜祭実行委員会', // あなたの団体名など
+                // 子ウィジェットとして、より詳細な情報を追加
+                children: [
+                  const SizedBox(height: 24),
+                  const Text(
+                    'このアプリは、第29回横浜祭をより楽しむために開発されました。',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ],
+              );
             },
           ),
-          ListTile(
-            leading: const Icon(Icons.public),
-            title: const Text('横浜祭公式サイト'),
-            onTap: () => _launchURL('https://yokohama-fest.net/29th'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.feedback_outlined),
-            title: const Text('お問い合わせ'),
-            onTap: () => _launchURL('https://yokohama-fest.net/29th/form'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.privacy_tip_outlined),
-            title: const Text('プライバシーポリシー'),
-            onTap: () => _launchURL(
-              'https://yokohama-fest.net/29th',
-            ), // TODO: プライバシーポリシーのURLに要変更
+          FutureBuilder<List<InfoLinkItem>>(
+            future: _infoLinksFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const SizedBox.shrink();
+              }
+              if (snapshot.hasError || !snapshot.hasData) {
+                return const ListTile(title: Text('情報を読み込めませんでした'));
+              }
+
+              final links = snapshot.data!;
+              return Column(
+                children: links.map((link) {
+                  return ListTile(
+                    leading: Icon(_getIconForName(link.iconName)),
+                    title: Text(link.title),
+                    onTap: () => _launchURL(link.url),
+                  );
+                }).toList(),
+              );
+            },
           ),
         ],
       ),
