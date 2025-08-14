@@ -70,7 +70,7 @@ extension EventCategoryExt on EventCategory {
 extension PinTypeExt on PinType {
   String get displayName {
     switch (this) {
-      case PinType.event:
+      case PinType.location:
         return '企画';
       case PinType.restroom:
         return 'お手洗い';

@@ -117,7 +117,7 @@ class _MapScreenState extends State<MapScreen> {
     try {
       targetPin = _allPins!.firstWhere(
         (pin) =>
-            pin.type == PinType.event && pin.title == targetEvent!.location,
+            pin.type == PinType.location && pin.title == targetEvent!.location,
       );
     } catch (e) {
       targetPin = null;
@@ -209,7 +209,7 @@ class _MapScreenState extends State<MapScreen> {
 
         for (final pin in _allPins!) {
           bool shouldHighlight = false;
-          if (pin.type == PinType.event) {
+          if (pin.type == PinType.location) {
             shouldHighlight = filteredEvents.any(
               (event) => event.location == pin.title,
             );
@@ -293,7 +293,7 @@ class _MapScreenState extends State<MapScreen> {
                         .where((event) => event.area == targetArea)
                         .toList();
                   }
-                } else if (pin.type == PinType.event) {
+                } else if (pin.type == PinType.location) {
                   attachedEvents = visibleEvents
                       .where((event) => event.location == pin.title)
                       .toList();
@@ -1047,7 +1047,7 @@ class _MapPinWidgetState extends State<MapPinWidget>
   Widget build(BuildContext context) {
     IconData? serviceIcon;
     if (widget.pin.type != PinType.building &&
-        widget.pin.type != PinType.event) {
+        widget.pin.type != PinType.location) {
       switch (widget.pin.type) {
         case PinType.restroom:
           serviceIcon = Icons.wc;

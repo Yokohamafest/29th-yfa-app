@@ -85,7 +85,7 @@ final List<MapPin> allPins = [
     id: 'pin_31A',
     mapId: MapType.building3F1,
     position: Offset(361, 124),
-    type: PinType.event,
+    type: PinType.location,
     title: '31A',
     link: PinLink(
       text: 'VALORANT ドラフト杯の企画詳細ページへ移動（テスト用）',
@@ -115,7 +115,7 @@ final List<MapPin> allPins = [
     id: 'pin_link_test1',
     mapId: MapType.campus,
     position: Offset(100, 150),
-    type: PinType.event,
+    type: PinType.location,
     title: 'テスト用ピン',
     detailText: 'このピンのリンクをタップすると、2号館1階に移動',
     link: PinLink(

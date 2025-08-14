@@ -27,7 +27,7 @@ class MapInfo {
 
 // ピンの種類
 enum PinType {
-  event,
+  location,
   restroom,
   vendingMachine,
   bikeParking,
