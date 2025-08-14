@@ -2,6 +2,7 @@
 import 'package:intl/intl.dart';
 import '../models/event_item.dart';
 import '../widgets/tag_widget.dart';
+import '../models/enum_extensions.dart';
 
 class EventDetailScreen extends StatefulWidget {
   final EventItem event;
@@ -126,10 +127,17 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     spacing: 8.0,
                     runSpacing: 4.0,
                     children: [
-                      TagWidget(text:widget.event.date.name, color:Colors.green),
-                      TagWidget(text:widget.event.area.name, color:Colors.orange),
+                      TagWidget(
+                        text: widget.event.date.name,
+                        color: Colors.green,
+                      ),
+                      TagWidget(
+                        text: widget.event.area.name,
+                        color: Colors.orange,
+                      ),
                       ...widget.event.categories.map(
-                        (category) => TagWidget(text:category.name, color:Colors.blue),
+                        (category) =>
+                            TagWidget(text: category.name, color: Colors.blue),
                       ),
                     ],
                   ),

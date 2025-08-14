@@ -10,6 +10,7 @@ import 'announcement_detail_screen.dart';
 import 'options_screen.dart';
 import '../services/data_service.dart';
 import '../widgets/tag_widget.dart';
+import '../models/enum_extensions.dart';
 
 class MapScreen extends StatefulWidget {
   final String? highlightedEventId;
@@ -650,13 +651,13 @@ class _MapScreenState extends State<MapScreen> {
                                                 runSpacing: 4.0,
                                                 children: [
                                                   TagWidget(
-                                                    text:event.date.name,
-                                                    color:Colors.green,
+                                                    text: event.date.name,
+                                                    color: Colors.green,
                                                   ),
                                                   ...event.categories.map(
                                                     (category) => TagWidget(
-                                                      text:category.name,
-                                                      color:Colors.blue,
+                                                      text: category.name,
+                                                      color: Colors.blue,
                                                     ),
                                                   ),
                                                 ],
@@ -985,27 +986,6 @@ class _MapScreenState extends State<MapScreen> {
 }
 
 enum MapFilterType { event, service }
-
-extension PinTypeExt on PinType {
-  String get displayName {
-    switch (this) {
-      case PinType.event:
-        return '企画';
-      case PinType.restroom:
-        return 'お手洗い';
-      case PinType.vendingMachine:
-        return '自動販売機';
-      case PinType.bikeParking:
-        return '駐輪場';
-      case PinType.smokingArea:
-        return '喫煙所';
-      case PinType.recyclingStation:
-        return '資源ステーション';
-      case PinType.building:
-        return '建物';
-    }
-  }
-}
 
 class MapPinWidget extends StatefulWidget {
   final MapPin pin;

@@ -2,6 +2,7 @@
 import '../models/event_item.dart';
 import '../screens/event_detail_screen.dart';
 import 'tag_widget.dart';
+import '../models/enum_extensions.dart';
 
 class EventCard extends StatelessWidget {
   final EventItem event;

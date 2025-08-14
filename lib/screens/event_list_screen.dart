@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../services/data_service.dart';
 import '../models/event_item.dart';
 import '../widgets/event_card.dart';
+import '../models/enum_extensions.dart';
 
 class EventListScreen extends StatefulWidget {
   final Set<String> favoriteEventIds;
