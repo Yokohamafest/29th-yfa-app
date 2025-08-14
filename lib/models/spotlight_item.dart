@@ -1,7 +1,4 @@
-﻿enum SpotlightActionType {
-  event,
-  url,
-}
+﻿enum SpotlightActionType { event, url }
 
 class SpotlightItem {
   final String id;
@@ -17,4 +14,13 @@ class SpotlightItem {
     required this.actionType,
     required this.actionValue,
   });
+
+  factory SpotlightItem.fromJson(Map<String, dynamic> json) {
+    return SpotlightItem(
+      id: json['id'],
+      imagePath: json['imagePath'],
+      actionType: SpotlightActionType.values.byName(json['actionType']),
+      actionValue: json['actionValue'],
+    );
+  }
 }

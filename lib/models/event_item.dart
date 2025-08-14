@@ -99,6 +99,13 @@ class TimeSlot {
   final DateTime endTime;
 
   const TimeSlot({required this.startTime, required this.endTime});
+
+  factory TimeSlot.fromJson(Map<String, dynamic> json) {
+    return TimeSlot(
+      startTime: DateTime.parse(json['startTime']),
+      endTime: DateTime.parse(json['endTime']),
+    );
+  }
 }
 
 class EventItem {
@@ -114,7 +121,7 @@ class EventItem {
   final bool hideFromList; // trueなら企画一覧とお気に入り一覧に表示しない デフォルトはfalse
   final bool disableDetailsLink; // trueなら詳細ページへの遷移を無効にする デフォルトはfalse
   final FestivalDay date;
-  final List<TimeSlot> timeSlots;    // デフォルトは空のリスト 時間指定のない常時開催企画は、このリストが空になる
+  final List<TimeSlot> timeSlots; // デフォルトは空のリスト 時間指定のない常時開催企画は、このリストが空になる
 
   const EventItem({
     required this.id,
@@ -130,4 +137,25 @@ class EventItem {
     required this.date,
     this.timeSlots = const [],
   });
+
+  factory EventItem.fromJson(Map<String, dynamic> json) {
+    return EventItem(
+      id: json['id'],
+      title: json['title'],
+      groupName: json['groupName'],
+      description: json['description'],
+      imagePath: json['imagePath'],
+      area: EventArea.values.byName(json['area']),
+      location: json['location'],
+      categories: (json['categories'] as List)
+          .map((category) => EventCategory.values.byName(category))
+          .toList(),
+      hideFromList: json['hideFromList'] ?? false,
+      disableDetailsLink: json['disableDetailsLink'] ?? false,
+      date: FestivalDay.values.byName(json['date']),
+      timeSlots: (json['timeSlots'] as List)
+          .map((slot) => TimeSlot.fromJson(slot))
+          .toList(),
+    );
+  }
 }
