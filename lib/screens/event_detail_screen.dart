@@ -1,6 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/event_item.dart';
+import '../widgets/tag_widget.dart';
 
 class EventDetailScreen extends StatefulWidget {
   final EventItem event;
@@ -21,24 +22,6 @@ class EventDetailScreen extends StatefulWidget {
 }
 
 class _EventDetailScreenState extends State<EventDetailScreen> {
-  Widget _buildTag(String text, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-      decoration: BoxDecoration(
-        color: color.withAlpha(51),
-        borderRadius: BorderRadius.circular(8.0),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: color,
-          fontWeight: FontWeight.bold,
-          fontSize: 10,
-        ),
-      ),
-    );
-  }
-
   Widget _buildInfoRow({
     required IconData icon,
     required String title,
@@ -143,10 +126,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     spacing: 8.0,
                     runSpacing: 4.0,
                     children: [
-                      _buildTag(widget.event.date.name, Colors.green),
-                      _buildTag(widget.event.area.name, Colors.orange),
+                      TagWidget(text:widget.event.date.name, color:Colors.green),
+                      TagWidget(text:widget.event.area.name, color:Colors.orange),
                       ...widget.event.categories.map(
-                        (category) => _buildTag(category.name, Colors.blue),
+                        (category) => TagWidget(text:category.name, color:Colors.blue),
                       ),
                     ],
                   ),

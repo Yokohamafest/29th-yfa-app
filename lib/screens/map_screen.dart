@@ -9,6 +9,7 @@ import '../models/announcement_item.dart';
 import 'announcement_detail_screen.dart';
 import 'options_screen.dart';
 import '../services/data_service.dart';
+import '../widgets/tag_widget.dart';
 
 class MapScreen extends StatefulWidget {
   final String? highlightedEventId;
@@ -250,26 +251,6 @@ class _MapScreenState extends State<MapScreen> {
       _blinkingPinId = null;
       _highlightedPinIds = isFilterActive ? newHighlightedPinIds : {};
     });
-  }
-
-  // --- UIを生成するヘルパーメソッド群 ---
-
-  Widget _buildTag(String text, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 3.0),
-      decoration: BoxDecoration(
-        color: color.withAlpha(51),
-        borderRadius: BorderRadius.circular(8.0),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: color,
-          fontWeight: FontWeight.bold,
-          fontSize: 10,
-        ),
-      ),
-    );
   }
 
   Widget _buildMapPin(MapPin pin) {
@@ -668,14 +649,14 @@ class _MapScreenState extends State<MapScreen> {
                                                 spacing: 6.0,
                                                 runSpacing: 4.0,
                                                 children: [
-                                                  _buildTag(
-                                                    event.date.name,
-                                                    Colors.green,
+                                                  TagWidget(
+                                                    text:event.date.name,
+                                                    color:Colors.green,
                                                   ),
                                                   ...event.categories.map(
-                                                    (category) => _buildTag(
-                                                      category.name,
-                                                      Colors.blue,
+                                                    (category) => TagWidget(
+                                                      text:category.name,
+                                                      color:Colors.blue,
                                                     ),
                                                   ),
                                                 ],
