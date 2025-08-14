@@ -1,17 +1,15 @@
 ﻿import 'dart:math' as math;
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_app_yfa/models/announcement_item.dart';
 import 'announcement_screen.dart';
 import 'options_screen.dart';
 import 'event_detail_screen.dart';
-import '../data/dummy_events.dart';
 import '../models/event_item.dart';
-import '../widgets/event_card.dart';
-import '../data/dummy_announcements.dart';
 import 'announcement_detail_screen.dart';
 import '../models/spotlight_item.dart';
-import '../data/dummy_spotlights.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../services/data_service.dart';
 
 class HomeScreen extends StatefulWidget {
   final Set<String> favoriteEventIds;
@@ -32,11 +30,13 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
+  final DataService _dataService = DataService();
+  late Future<List<dynamic>> _homeDataFuture; // 複数のデータをまとめて扱う
+
   AnimationController? _slideInController;
   late final AnimationController _rockingController;
   Animation<double>? _xAnimation;
   bool _isAnimationInitialized = false;
-  List<EventItem> _recommendedEvents = [];
 
   static const int _initialPage = 5000;
   late final PageController _pageController;
@@ -45,6 +45,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+
+    _homeDataFuture = Future.wait([
+      _dataService.getAnnouncements(),
+      _dataService.getSpotlights(),
+      _dataService.getEvents(),
+    ]);
 
     _rockingController = AnimationController(
       vsync: this,
@@ -56,7 +62,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       initialPage: _initialPage,
     );
 
-    _selectRecommendedEvents();
     WidgetsBinding.instance.addPostFrameCallback((_) => _initSlideAnimation());
     _startAutoPlay();
   }
@@ -74,16 +79,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     if (mounted) {
       setState(() {});
     }
-  }
-
-  void _selectRecommendedEvents() {
-    final allEvents = dummyEvents
-        .where((event) => !event.hideFromList)
-        .toList();
-    allEvents.shuffle();
-    setState(() {
-      _recommendedEvents = allEvents.take(3).toList();
-    });
   }
 
   void _startAutoPlay() {
@@ -177,113 +172,143 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ],
           ),
 
-          SingleChildScrollView(
-            child: Column(
-              children: [
-                Stack(
+          FutureBuilder<List<dynamic>>(
+            future: _homeDataFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Positioned.fill(
+                  top: 420,
+                  child: Center(
+                    child: CircularProgressIndicator(color: Colors.white),
+                  ),
+                );
+              }
+              if (snapshot.hasError || !snapshot.hasData) {
+                return const Positioned.fill(
+                  top: 420,
+                  child: Center(
+                    child: Text(
+                      '情報を読み込めませんでした',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                );
+              }
+
+              final announcements = snapshot.data![0] as List<AnnouncementItem>;
+              final spotlights = snapshot.data![1] as List<SpotlightItem>;
+              final allEvents = snapshot.data![2] as List<EventItem>;
+
+              return SingleChildScrollView(
+                child: Column(
                   children: [
-                    SizedBox(height: 420),
+                    Stack(
+                      children: [
+                        SizedBox(height: 420),
 
-                    Container(
-                      height: 250, //screenHeight * 0.4,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [Color(0xFF54A4DB), Colors.white],
-                        ),
-                      ),
-                    ),
-
-                    Positioned(
-                      top: 250, //screenHeight * 0.4,
-                      left: 0,
-                      right: 0,
-                      height: 50, //screenHeight * 0.1,
-                      child: Container(color: Colors.white),
-                    ),
-
-                    Positioned(
-                      top: 100,
-                      left: screenWidth * 0.55,
-                      child: Image.asset('assets/images/title.png', width: 150),
-                    ),
-                    Positioned(
-                      top: 0,
-                      left: screenWidth * 0.55,
-                      child: Image.asset(
-                        'assets/images/voyage_logo.png',
-                        width: 150,
-                      ),
-                    ),
-
-                    if (_slideInController != null && _xAnimation != null)
-                      AnimatedBuilder(
-                        animation: _slideInController!,
-                        builder: (context, slideInChild) {
-                          return Positioned(
-                            left: _xAnimation!.value,
-                            top: 140,
-                            child: slideInChild!,
-                          );
-                        },
-                        child: AnimatedBuilder(
-                          animation: _rockingController,
-                          builder: (context, rockingChild) {
-                            final rockingValue = math.sin(
-                              _rockingController.value * 2 * math.pi,
-                            );
-                            return Transform(
-                              transform: Matrix4.translationValues(
-                                0,
-                                rockingValue * 5,
-                                0,
-                              )..rotateZ(rockingValue * 0.05),
-                              alignment: Alignment.center,
-                              child: rockingChild,
-                            );
-                          },
-                          child: Image.asset(
-                            'assets/images/ship.png',
-                            width: 180,
+                        Container(
+                          height: 250, //screenHeight * 0.4,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [Color(0xFF54A4DB), Colors.white],
+                            ),
                           ),
                         ),
-                      ),
 
-                    Positioned(
-                      top: 275,
-                      left: 0,
-                      right: 0,
-                      child: Image.asset(
-                        'assets/images/wave.gif',
-                        fit: BoxFit.cover,
+                        Positioned(
+                          top: 250, //screenHeight * 0.4,
+                          left: 0,
+                          right: 0,
+                          height: 50, //screenHeight * 0.1,
+                          child: Container(color: Colors.white),
+                        ),
+
+                        Positioned(
+                          top: 100,
+                          left: screenWidth * 0.55,
+                          child: Image.asset(
+                            'assets/images/title.png',
+                            width: 150,
+                          ),
+                        ),
+                        Positioned(
+                          top: 0,
+                          left: screenWidth * 0.55,
+                          child: Image.asset(
+                            'assets/images/voyage_logo.png',
+                            width: 150,
+                          ),
+                        ),
+
+                        if (_slideInController != null && _xAnimation != null)
+                          AnimatedBuilder(
+                            animation: _slideInController!,
+                            builder: (context, slideInChild) {
+                              return Positioned(
+                                left: _xAnimation!.value,
+                                top: 140,
+                                child: slideInChild!,
+                              );
+                            },
+                            child: AnimatedBuilder(
+                              animation: _rockingController,
+                              builder: (context, rockingChild) {
+                                final rockingValue = math.sin(
+                                  _rockingController.value * 2 * math.pi,
+                                );
+                                return Transform(
+                                  transform: Matrix4.translationValues(
+                                    0,
+                                    rockingValue * 5,
+                                    0,
+                                  )..rotateZ(rockingValue * 0.05),
+                                  alignment: Alignment.center,
+                                  child: rockingChild,
+                                );
+                              },
+                              child: Image.asset(
+                                'assets/images/ship.png',
+                                width: 180,
+                              ),
+                            ),
+                          ),
+
+                        Positioned(
+                          top: 275,
+                          left: 0,
+                          right: 0,
+                          child: Image.asset(
+                            'assets/images/wave.gif',
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    Container(
+                      color: const Color.fromARGB(255, 15, 114, 175),
+                      width: double.infinity,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0,
+                          vertical: 24.0,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildAnnouncementsSection(context, announcements),
+                            const SizedBox(height: 32),
+                            _buildSpotlightCarousel(context, spotlights, allEvents),
+                          ],
+                        ),
                       ),
                     ),
                   ],
                 ),
-
-                Container(
-                  color: const Color.fromARGB(255, 15, 114, 175),
-                  width: double.infinity,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16.0,
-                      vertical: 24.0,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildAnnouncementsSection(context),
-                        const SizedBox(height: 32),
-                        _buildSpotlightCarousel(context),
-                        const SizedBox(height: 32),
-                        _buildRecommendationsSection(context),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              );
+            },
           ),
 
           Positioned(
@@ -320,34 +345,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  // コンテンツカードを生成するメソッド 文字情報を追加する場合はこれを使えるかもしれない
-  /*
-  Widget _buildContentCard({required String title, required String content}) {
-    return Card(
-      elevation: 4.0, // 影の離れ具合
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(content),
-          ],
-        ),
-      ),
-    );
-  }
-  */
-
-  Widget _buildAnnouncementsSection(BuildContext context) {
+  Widget _buildAnnouncementsSection(BuildContext context, List<AnnouncementItem> announcements) {
     final latestAnnouncements = (List.of(
-      dummyAnnouncements,
-    )..sort((a, b) => b.publishedAt.compareTo(a.publishedAt))).take(3).toList();
+      announcements,
+    )..sort((a, b) => b.publishedAt.compareTo(a.publishedAt))).take(3);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -407,35 +408,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildRecommendationsSection(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'おすすめ企画（削除予定）',
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        const SizedBox(height: 8),
-        ..._recommendedEvents.map(
-          (event) => EventCard(
-            event: event,
-            favoriteEventIds: widget.favoriteEventIds,
-            onToggleFavorite: widget.onToggleFavorite,
-            onNavigateToMap: widget.onNavigateToMap,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSpotlightCarousel(BuildContext context) {
-    final visibleSpotlights = dummySpotlights
-        .where((s) => s.isVisible)
-        .toList();
+  Widget _buildSpotlightCarousel(BuildContext context, List<SpotlightItem> spotlights, List<EventItem> allEvents) {
+    final visibleSpotlights = spotlights.where((s) => s.isVisible).toList();
 
     if (visibleSpotlights.isEmpty) {
       return const SizedBox.shrink();
@@ -479,7 +453,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       final String eventId = spotlight.actionValue;
                       EventItem? targetEvent;
                       try {
-                        targetEvent = dummyEvents.firstWhere(
+                        targetEvent = allEvents.firstWhere(
                           (e) => e.id == eventId,
                         );
                       } catch (e) {

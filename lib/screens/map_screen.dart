@@ -1,15 +1,14 @@
 ﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_app_yfa/data/dummy_announcements.dart';
-import '../data/dummy_map_data.dart';
 import '../models/map_models.dart';
-import '../data/dummy_events.dart';
 import '../models/event_item.dart';
 import 'event_detail_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/announcement_item.dart';
 import 'announcement_detail_screen.dart';
 import 'options_screen.dart';
+import '../services/data_service.dart';
 
 class MapScreen extends StatefulWidget {
   final String? highlightedEventId;
@@ -32,7 +31,10 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
-  MapInfo _currentMap = allMaps.first;
+  final DataService _dataService = DataService();
+  late Future<List<dynamic>> _mapDataFuture;
+
+  MapInfo? _currentMap;
 
   Set<String> _highlightedPinIds = {};
   String? _blinkingPinId;
@@ -51,12 +53,32 @@ class _MapScreenState extends State<MapScreen> {
     // 1号館および体育館（5号館）はフロアマップがないので、ここには含めない
   };
 
+  List<MapInfo>? _allMaps;
+  List<MapPin>? _allPins;
+  List<EventItem>? _allEvents;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (widget.highlightedEventId != null) {
-        _navigateToEvent(widget.highlightedEventId!);
+    _mapDataFuture = Future.wait([
+      _dataService.getMaps(),
+      _dataService.getPins(),
+      _dataService.getEvents(),
+    ]);
+
+    _mapDataFuture.then((data) {
+      if (mounted) {
+        _allMaps = data[0] as List<MapInfo>;
+        _allPins = data[1] as List<MapPin>;
+        _allEvents = data[2] as List<EventItem>;
+        setState(() {
+          _currentMap = _allMaps!.first;
+        });
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (widget.highlightedEventId != null) {
+            _navigateToEvent(widget.highlightedEventId!);
+          }
+        });
       }
     });
   }
@@ -82,7 +104,7 @@ class _MapScreenState extends State<MapScreen> {
   void _navigateToEvent(String eventId) {
     EventItem? targetEvent;
     try {
-      targetEvent = dummyEvents.firstWhere((e) => e.id == eventId);
+      targetEvent = _allEvents!.firstWhere((e) => e.id == eventId);
     } catch (e) {
       targetEvent = null;
     }
@@ -91,7 +113,7 @@ class _MapScreenState extends State<MapScreen> {
 
     MapPin? targetPin;
     try {
-      targetPin = allPins.firstWhere(
+      targetPin = _allPins!.firstWhere(
         (pin) =>
             pin.type == PinType.event && pin.title == targetEvent!.location,
       );
@@ -120,7 +142,7 @@ class _MapScreenState extends State<MapScreen> {
       if (buildingEntry != null) {
         final buildingTitle = buildingEntry.key;
         try {
-          targetPin = allPins.firstWhere(
+          targetPin = _allPins!.firstWhere(
             (pin) => pin.type == PinType.building && pin.title == buildingTitle,
           );
         } catch (e) {
@@ -131,7 +153,7 @@ class _MapScreenState extends State<MapScreen> {
 
     if (targetPin == null) return;
 
-    final MapInfo targetMap = allMaps.firstWhere(
+    final MapInfo targetMap = _allMaps!.firstWhere(
       (map) => map.id == targetPin!.mapId,
     );
 
@@ -160,7 +182,7 @@ class _MapScreenState extends State<MapScreen> {
           _selectedCategories.isNotEmpty ||
           _filterFavorites;
       if (isFilterActive) {
-        final filteredEvents = dummyEvents.where((event) {
+        final filteredEvents = _allEvents!.where((event) {
           if (_selectedDays.isNotEmpty) {
             final isDayMatch =
                 (_selectedDays.contains(FestivalDay.dayOne) &&
@@ -183,7 +205,7 @@ class _MapScreenState extends State<MapScreen> {
           return true;
         }).toList();
 
-        for (final pin in allPins) {
+        for (final pin in _allPins!) {
           bool shouldHighlight = false;
           if (pin.type == PinType.event) {
             shouldHighlight = filteredEvents.any(
@@ -212,7 +234,7 @@ class _MapScreenState extends State<MapScreen> {
     } else {
       isFilterActive = _selectedServiceTypes.isNotEmpty;
       if (isFilterActive) {
-        for (final pin in allPins) {
+        for (final pin in _allPins!) {
           if (_selectedServiceTypes.contains(pin.type)) {
             newHighlightedPinIds.add(pin.id);
 
@@ -271,7 +293,7 @@ class _MapScreenState extends State<MapScreen> {
                 // --- データ準備 ---
                 List<EventItem> attachedEvents = [];
 
-                final visibleEvents = dummyEvents
+                final visibleEvents = _allEvents!
                     .where((event) => !event.hideFromList)
                     .toList();
 
@@ -296,7 +318,7 @@ class _MapScreenState extends State<MapScreen> {
                 }
                 // --- 検索ロジックここまで ---
 
-                final servicesInBuilding = allPins
+                final servicesInBuilding = _allPins!
                     .where(
                       (servicePin) => servicePin.parentBuildingId == pin.id,
                     )
@@ -344,7 +366,7 @@ class _MapScreenState extends State<MapScreen> {
                                           _buildingPinToFloorMap[pin.id];
                                       if (targetMapId != null) {
                                         setState(() {
-                                          _currentMap = allMaps.firstWhere(
+                                          _currentMap = _allMaps!.firstWhere(
                                             (map) => map.id == targetMapId,
                                           );
                                         });
@@ -355,16 +377,17 @@ class _MapScreenState extends State<MapScreen> {
                               ],
                             ),
 
-                          if ((pin.detailText != null || pin.link != null) && pin.showDetailText) ...[
-                            const Divider(height: 24),
-                            if (pin.detailText != null)
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 8.0),
-                                child: Text(
-                                  pin.detailText!,
-                                  style: const TextStyle(fontSize: 14),
+                            if ((pin.detailText != null || pin.link != null) &&
+                                pin.showDetailText) ...[
+                              const Divider(height: 24),
+                              if (pin.detailText != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 8.0),
+                                  child: Text(
+                                    pin.detailText!,
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
                                 ),
-                              ),
                               if (pin.link != null)
                                 Padding(
                                   padding: const EdgeInsets.only(top: 8.0),
@@ -383,7 +406,7 @@ class _MapScreenState extends State<MapScreen> {
                                           final eventId = link.actionValue;
                                           EventItem? targetEvent;
                                           try {
-                                            targetEvent = dummyEvents
+                                            targetEvent = _allEvents!
                                                 .firstWhere(
                                                   (e) => e.id == eventId,
                                                 );
@@ -432,7 +455,8 @@ class _MapScreenState extends State<MapScreen> {
                                               MaterialPageRoute(
                                                 builder: (context) =>
                                                     AnnouncementDetailScreen(
-                                                      announcement: targetAnnouncement!,
+                                                      announcement:
+                                                          targetAnnouncement!,
                                                     ),
                                               ),
                                             );
@@ -443,7 +467,8 @@ class _MapScreenState extends State<MapScreen> {
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (context) => const OptionsScreen(),
+                                              builder: (context) =>
+                                                  const OptionsScreen(),
                                             ),
                                           );
                                           break;
@@ -451,8 +476,11 @@ class _MapScreenState extends State<MapScreen> {
                                           final mapIdString = link.actionValue;
                                           MapInfo? targetMap;
                                           try {
-                                            final targetMapType = MapType.values.byName(mapIdString);
-                                            targetMap = allMaps.firstWhere((map) => map.id == targetMapType);
+                                            final targetMapType = MapType.values
+                                                .byName(mapIdString);
+                                            targetMap = _allMaps!.firstWhere(
+                                              (map) => map.id == targetMapType,
+                                            );
                                           } catch (e) {
                                             targetMap = null;
                                           }
@@ -697,26 +725,26 @@ class _MapScreenState extends State<MapScreen> {
         child: Row(
           children: [
             DropdownButton<MapType>(
-              value: _currentMap.id,
+              value: _currentMap!.id,
               onChanged: (MapType? newMap) {
                 if (newMap != null) {
                   setState(() {
-                    _currentMap = allMaps.firstWhere((m) => m.id == newMap);
+                    _currentMap = _allMaps!.firstWhere((m) => m.id == newMap);
                     _blinkingPinId = null; // マップ切り替えで点滅解除
                   });
                 }
               },
-              items: allMaps
+              items: _allMaps!
                   .map(
                     (map) =>
                         DropdownMenuItem(value: map.id, child: Text(map.name)),
                   )
                   .toList(),
             ),
-            if (_currentMap.id != MapType.campus)
+            if (_currentMap!.id != MapType.campus)
               TextButton(
                 onPressed: () => setState(() {
-                  _currentMap = allMaps.first;
+                  _currentMap = _allMaps!.first;
                   _blinkingPinId = null;
                 }),
                 child: const Text('全体マップに戻る'),
@@ -900,59 +928,77 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currentPins = allPins
-        .where((p) => p.mapId == _currentMap.id)
-        .toList();
+    return FutureBuilder<List<dynamic>>(
+      future: _mapDataFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting ||
+            _currentMap == null) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('マップ')),
+            body: const Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (snapshot.hasError) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('マップ')),
+            body: const Center(child: Text('データの読み込みに失敗しました')),
+          );
+        }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("マップ", style: TextStyle(fontWeight: FontWeight.bold)),
-        actions: [
-          Builder(
-            builder: (context) {
-              return TextButton.icon(
-                onPressed: () {
-                  Scaffold.of(context).openEndDrawer();
+        final currentPins = _allPins!
+            .where((p) => p.mapId == _currentMap!.id)
+            .toList();
+
+        return Scaffold(
+          appBar: AppBar(
+            title: Text("マップ", style: TextStyle(fontWeight: FontWeight.bold)),
+            actions: [
+              Builder(
+                builder: (context) {
+                  return TextButton.icon(
+                    onPressed: () {
+                      Scaffold.of(context).openEndDrawer();
+                    },
+                    icon: const Icon(Icons.search),
+                    label: const Text(
+                      'マップピン検索',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    style: TextButton.styleFrom(
+                      side: const BorderSide(color: Colors.white, width: 0.8),
+                      backgroundColor: Color.fromARGB(255, 72, 151, 209),
+                      foregroundColor:
+                          Theme.of(context).appBarTheme.iconTheme?.color ??
+                          Colors.white,
+                      shadowColor: Colors.black,
+                    ),
+                  );
                 },
-                icon: const Icon(Icons.search),
-                label: const Text(
-                  'マップピン検索',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                style: TextButton.styleFrom(
-                  side: const BorderSide(color: Colors.white, width: 0.8),
-                  backgroundColor: Color.fromARGB(255, 72, 151, 209),
-                  foregroundColor:
-                      Theme.of(context).appBarTheme.iconTheme?.color ??
-                      Colors.white,
-                  shadowColor: Colors.black,
-                ),
-              );
-            },
-          ),
-        ],
-        backgroundColor: Color.fromARGB(255, 84, 164, 219),
-        foregroundColor: Colors.white,
-      ),
-      endDrawer: _buildFilterDrawer(),
-      body: Stack(
-        children: [
-          InteractiveViewer(
-            minScale: 0.5,
-            maxScale: 5.0,
-            child: Center(
-              child: Stack(
-                children: [
-                  Image.asset(_currentMap.imagePath),
-                  ...currentPins.map((pin) => _buildMapPin(pin)),
-                ],
               ),
-            ),
+            ],
+            backgroundColor: Color.fromARGB(255, 84, 164, 219),
+            foregroundColor: Colors.white,
           ),
-
-          _buildMapSwitcher(),
-        ],
-      ),
+          endDrawer: _buildFilterDrawer(),
+          body: Stack(
+            children: [
+              InteractiveViewer(
+                minScale: 0.5,
+                maxScale: 5.0,
+                child: Center(
+                  child: Stack(
+                    children: [
+                      Image.asset(_currentMap!.imagePath),
+                      ...currentPins.map((pin) => _buildMapPin(pin)),
+                    ],
+                  ),
+                ),
+              ),
+              _buildMapSwitcher(),
+            ],
+          ),
+        );
+      },
     );
   }
 }

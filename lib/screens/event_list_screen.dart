@@ -1,6 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../data/shuffled_events.dart';
+import '../services/data_service.dart';
 import '../models/event_item.dart';
 import '../widgets/event_card.dart';
 
@@ -23,7 +23,12 @@ class EventListScreen extends StatefulWidget {
 }
 
 class _EventListScreenState extends State<EventListScreen> {
+  final DataService _dataService = DataService();
+  late Future<List<EventItem>> _shuffledEventsFuture;
+
+  List<EventItem>? _initialEvents;
   List<EventItem> _filteredEvents = [];
+
   final TextEditingController _searchController = TextEditingController();
 
   final Set<EventCategory> _selectedCategories = {};
@@ -36,7 +41,7 @@ class _EventListScreenState extends State<EventListScreen> {
   @override
   void initState() {
     super.initState();
-    _filteredEvents = shuffledDummyEvents;
+    _shuffledEventsFuture = _dataService.getShuffledEvents();
     _searchController.addListener(_runFilter);
   }
 
@@ -47,7 +52,9 @@ class _EventListScreenState extends State<EventListScreen> {
   }
 
   void _runFilter() {
-    List<EventItem> results = List.of(shuffledDummyEvents);
+    if (_initialEvents == null) return;
+    List<EventItem> results = List.of(_initialEvents!);
+
     final searchQuery = _searchController.text.toLowerCase();
 
     if (searchQuery.isNotEmpty) {
@@ -258,16 +265,36 @@ class _EventListScreenState extends State<EventListScreen> {
         ),
       ),
 
-      body: ListView.builder(
-        padding: const EdgeInsets.all(8.0),
-        itemCount: _filteredEvents.length,
-        itemBuilder: (context, index) {
-          final event = _filteredEvents[index];
-          return EventCard(
-            event: event,
-            favoriteEventIds: widget.favoriteEventIds,
-            onToggleFavorite: widget.onToggleFavorite,
-            onNavigateToMap: widget.onNavigateToMap,
+      body: FutureBuilder<List<EventItem>>(
+        future: _shuffledEventsFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return const Center(child: Text('データの読み込みに失敗しました'));
+          }
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('表示できる企画のデータがありません'));
+          }
+
+          if (_initialEvents == null) {
+            _initialEvents = snapshot.data!;
+            _filteredEvents = List.of(_initialEvents!);
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(8.0),
+            itemCount: _filteredEvents.length,
+            itemBuilder: (context, index) {
+              final event = _filteredEvents[index];
+              return EventCard(
+                event: event,
+                favoriteEventIds: widget.favoriteEventIds,
+                onToggleFavorite: widget.onToggleFavorite,
+                onNavigateToMap: widget.onNavigateToMap,
+              );
+            },
           );
         },
       ),
