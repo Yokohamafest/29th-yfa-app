@@ -285,13 +285,21 @@ class _MapScreenState extends State<MapScreen> {
     });
   }
 
-  Widget _buildMapPin(MapPin pin) {
+  Widget _buildMapPin(
+    MapPin pin,
+    BoxConstraints constraints,
+    List<EventItem> allEvents,
+    List<MapPin> allPins,
+  ) {
     final bool isHighlighted = _highlightedPinIds.contains(pin.id);
     final bool isBlinking = _blinkingPinId == pin.id;
 
+    final absoluteX = pin.position.dx * constraints.maxWidth;
+    final absoluteY = pin.position.dy * constraints.maxHeight;
+
     return Positioned(
-      left: pin.position.dx,
-      top: pin.position.dy,
+      left: absoluteX,
+      top: absoluteY,
       child: FractionalTranslation(
         translation: const Offset(-0.5, -0.5),
         child: InkWell(
@@ -952,16 +960,27 @@ class _MapScreenState extends State<MapScreen> {
           child: SegmentedButton<BuildingSelection>(
             segments: const [
               ButtonSegment(value: BuildingSelection.campus, label: Text('全体')),
-              ButtonSegment(value: BuildingSelection.building2, label: Text('2号館')),
-              ButtonSegment(value: BuildingSelection.building3, label: Text('3号館')),
-              ButtonSegment(value: BuildingSelection.building4, label: Text('4号館')),
+              ButtonSegment(
+                value: BuildingSelection.building2,
+                label: Text('2号館'),
+              ),
+              ButtonSegment(
+                value: BuildingSelection.building3,
+                label: Text('3号館'),
+              ),
+              ButtonSegment(
+                value: BuildingSelection.building4,
+                label: Text('4号館'),
+              ),
             ],
             selected: {_selectedBuilding},
             onSelectionChanged: (newSelection) {
               setState(() {
                 _selectedBuilding = newSelection.first;
                 if (_selectedBuilding == BuildingSelection.campus) {
-                  _currentMap = _allMaps!.firstWhere((m) => m.id == MapType.campus);
+                  _currentMap = _allMaps!.firstWhere(
+                    (m) => m.id == MapType.campus,
+                  );
                 } else {
                   _currentMap = _floorMapsByBuilding[_selectedBuilding]!.first;
                 }
@@ -1020,6 +1039,10 @@ class _MapScreenState extends State<MapScreen> {
           );
         }
 
+        final allMaps = snapshot.data![0] as List<MapInfo>;
+        final allPins = snapshot.data![1] as List<MapPin>;
+        final allEvents = snapshot.data![2] as List<EventItem>;
+
         final currentPins = _allPins!
             .where((p) => p.mapId == _currentMap!.id)
             .toList();
@@ -1057,29 +1080,46 @@ class _MapScreenState extends State<MapScreen> {
           endDrawer: _buildFilterDrawer(),
           body: Column(
             children: [
-              // --- 【変更点】トップレベルのマップセレクター ---
               _buildBuildingSelector(),
-              // --- 【変更点】フロアセレクター ---
               if (_selectedBuilding != BuildingSelection.campus)
                 _buildFloorSelector(),
 
-              // --- タイムテーブル本体 ---
               Expanded(
-                child: Stack(
-                  children: [
-                    InteractiveViewer(
-                      minScale: 0.5,
-                      maxScale: 5.0,
-                      child: Center(
-                        child: Stack(
-                          children: [
-                            Image.asset(_currentMap!.imagePath),
-                            ...currentPins.map((pin) => _buildMapPin(pin)),
-                          ],
+                child: InteractiveViewer(
+                  minScale: 0.5,
+                  maxScale: 5.0,
+                  child: Center(
+                    // 【変更点①】Stackを二重構造にする
+                    child: Stack(
+                      // このStackは、中のImageウィジェットのサイズに自動的にフィットする
+                      children: [
+                        // --- レイヤー1: ベースとなるマップ画像 ---
+                        Image.asset(
+                          _currentMap!.imagePath,
+                          width: MediaQuery.of(context).size.width,
+                          fit: BoxFit.fitWidth,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Center(child: Text('マップ画像を読み込めませんでした'));
+                          },
                         ),
-                      ),
+
+                        // --- レイヤー2: ピンを配置する透明なオーバーレイ ---
+                        // Positioned.fillで、上のImageと全く同じサイズに広がる
+                        Positioned.fill(
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              // このconstraintsは、Imageの実際の描画サイズと一致する
+                              return Stack(
+                                children: currentPins.map((pin) {
+                                  return _buildMapPin(pin, constraints, allEvents, allPins);
+                                }).toList(),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ],
