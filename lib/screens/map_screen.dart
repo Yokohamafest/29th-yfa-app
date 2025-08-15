@@ -12,6 +12,8 @@ import '../services/data_service.dart';
 import '../widgets/tag_widget.dart';
 import '../models/enum_extensions.dart';
 
+enum BuildingSelection { campus, building2, building3, building4 }
+
 class MapScreen extends StatefulWidget {
   final String? highlightedEventId;
   final Set<String> favoriteEventIds;
@@ -36,7 +38,12 @@ class _MapScreenState extends State<MapScreen> {
   final DataService _dataService = DataService();
   late Future<List<dynamic>> _mapDataFuture;
 
-  MapInfo? _currentMap;
+  List<MapInfo>? _allMaps;
+  List<MapPin>? _allPins;
+  List<EventItem>? _allEvents;
+
+  BuildingSelection _selectedBuilding = BuildingSelection.campus;
+  MapInfo? _currentMap; // 表示中のマップ
 
   Set<String> _highlightedPinIds = {};
   String? _blinkingPinId;
@@ -55,9 +62,7 @@ class _MapScreenState extends State<MapScreen> {
     // 1号館および体育館（5号館）はフロアマップがないので、ここには含めない
   };
 
-  List<MapInfo>? _allMaps;
-  List<MapPin>? _allPins;
-  List<EventItem>? _allEvents;
+  late final Map<BuildingSelection, List<MapInfo>> _floorMapsByBuilding;
 
   @override
   void initState() {
@@ -73,9 +78,23 @@ class _MapScreenState extends State<MapScreen> {
         _allMaps = data[0] as List<MapInfo>;
         _allPins = data[1] as List<MapPin>;
         _allEvents = data[2] as List<EventItem>;
+
+        _floorMapsByBuilding = {
+          BuildingSelection.building2: _allMaps!
+              .where((m) => m.id.name.startsWith('building2'))
+              .toList(),
+          BuildingSelection.building3: _allMaps!
+              .where((m) => m.id.name.startsWith('building3'))
+              .toList(),
+          BuildingSelection.building4: _allMaps!
+              .where((m) => m.id.name.startsWith('building4'))
+              .toList(),
+        };
+
         setState(() {
-          _currentMap = _allMaps!.first;
+          _currentMap = _allMaps!.firstWhere((m) => m.id == MapType.campus);
         });
+
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (widget.highlightedEventId != null) {
             _navigateToEvent(widget.highlightedEventId!);
@@ -159,7 +178,19 @@ class _MapScreenState extends State<MapScreen> {
       (map) => map.id == targetPin!.mapId,
     );
 
+    BuildingSelection targetBuilding = BuildingSelection.campus;
+    if (targetMap.id.name.startsWith('building2')) {
+      targetBuilding = BuildingSelection.building2;
+    }
+    if (targetMap.id.name.startsWith('building3')) {
+      targetBuilding = BuildingSelection.building3;
+    }
+    if (targetMap.id.name.startsWith('building4')) {
+      targetBuilding = BuildingSelection.building4;
+    }
+
     setState(() {
+      _selectedBuilding = targetBuilding;
       _currentMap = targetMap;
       _blinkingPinId = targetPin!.id;
       _highlightedPinIds = {};
@@ -347,7 +378,30 @@ class _MapScreenState extends State<MapScreen> {
                                       final targetMapId =
                                           _buildingPinToFloorMap[pin.id];
                                       if (targetMapId != null) {
+                                        BuildingSelection newBuildingSelection =
+                                            BuildingSelection.campus;
+                                        if (targetMapId.name.startsWith(
+                                          'building2',
+                                        )) {
+                                          newBuildingSelection =
+                                              BuildingSelection.building2;
+                                        }
+                                        if (targetMapId.name.startsWith(
+                                          'building3',
+                                        )) {
+                                          newBuildingSelection =
+                                              BuildingSelection.building3;
+                                        }
+                                        if (targetMapId.name.startsWith(
+                                          'building4',
+                                        )) {
+                                          newBuildingSelection =
+                                              BuildingSelection.building4;
+                                        }
+
                                         setState(() {
+                                          _selectedBuilding =
+                                              newBuildingSelection;
                                           _currentMap = _allMaps!.firstWhere(
                                             (map) => map.id == targetMapId,
                                           );
@@ -468,8 +522,32 @@ class _MapScreenState extends State<MapScreen> {
                                           }
 
                                           if (targetMap != null) {
+                                            BuildingSelection
+                                            newBuildingSelection =
+                                                BuildingSelection.campus;
+                                            if (targetMap.id.name.startsWith(
+                                              'building2',
+                                            )) {
+                                              newBuildingSelection =
+                                                  BuildingSelection.building2;
+                                            }
+                                            if (targetMap.id.name.startsWith(
+                                              'building3',
+                                            )) {
+                                              newBuildingSelection =
+                                                  BuildingSelection.building3;
+                                            }
+                                            if (targetMap.id.name.startsWith(
+                                              'building4',
+                                            )) {
+                                              newBuildingSelection =
+                                                  BuildingSelection.building4;
+                                            }
+
                                             setState(() {
-                                              _currentMap = targetMap!;
+                                              _selectedBuilding =
+                                                  newBuildingSelection;
+                                              _currentMap = targetMap;
                                             });
                                           }
                                           Navigator.of(context).pop();
@@ -693,50 +771,6 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  Widget _buildMapSwitcher() {
-    return Positioned(
-      top: 10,
-      left: 10,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4)],
-        ),
-        child: Row(
-          children: [
-            DropdownButton<MapType>(
-              value: _currentMap!.id,
-              onChanged: (MapType? newMap) {
-                if (newMap != null) {
-                  setState(() {
-                    _currentMap = _allMaps!.firstWhere((m) => m.id == newMap);
-                    _blinkingPinId = null; // マップ切り替えで点滅解除
-                  });
-                }
-              },
-              items: _allMaps!
-                  .map(
-                    (map) =>
-                        DropdownMenuItem(value: map.id, child: Text(map.name)),
-                  )
-                  .toList(),
-            ),
-            if (_currentMap!.id != MapType.campus)
-              TextButton(
-                onPressed: () => setState(() {
-                  _currentMap = _allMaps!.first;
-                  _blinkingPinId = null;
-                }),
-                child: const Text('全体マップに戻る'),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildFilterDrawer() {
     return Drawer(
       child: ListView(
@@ -908,6 +942,65 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
+  Widget _buildBuildingSelector() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: SegmentedButton<BuildingSelection>(
+            segments: const [
+              ButtonSegment(value: BuildingSelection.campus, label: Text('全体')),
+              ButtonSegment(value: BuildingSelection.building2, label: Text('2号館')),
+              ButtonSegment(value: BuildingSelection.building3, label: Text('3号館')),
+              ButtonSegment(value: BuildingSelection.building4, label: Text('4号館')),
+            ],
+            selected: {_selectedBuilding},
+            onSelectionChanged: (newSelection) {
+              setState(() {
+                _selectedBuilding = newSelection.first;
+                if (_selectedBuilding == BuildingSelection.campus) {
+                  _currentMap = _allMaps!.firstWhere((m) => m.id == MapType.campus);
+                } else {
+                  _currentMap = _floorMapsByBuilding[_selectedBuilding]!.first;
+                }
+                _blinkingPinId = null;
+              });
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFloorSelector() {
+    final floors = _floorMapsByBuilding[_selectedBuilding]!;
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        child: ToggleButtons(
+          isSelected: floors.map((map) => map.id == _currentMap!.id).toList(),
+          onPressed: (index) {
+            setState(() {
+              _currentMap = floors[index];
+            });
+          },
+          borderRadius: BorderRadius.circular(8.0),
+          children: floors
+              .map(
+                (map) => Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                  child: Text(map.name.split(' ').last),
+                ),
+              )
+              .toList(),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<dynamic>>(
@@ -962,21 +1055,33 @@ class _MapScreenState extends State<MapScreen> {
             foregroundColor: Colors.white,
           ),
           endDrawer: _buildFilterDrawer(),
-          body: Stack(
+          body: Column(
             children: [
-              InteractiveViewer(
-                minScale: 0.5,
-                maxScale: 5.0,
-                child: Center(
-                  child: Stack(
-                    children: [
-                      Image.asset(_currentMap!.imagePath),
-                      ...currentPins.map((pin) => _buildMapPin(pin)),
-                    ],
-                  ),
+              // --- 【変更点】トップレベルのマップセレクター ---
+              _buildBuildingSelector(),
+              // --- 【変更点】フロアセレクター ---
+              if (_selectedBuilding != BuildingSelection.campus)
+                _buildFloorSelector(),
+
+              // --- タイムテーブル本体 ---
+              Expanded(
+                child: Stack(
+                  children: [
+                    InteractiveViewer(
+                      minScale: 0.5,
+                      maxScale: 5.0,
+                      child: Center(
+                        child: Stack(
+                          children: [
+                            Image.asset(_currentMap!.imagePath),
+                            ...currentPins.map((pin) => _buildMapPin(pin)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              _buildMapSwitcher(),
             ],
           ),
         );
