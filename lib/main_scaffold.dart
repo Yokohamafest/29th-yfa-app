@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'services/data_service.dart';
 import 'services/notification_service.dart';
 import 'models/event_item.dart';
+import 'widgets/notification_permission_dialog.dart';
 
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});
@@ -38,6 +39,36 @@ class _MainScaffoldState extends State<MainScaffold> {
     _loadFavorites();
   }
 
+  void _rescheduleAllReminders() async {
+    if (_allEvents == null) return;
+
+    // 1. 最新の通知設定を読み込む
+    final prefs = await SharedPreferences.getInstance();
+    final remindersEnabled = prefs.getBool('reminders_enabled') ?? true;
+    final reminderMinutesSettings = {
+      5: prefs.getBool('reminder_5_min_enabled') ?? false,
+      15: prefs.getBool('reminder_15_min_enabled') ?? true,
+      30: prefs.getBool('reminder_30_min_enabled') ?? false,
+      60: prefs.getBool('reminder_60_min_enabled') ?? false,
+    };
+
+    for (final eventId in _favoriteEventIds) {
+      EventItem? event;
+      try { event = _allEvents!.firstWhere((e) => e.id == eventId); } catch (e) { event = null; }
+      if (event == null) continue;
+
+      await _notificationService.cancelReminder(event);
+
+      if (remindersEnabled) {
+        reminderMinutesSettings.forEach((minutes, isEnabled) {
+          if (isEnabled) {
+            _notificationService.scheduleReminder(context, event!, minutes);
+          }
+        });
+      }
+    }
+  }
+
   Future<void> _loadFavorites() async {
     final prefs = await SharedPreferences.getInstance();
     final favoriteIds = prefs.getStringList('favorite_events');
@@ -55,36 +86,45 @@ class _MainScaffoldState extends State<MainScaffold> {
 
   void _toggleFavorite(String eventId) async {
     if (_allEvents == null) return;
-
     final isFavorited = _favoriteEventIds.contains(eventId);
-    EventItem? event;
-    try {
-      event = _allEvents!.firstWhere((e) => e.id == eventId);
-    } catch (e) {
-      event = null;
-    }
-
-    if (event == null) return;
 
     if (isFavorited) {
-      await _notificationService.cancelReminder(event);
+      EventItem? event;
+      try { event = _allEvents!.firstWhere((e) => e.id == eventId); } catch (e) { event = null; }
+      if (event != null) {
+        await _notificationService.cancelReminder(event);
+      }
     } else {
       final prefs = await SharedPreferences.getInstance();
       final remindersEnabled = prefs.getBool('reminders_enabled') ?? true;
 
       if (remindersEnabled) {
-        final reminderMinutesSettings = {
-          5: prefs.getBool('reminder_5_min_enabled') ?? false,
-          15: prefs.getBool('reminder_15_min_enabled') ?? true,
-          30: prefs.getBool('reminder_30_min_enabled') ?? false,
-          60: prefs.getBool('reminder_60_min_enabled') ?? false,
-        };
+        final permissionsStatus = await _notificationService.checkPermissions();
 
-        reminderMinutesSettings.forEach((minutes, isEnabled) {
-          if (isEnabled) {
-            _notificationService.scheduleReminder(context, event!, minutes);
+        if (permissionsStatus.allGranted) {
+          EventItem? event;
+          try { event = _allEvents!.firstWhere((e) => e.id == eventId); } catch (e) { event = null; }
+          if (event != null) {
+            final reminderMinutesSettings = {
+              5: prefs.getBool('reminder_5_min_enabled') ?? false,
+              15: prefs.getBool('reminder_15_min_enabled') ?? true,
+              30: prefs.getBool('reminder_30_min_enabled') ?? false,
+              60: prefs.getBool('reminder_60_min_enabled') ?? false,
+            };
+            reminderMinutesSettings.forEach((minutes, isEnabled) {
+              if (isEnabled) {
+                _notificationService.scheduleReminder(context, event!, minutes);
+              }
+            });
           }
-        });
+        } else {
+          if (mounted) {
+            showDialog(
+              context: context,
+              builder: (context) => NotificationPermissionDialog(permissionsStatus: permissionsStatus),
+            );
+          }
+        }
       }
     }
 
@@ -132,6 +172,7 @@ class _MainScaffoldState extends State<MainScaffold> {
         onToggleFavorite: _toggleFavorite,
         onNavigateToMap: _navigateToMapAndHighlight,
         changeTab: changeTab,
+        onSettingsChanged: _rescheduleAllReminders,
       ),
       TimetableScreen(
         favoriteEventIds: _favoriteEventIds,
@@ -145,6 +186,7 @@ class _MainScaffoldState extends State<MainScaffold> {
         onToggleFavorite: _toggleFavorite,
         onNavigateToMap: _navigateToMapAndHighlight,
         changeTab: changeTab,
+        onSettingsChanged: _rescheduleAllReminders,
       ),
       EventListScreen(
         favoriteEventIds: _favoriteEventIds,
@@ -157,6 +199,7 @@ class _MainScaffoldState extends State<MainScaffold> {
         onToggleFavorite: _toggleFavorite,
         onNavigateToMap: _navigateToMapAndHighlight,
         changeTab: changeTab,
+        onSettingsChanged: _rescheduleAllReminders,
       ),
     ];
 

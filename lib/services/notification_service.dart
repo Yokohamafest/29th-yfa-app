@@ -1,9 +1,21 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import '../models/event_item.dart';
-import 'package:permission_handler/permission_handler.dart';
+
+class NotificationPermissionsStatus {
+  final bool isNotificationGranted;
+  final bool isExactAlarmGranted;
+
+  const NotificationPermissionsStatus({
+    required this.isNotificationGranted,
+    required this.isExactAlarmGranted,
+  });
+
+  bool get allGranted => isNotificationGranted && isExactAlarmGranted;
+}
 
 class NotificationService {
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -28,6 +40,15 @@ class NotificationService {
     tz.setLocalLocation(tz.getLocation('Asia/Tokyo'));
   }
 
+  Future<NotificationPermissionsStatus> checkPermissions() async {
+    final notificationStatus = await Permission.notification.status;
+    final exactAlarmStatus = await Permission.scheduleExactAlarm.status;
+    return NotificationPermissionsStatus(
+      isNotificationGranted: notificationStatus.isGranted,
+      isExactAlarmGranted: exactAlarmStatus.isGranted,
+    );
+  }
+
   Future<bool> _requestExactAlarmPermission(BuildContext context) async {
     if (await Permission.scheduleExactAlarm.isGranted) {
       return true;
@@ -44,7 +65,7 @@ class NotificationService {
         context: context,
         builder: (context) => AlertDialog(
           title: const Text('権限が必要です'),
-          content: const Text('リマインダーを正確な時間に動作させるには、「アラームとリインダー」の権限を許可してください。'),
+          content: const Text('リマインダーを動作させるには、「アラームとリマインダー」の権限を許可してください。'),
           actions: [
             TextButton(
               child: const Text('キャンセル'),
@@ -65,21 +86,15 @@ class NotificationService {
     return false;
   }
 
-  Future<void> scheduleReminder(
-    BuildContext context,
-    EventItem event,
-    int reminderMinutes,
-  ) async {
+  Future<void> scheduleReminder(BuildContext context, EventItem event, int reminderMinutes) async {
     final hasPermission = await _requestExactAlarmPermission(context);
     if (!hasPermission) {
       debugPrint('Exact alarm permission not granted.');
       return;
     }
-
     for (final timeSlot in event.timeSlots) {
-      final scheduleTime = timeSlot.startTime.subtract(
-        Duration(minutes: reminderMinutes),
-      );
+      final scheduleTime =
+          timeSlot.startTime.subtract(Duration(minutes: reminderMinutes));
 
       if (scheduleTime.isBefore(DateTime.now())) {
         continue;

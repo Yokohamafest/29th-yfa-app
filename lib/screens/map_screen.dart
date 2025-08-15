@@ -20,6 +20,7 @@ class MapScreen extends StatefulWidget {
   final Function(String) onToggleFavorite;
   final Function(String) onNavigateToMap;
   final Function(int) changeTab;
+  final VoidCallback onSettingsChanged;
 
   const MapScreen({
     super.key,
@@ -28,6 +29,7 @@ class MapScreen extends StatefulWidget {
     required this.onToggleFavorite,
     required this.onNavigateToMap,
     required this.changeTab,
+    required this.onSettingsChanged,
   });
 
   @override
@@ -512,7 +514,7 @@ class _MapScreenState extends State<MapScreen> {
                                             context,
                                             MaterialPageRoute(
                                               builder: (context) =>
-                                                  const OptionsScreen(),
+                                                  OptionsScreen(onSettingsChanged: widget.onSettingsChanged,),
                                             ),
                                           );
                                           break;

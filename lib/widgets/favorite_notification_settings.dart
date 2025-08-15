@@ -2,7 +2,8 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class FavoriteNotificationSettings extends StatefulWidget {
-  const FavoriteNotificationSettings({super.key});
+  final VoidCallback onSettingsChanged;
+  const FavoriteNotificationSettings({super.key, required this.onSettingsChanged});
 
   @override
   State<FavoriteNotificationSettings> createState() =>
@@ -50,6 +51,7 @@ class _FavoriteNotificationSettingsState
     setState(() {
       _remindersEnabled = value;
     });
+    widget.onSettingsChanged();
   }
 
   Future<void> _updateReminderMinutes(int minutes, bool isEnabled) async {
@@ -58,6 +60,7 @@ class _FavoriteNotificationSettingsState
     setState(() {
       _reminderMinutesSettings[minutes] = isEnabled;
     });
+    widget.onSettingsChanged();
   }
 
   @override

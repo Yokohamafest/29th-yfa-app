@@ -16,6 +16,7 @@ class HomeScreen extends StatefulWidget {
   final Function(String) onToggleFavorite;
   final Function(String) onNavigateToMap;
   final Function(int) changeTab;
+  final VoidCallback onSettingsChanged;
 
   const HomeScreen({
     super.key,
@@ -23,6 +24,7 @@ class HomeScreen extends StatefulWidget {
     required this.onToggleFavorite,
     required this.onNavigateToMap,
     required this.changeTab,
+    required this.onSettingsChanged,
   });
 
   @override
@@ -151,7 +153,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const OptionsScreen(),
+                    builder: (context) => OptionsScreen(onSettingsChanged: widget.onSettingsChanged,),
                   ),
                 );
               },

@@ -17,6 +17,7 @@ class FavoritesScreen extends StatefulWidget {
   final Function(String) onToggleFavorite;
   final Function(String) onNavigateToMap;
   final Function(int) changeTab;
+  final VoidCallback onSettingsChanged;
 
   const FavoritesScreen({
     super.key,
@@ -24,6 +25,7 @@ class FavoritesScreen extends StatefulWidget {
     required this.onToggleFavorite,
     required this.onNavigateToMap,
     required this.changeTab,
+    required this.onSettingsChanged,
   });
 
   @override
@@ -117,7 +119,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                       ),
                     ),
                     builder: (context) {
-                      return const FavoriteNotificationSettings();
+                      return FavoriteNotificationSettings(onSettingsChanged: widget.onSettingsChanged,);
                     },
                   );
                 },

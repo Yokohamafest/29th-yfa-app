@@ -7,7 +7,9 @@ import '../widgets/favorite_notification_settings.dart';
 import '../services/data_service.dart';
 
 class OptionsScreen extends StatefulWidget {
-  const OptionsScreen({super.key});
+  final VoidCallback onSettingsChanged;
+
+  const OptionsScreen({super.key, required this.onSettingsChanged});
 
   @override
   State<OptionsScreen> createState() => _OptionsScreenState();
@@ -134,7 +136,7 @@ class _OptionsScreenState extends State<OptionsScreen> {
             onChanged: _updateGeneralNotificationSetting,
           ),
 
-          const FavoriteNotificationSettings(),
+          FavoriteNotificationSettings(onSettingsChanged: widget.onSettingsChanged,),
           const Divider(),
 
           // --- データ管理 ---
