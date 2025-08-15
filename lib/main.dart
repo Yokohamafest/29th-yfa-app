@@ -2,9 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_app_yfa/main_scaffold.dart';
+import 'services/notification_service.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  final NotificationService notificationService = NotificationService();
+  await notificationService.init();
+
+  await notificationService.flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
+      ?.requestNotificationsPermission();
 
   await initializeDateFormatting('ja_JP');
 

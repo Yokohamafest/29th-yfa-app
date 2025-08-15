@@ -5,6 +5,9 @@ import 'package:flutter_app_yfa/screens/home_screen.dart';
 import 'package:flutter_app_yfa/screens/map_screen.dart';
 import 'package:flutter_app_yfa/screens/timetable_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'services/data_service.dart';
+import 'services/notification_service.dart';
+import 'models/event_item.dart';
 
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});
@@ -14,7 +17,10 @@ class MainScaffold extends StatefulWidget {
 }
 
 class _MainScaffoldState extends State<MainScaffold> {
-  // --- 状態変数 ---
+  final DataService _dataService = DataService();
+  final NotificationService _notificationService = NotificationService();
+  List<EventItem>? _allEvents;
+
   int _selectedIndex = 0;
   final Set<String> _favoriteEventIds = {};
   String? _highlightedEventId;
@@ -22,6 +28,13 @@ class _MainScaffoldState extends State<MainScaffold> {
   @override
   void initState() {
     super.initState();
+    _dataService.getEvents().then((events) {
+      if (mounted) {
+        setState(() {
+          _allEvents = events;
+        });
+      }
+    });
     _loadFavorites();
   }
 
@@ -40,9 +53,28 @@ class _MainScaffoldState extends State<MainScaffold> {
     await prefs.setStringList('favorite_events', _favoriteEventIds.toList());
   }
 
-  void _toggleFavorite(String eventId) {
+  void _toggleFavorite(String eventId) async {
+    if (_allEvents == null) return;
+
+    final isFavorited = _favoriteEventIds.contains(eventId);
+    EventItem? event;
+    try {
+      event = _allEvents!.firstWhere((e) => e.id == eventId);
+    } catch (e) {
+      event = null;
+    }
+
+    if (event == null) return;
+
+    if (isFavorited) {
+      await _notificationService.cancelReminder(event);
+    } else {
+      // TODO: options_screenで設定された値（例: 15分前）を読み込んで渡す
+      await _notificationService.scheduleReminder(event, 15);
+    }
+
     setState(() {
-      if (_favoriteEventIds.contains(eventId)) {
+      if (isFavorited) {
         _favoriteEventIds.remove(eventId);
       } else {
         _favoriteEventIds.add(eventId);
