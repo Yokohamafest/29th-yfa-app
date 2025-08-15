@@ -1039,10 +1039,6 @@ class _MapScreenState extends State<MapScreen> {
           );
         }
 
-        final allMaps = snapshot.data![0] as List<MapInfo>;
-        final allPins = snapshot.data![1] as List<MapPin>;
-        final allEvents = snapshot.data![2] as List<EventItem>;
-
         final currentPins = _allPins!
             .where((p) => p.mapId == _currentMap!.id)
             .toList();
@@ -1089,11 +1085,8 @@ class _MapScreenState extends State<MapScreen> {
                   minScale: 0.5,
                   maxScale: 5.0,
                   child: Center(
-                    // 【変更点①】Stackを二重構造にする
                     child: Stack(
-                      // このStackは、中のImageウィジェットのサイズに自動的にフィットする
                       children: [
-                        // --- レイヤー1: ベースとなるマップ画像 ---
                         Image.asset(
                           _currentMap!.imagePath,
                           width: MediaQuery.of(context).size.width,
@@ -1103,15 +1096,12 @@ class _MapScreenState extends State<MapScreen> {
                           },
                         ),
 
-                        // --- レイヤー2: ピンを配置する透明なオーバーレイ ---
-                        // Positioned.fillで、上のImageと全く同じサイズに広がる
                         Positioned.fill(
                           child: LayoutBuilder(
                             builder: (context, constraints) {
-                              // このconstraintsは、Imageの実際の描画サイズと一致する
                               return Stack(
                                 children: currentPins.map((pin) {
-                                  return _buildMapPin(pin, constraints, allEvents, allPins);
+                                  return _buildMapPin(pin, constraints, _allEvents!, _allPins!);
                                 }).toList(),
                               );
                             },
