@@ -69,8 +69,23 @@ class _MainScaffoldState extends State<MainScaffold> {
     if (isFavorited) {
       await _notificationService.cancelReminder(event);
     } else {
-      // TODO: options_screenで設定された値（例: 15分前）を読み込んで渡す
-      await _notificationService.scheduleReminder(event, 15);
+      final prefs = await SharedPreferences.getInstance();
+      final remindersEnabled = prefs.getBool('reminders_enabled') ?? true;
+
+      if (remindersEnabled) {
+        final reminderMinutesSettings = {
+          5: prefs.getBool('reminder_5_min_enabled') ?? false,
+          15: prefs.getBool('reminder_15_min_enabled') ?? true,
+          30: prefs.getBool('reminder_30_min_enabled') ?? false,
+          60: prefs.getBool('reminder_60_min_enabled') ?? false,
+        };
+
+        reminderMinutesSettings.forEach((minutes, isEnabled) {
+          if (isEnabled) {
+            _notificationService.scheduleReminder(context, event!, minutes);
+          }
+        });
+      }
     }
 
     setState(() {

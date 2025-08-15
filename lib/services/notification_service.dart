@@ -1,7 +1,9 @@
-﻿import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import '../models/event_item.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class NotificationService {
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -14,10 +16,11 @@ class NotificationService {
     const DarwinInitializationSettings initializationSettingsIOS =
         DarwinInitializationSettings();
 
-    const InitializationSettings initializationSettings = InitializationSettings(
-      android: initializationSettingsAndroid,
-      iOS: initializationSettingsIOS,
-    );
+    const InitializationSettings initializationSettings =
+        InitializationSettings(
+          android: initializationSettingsAndroid,
+          iOS: initializationSettingsIOS,
+        );
 
     await flutterLocalNotificationsPlugin.initialize(initializationSettings);
 
@@ -25,22 +28,71 @@ class NotificationService {
     tz.setLocalLocation(tz.getLocation('Asia/Tokyo'));
   }
 
-  Future<void> scheduleReminder(EventItem event, int reminderMinutes) async {
+  Future<bool> _requestExactAlarmPermission(BuildContext context) async {
+    if (await Permission.scheduleExactAlarm.isGranted) {
+      return true;
+    }
+
+    final status = await Permission.scheduleExactAlarm.request();
+    if (status.isGranted) {
+      return true;
+    }
+
+    if (status.isPermanentlyDenied || status.isDenied) {
+      if (!context.mounted) return false;
+      await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('権限が必要です'),
+          content: const Text('リマインダーを正確な時間に動作させるには、「アラームとリインダー」の権限を許可してください。'),
+          actions: [
+            TextButton(
+              child: const Text('キャンセル'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: const Text('設定を開く'),
+              onPressed: () {
+                openAppSettings();
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        ),
+      );
+      return await Permission.scheduleExactAlarm.isGranted;
+    }
+    return false;
+  }
+
+  Future<void> scheduleReminder(
+    BuildContext context,
+    EventItem event,
+    int reminderMinutes,
+  ) async {
+    final hasPermission = await _requestExactAlarmPermission(context);
+    if (!hasPermission) {
+      debugPrint('Exact alarm permission not granted.');
+      return;
+    }
+
     for (final timeSlot in event.timeSlots) {
-      final scheduleTime =
-          timeSlot.startTime.subtract(Duration(minutes: reminderMinutes));
+      final scheduleTime = timeSlot.startTime.subtract(
+        Duration(minutes: reminderMinutes),
+      );
 
       if (scheduleTime.isBefore(DateTime.now())) {
         continue;
       }
 
       final notificationId =
-          '${event.id}_${timeSlot.startTime.toIso8601String()}'.hashCode;
+          '${event.id}_${timeSlot.startTime.toIso8601String()}_$reminderMinutes'
+              .hashCode;
 
       await flutterLocalNotificationsPlugin.zonedSchedule(
         notificationId,
         event.title,
-        'まもなく「${event.location}」で始まります',
+        '${event.title}が$reminderMinutes分後に「${event.location}」で始まります!',
         tz.TZDateTime.from(scheduleTime, tz.local),
         const NotificationDetails(
           android: AndroidNotificationDetails(
@@ -60,10 +112,14 @@ class NotificationService {
   }
 
   Future<void> cancelReminder(EventItem event) async {
+    final possibleMinutes = [5, 15, 30, 60];
     for (final timeSlot in event.timeSlots) {
-      final notificationId =
-          '${event.id}_${timeSlot.startTime.toIso8601String()}'.hashCode;
-      await flutterLocalNotificationsPlugin.cancel(notificationId);
+      for (final minutes in possibleMinutes) {
+        final notificationId =
+            '${event.id}_${timeSlot.startTime.toIso8601String()}_$minutes'
+                .hashCode;
+        await flutterLocalNotificationsPlugin.cancel(notificationId);
+      }
     }
   }
 }

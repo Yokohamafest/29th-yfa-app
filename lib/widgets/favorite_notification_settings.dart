@@ -15,6 +15,7 @@ class _FavoriteNotificationSettingsState
   bool _isLoading = true;
 
   final Map<int, bool> _reminderMinutesSettings = {
+    5: false,
     15: true,
     30: false,
     60: false,
@@ -31,6 +32,8 @@ class _FavoriteNotificationSettingsState
     if (!mounted) return;
     setState(() {
       _remindersEnabled = prefs.getBool('reminders_enabled') ?? true;
+      _reminderMinutesSettings[5] =
+          prefs.getBool('reminder_5_min_enabled') ?? false;
       _reminderMinutesSettings[15] =
           prefs.getBool('reminder_15_min_enabled') ?? true;
       _reminderMinutesSettings[30] =
@@ -87,6 +90,15 @@ class _FavoriteNotificationSettingsState
                     style: TextStyle(color: Colors.black54),
                   ),
                 ),
+                CheckboxListTile(
+                  title: const Text('5分前'),
+                  value: _reminderMinutesSettings[5],
+                  onChanged: (bool? value) {
+                    if (value != null) _updateReminderMinutes(5, value);
+                  },
+                  controlAffinity: ListTileControlAffinity.leading,
+                ),
+
                 CheckboxListTile(
                   title: const Text('15分前'),
                   value: _reminderMinutesSettings[15],
