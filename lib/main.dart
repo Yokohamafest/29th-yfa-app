@@ -7,6 +7,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'dart:async';
 
 // ここにFirebaseの初期化コードが入る
+// ignore: unused_element
 Future<void> _firebaseMessagingBackgroundHandler(dynamic message) async {
   // バックグラウンドで通知を受け取った際の処理
   debugPrint("Handling a background message: ${message.messageId}");

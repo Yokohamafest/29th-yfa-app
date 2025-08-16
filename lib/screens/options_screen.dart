@@ -5,11 +5,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../widgets/favorite_notification_settings.dart';
 import '../services/data_service.dart';
+import '../services/notification_service.dart';
+import '../widgets/general_notification_permission_dialog.dart';
+import 'package:permission_handler/permission_handler.dart';
+
 
 class OptionsScreen extends StatefulWidget {
   final VoidCallback onSettingsChanged;
+  final NotificationService notificationService;
 
-  const OptionsScreen({super.key, required this.onSettingsChanged});
+  const OptionsScreen({super.key, required this.onSettingsChanged, required this.notificationService});
 
   @override
   State<OptionsScreen> createState() => _OptionsScreenState();
@@ -31,7 +36,6 @@ class _OptionsScreenState extends State<OptionsScreen> {
     _infoLinksFuture = _dataService.getInfoLinks();
   }
 
-  // アプリのバージョン情報を読み込む
   Future<void> _loadAppVersion() async {
     final packageInfo = await PackageInfo.fromPlatform();
     setState(() {
@@ -93,7 +97,18 @@ class _OptionsScreenState extends State<OptionsScreen> {
     setState(() {
       _generalNotificationsEnabled = value;
     });
+
+    if (value == true) {
+      final status = await Permission.notification.status;
+      if (!status.isGranted && mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => const GeneralNotificationPermissionDialog(),
+        );
+      }
+    }
   }
+
 
   IconData _getIconForName(String name) {
     switch (name) {
@@ -139,7 +154,6 @@ class _OptionsScreenState extends State<OptionsScreen> {
           FavoriteNotificationSettings(onSettingsChanged: widget.onSettingsChanged,),
           const Divider(),
 
-          // --- データ管理 ---
           const ListTile(
             title: Text(
               'データ管理',
@@ -172,13 +186,10 @@ class _OptionsScreenState extends State<OptionsScreen> {
                   width: 50,
                   height: 50,
                 ),
-                // アプリ名
-                applicationName: '横浜祭2025 公式アプリ', // あなたのアプリ名
-                // アプリのバージョン
+                applicationName: '横浜祭2025 公式アプリ',
                 applicationVersion: _appVersion,
-                // アプリの著作権情報
-                applicationLegalese: '© 2025 横浜祭実行委員会', // あなたの団体名など
-                // 子ウィジェットとして、より詳細な情報を追加
+
+                applicationLegalese: '© 2025 横浜祭実行委員会',
                 children: [
                   const SizedBox(height: 24),
                   const Text(

@@ -11,6 +11,7 @@ import 'options_screen.dart';
 import '../services/data_service.dart';
 import '../widgets/tag_widget.dart';
 import '../models/enum_extensions.dart';
+import '../services/notification_service.dart';
 
 enum BuildingSelection { campus, building2, building3, building4 }
 
@@ -514,7 +515,7 @@ class _MapScreenState extends State<MapScreen> {
                                             context,
                                             MaterialPageRoute(
                                               builder: (context) =>
-                                                  OptionsScreen(onSettingsChanged: widget.onSettingsChanged,),
+                                                  OptionsScreen(onSettingsChanged: widget.onSettingsChanged, notificationService: NotificationService(),),
                                             ),
                                           );
                                           break;

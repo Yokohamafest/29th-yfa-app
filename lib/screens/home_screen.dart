@@ -10,6 +10,7 @@ import 'announcement_detail_screen.dart';
 import '../models/spotlight_item.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/data_service.dart';
+import '../services/notification_service.dart';
 
 class HomeScreen extends StatefulWidget {
   final Set<String> favoriteEventIds;
@@ -33,8 +34,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final DataService _dataService = DataService();
-  late Future<List<dynamic>> _homeDataFuture; // 複数のデータをまとめて扱う
-
+  late Future<List<dynamic>> _homeDataFuture;
   AnimationController? _slideInController;
   late final AnimationController _rockingController;
   Animation<double>? _xAnimation;
@@ -153,7 +153,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => OptionsScreen(onSettingsChanged: widget.onSettingsChanged,),
+                    builder: (context) => OptionsScreen(onSettingsChanged: widget.onSettingsChanged, notificationService: NotificationService(),),
                   ),
                 );
               },
