@@ -1,6 +1,8 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/announcement_item.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AnnouncementDetailScreen extends StatelessWidget {
   final AnnouncementItem announcement;
@@ -35,9 +37,16 @@ class AnnouncementDetailScreen extends StatelessWidget {
               style: TextStyle(color: Colors.grey[600]),
             ),
             const Divider(height: 32.0),
-            Text(
-              announcement.content,
-              style: const TextStyle(fontSize: 16, height: 1.7),
+            MarkdownBody(
+              data: announcement.content,
+              styleSheet: MarkdownStyleSheet(
+                p: const TextStyle(fontSize: 16, height: 1.7),
+              ),
+              onTapLink: (text, href, title) {
+                if (href != null) {
+                  launchUrl(Uri.parse(href));
+                }
+              },
             ),
           ],
         ),

@@ -3,6 +3,8 @@ import 'package:intl/intl.dart';
 import '../models/event_item.dart';
 import '../widgets/tag_widget.dart';
 import '../models/enum_extensions.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class EventDetailScreen extends StatefulWidget {
   final EventItem event;
@@ -174,7 +176,17 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     ),
                   ),
                   const Divider(height: 32.0),
-                  Text(widget.event.description),
+                  MarkdownBody(
+                    data: widget.event.description,
+                    styleSheet: MarkdownStyleSheet(
+                      p: const TextStyle(fontSize: 16, height: 1.7),
+                    ),
+                    onTapLink: (text, href, title) {
+                      if (href != null) {
+                        launchUrl(Uri.parse(href));
+                      }
+                    },
+                  ),
                 ],
               ),
             ),
