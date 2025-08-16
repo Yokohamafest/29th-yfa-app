@@ -126,13 +126,13 @@ class _TimetableScreenState extends State<TimetableScreen> {
                             Colors.orange.shade400,
                             allEvents,
                           ),
-                          const SizedBox(width: 3), // 企画列の間の隙間
+                          const SizedBox(width: 3),
                           _buildStageColumn(
                             '31A',
                             Colors.green.shade400,
                             allEvents,
                           ),
-                          const SizedBox(width: 3), // 企画列の間の隙間
+                          const SizedBox(width: 3),
                           _buildStageColumn(
                             '32A',
                             Colors.blue.shade400,

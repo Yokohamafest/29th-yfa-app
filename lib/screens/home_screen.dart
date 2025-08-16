@@ -209,7 +209,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         SizedBox(height: 420),
 
                         Container(
-                          height: 250, //screenHeight * 0.4,
+                          height: 250,
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               begin: Alignment.topCenter,
@@ -220,10 +220,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         ),
 
                         Positioned(
-                          top: 250, //screenHeight * 0.4,
+                          top: 250,
                           left: 0,
                           right: 0,
-                          height: 50, //screenHeight * 0.1,
+                          height: 50,
                           child: Container(color: Colors.white),
                         ),
 
@@ -334,7 +334,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     color: const Color.fromARGB(255, 15, 114, 175),
                     tooltip: 'メニューを開く',
                     onPressed: () {
-                      // Drawerを開くための命令
                       Scaffold.of(context).openDrawer();
                     },
                   ),
@@ -439,7 +438,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               setState(() {});
             },
             itemBuilder: (context, index) {
-              // 本当のインデックスを計算
               final realIndex = index % visibleSpotlights.length;
               final spotlight = visibleSpotlights[realIndex];
 

@@ -46,17 +46,15 @@ class _MapScreenState extends State<MapScreen> {
   List<EventItem>? _allEvents;
 
   BuildingSelection _selectedBuilding = BuildingSelection.campus;
-  MapInfo? _currentMap; // 表示中のマップ
+  MapInfo? _currentMap;
 
   Set<String> _highlightedPinIds = {};
   String? _blinkingPinId;
 
   MapFilterType _currentFilterType = MapFilterType.event;
-  // イベントフィルター
   final Set<FestivalDay> _selectedDays = {};
   final Set<EventCategory> _selectedCategories = {};
   bool _filterFavorites = false;
-  // サービスフィルター
   final Set<PinType> _selectedServiceTypes = {};
   final Map<String, MapType> _buildingPinToFloorMap = {
     'pin_b2': MapType.building2F1,
@@ -314,7 +312,6 @@ class _MapScreenState extends State<MapScreen> {
                 borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
               ),
               builder: (context) {
-                // --- データ準備 ---
                 List<EventItem> attachedEvents = [];
 
                 final visibleEvents = _allEvents!
@@ -340,7 +337,6 @@ class _MapScreenState extends State<MapScreen> {
                       .where((event) => event.location == pin.title)
                       .toList();
                 }
-                // --- 検索ロジックここまで ---
 
                 final servicesInBuilding = _allPins!
                     .where(
@@ -354,7 +350,6 @@ class _MapScreenState extends State<MapScreen> {
                         _selectedCategories.isNotEmpty ||
                         _filterFavorites);
 
-                // --- UI構築 ---
                 return Container(
                   constraints: BoxConstraints(
                     maxHeight: MediaQuery.of(context).size.height * 0.7,

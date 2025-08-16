@@ -174,8 +174,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     ),
                   ),
                   const Divider(height: 32.0),
-                  // ...
-                  Text(widget.event.description /* ... */),
+                  Text(widget.event.description),
                 ],
               ),
             ),

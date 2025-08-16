@@ -144,27 +144,21 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         backgroundColor: const Color.fromARGB(255, 84, 164, 219),
         foregroundColor: Colors.white,
       ),
-      // 【変更点】FutureBuilderでUIを構築
       body: FutureBuilder<List<EventItem>>(
         future: _eventsFuture,
         builder: (context, snapshot) {
-          // データ読み込み中
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-          // エラー発生
           if (snapshot.hasError) {
             return const Center(child: Text('データの読み込みに失敗しました'));
           }
-          // データなし
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(child: Text('表示できる企画がありません'));
           }
 
-          // データ読み込み完了
           final allEvents = snapshot.data!;
 
-          // --- ここから下が、元のbodyの中身 ---
           final favoritedEvents = allEvents
               .where((event) =>
                   widget.favoriteEventIds.contains(event.id) && !event.hideFromList)
