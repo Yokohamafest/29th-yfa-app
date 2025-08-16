@@ -4,6 +4,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import '../models/event_item.dart';
+import '../widgets/notification_permission_dialog.dart';
 
 class NotificationPermissionsStatus {
   final bool isNotificationGranted;
@@ -61,40 +62,36 @@ class NotificationService {
 
     if (status.isPermanentlyDenied || status.isDenied) {
       if (!context.mounted) return false;
+      // 【変更点】AlertDialogを直接書く代わりに、共通のダイアログウィジェットを呼び出す
       await showDialog(
         context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('権限が必要です'),
-          content: const Text('リマインダーを動作させるには、「アラームとリマインダー」の権限を許可してください。'),
-          actions: [
-            TextButton(
-              child: const Text('キャンセル'),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            TextButton(
-              child: const Text('設定を開く'),
-              onPressed: () {
-                openAppSettings();
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
+        builder: (context) => NotificationPermissionDialog(
+          permissionsStatus: NotificationPermissionsStatus(
+            isNotificationGranted: true, // この時点では通知許可はあると仮定
+            isExactAlarmGranted: false, // アラーム権限が不足している
+          ),
         ),
       );
+      // ダイアログを閉じた後、再度権限の状態を確認して返す
       return await Permission.scheduleExactAlarm.isGranted;
     }
     return false;
   }
 
-  Future<void> scheduleReminder(BuildContext context, EventItem event, int reminderMinutes) async {
+  Future<void> scheduleReminder(
+    BuildContext context,
+    EventItem event,
+    int reminderMinutes,
+  ) async {
     final hasPermission = await _requestExactAlarmPermission(context);
     if (!hasPermission) {
       debugPrint('Exact alarm permission not granted.');
       return;
     }
     for (final timeSlot in event.timeSlots) {
-      final scheduleTime =
-          timeSlot.startTime.subtract(Duration(minutes: reminderMinutes));
+      final scheduleTime = timeSlot.startTime.subtract(
+        Duration(minutes: reminderMinutes),
+      );
 
       if (scheduleTime.isBefore(DateTime.now())) {
         continue;

@@ -42,9 +42,31 @@ class _MainScaffoldState extends State<MainScaffold> {
   void _rescheduleAllReminders() async {
     if (_allEvents == null) return;
 
-    // 1. 最新の通知設定を読み込む
     final prefs = await SharedPreferences.getInstance();
     final remindersEnabled = prefs.getBool('reminders_enabled') ?? true;
+
+    if (!remindersEnabled) {
+      for (final eventId in _favoriteEventIds) {
+        EventItem? event;
+        try { event = _allEvents!.firstWhere((e) => e.id == eventId); } catch (e) { event = null; }
+        if (event != null) {
+          await _notificationService.cancelReminder(event);
+        }
+      }
+      return;
+    }
+
+    final permissionsStatus = await _notificationService.checkPermissions();
+    if (!permissionsStatus.allGranted) {
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => NotificationPermissionDialog(permissionsStatus: permissionsStatus),
+        );
+      }
+      return;
+    }
+
     final reminderMinutesSettings = {
       5: prefs.getBool('reminder_5_min_enabled') ?? false,
       15: prefs.getBool('reminder_15_min_enabled') ?? true,
@@ -58,14 +80,20 @@ class _MainScaffoldState extends State<MainScaffold> {
       if (event == null) continue;
 
       await _notificationService.cancelReminder(event);
+      reminderMinutesSettings.forEach((minutes, isEnabled) {
+        if (isEnabled) {
+          _notificationService.scheduleReminder(context, event!, minutes);
+        }
+      });
+    }
 
-      if (remindersEnabled) {
-        reminderMinutesSettings.forEach((minutes, isEnabled) {
-          if (isEnabled) {
-            _notificationService.scheduleReminder(context, event!, minutes);
-          }
-        });
-      }
+    if(mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('お気に入りの通知設定を更新しました。'),
+          duration: Duration(seconds: 2),
+        ),
+      );
     }
   }
 
