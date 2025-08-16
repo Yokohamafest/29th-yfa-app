@@ -62,17 +62,15 @@ class NotificationService {
 
     if (status.isPermanentlyDenied || status.isDenied) {
       if (!context.mounted) return false;
-      // 【変更点】AlertDialogを直接書く代わりに、共通のダイアログウィジェットを呼び出す
       await showDialog(
         context: context,
         builder: (context) => NotificationPermissionDialog(
           permissionsStatus: NotificationPermissionsStatus(
-            isNotificationGranted: true, // この時点では通知許可はあると仮定
-            isExactAlarmGranted: false, // アラーム権限が不足している
+            isNotificationGranted: true,
+            isExactAlarmGranted: false,
           ),
         ),
       );
-      // ダイアログを閉じた後、再度権限の状態を確認して返す
       return await Permission.scheduleExactAlarm.isGranted;
     }
     return false;
@@ -133,5 +131,38 @@ class NotificationService {
         await flutterLocalNotificationsPlugin.cancel(notificationId);
       }
     }
+  }
+
+  Future<void> showPushNotification({
+    required String title,
+    required String body,
+    String? payload,
+  }) async {
+    final AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+      'general_notifications',
+      '運営からのお知らせ',
+      channelDescription: '運営からの重要なお知らせを通知します。',
+      importance: Importance.max,
+      priority: Priority.high,
+    );
+
+    const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    final NotificationDetails notificationDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    await flutterLocalNotificationsPlugin.show(
+      DateTime.now().millisecond,
+      title,
+      body,
+      notificationDetails,
+      payload: payload,
+    );
   }
 }
