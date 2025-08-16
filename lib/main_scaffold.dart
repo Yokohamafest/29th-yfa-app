@@ -8,7 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'services/data_service.dart';
 import 'services/notification_service.dart';
 import 'models/event_item.dart';
-import 'widgets/notification_permission_dialog.dart';
+import 'widgets/reminder_permission_dialog.dart';
 
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});

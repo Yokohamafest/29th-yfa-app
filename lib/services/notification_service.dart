@@ -4,7 +4,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import '../models/event_item.dart';
-import '../widgets/notification_permission_dialog.dart';
+import '../widgets/reminder_permission_dialog.dart';
 
 class NotificationPermissionsStatus {
   final bool isNotificationGranted;

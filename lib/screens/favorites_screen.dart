@@ -2,7 +2,7 @@
 import 'package:intl/intl.dart';
 import '../models/event_item.dart';
 import '../widgets/event_card.dart';
-import '../widgets/favorite_notification_settings.dart';
+import '../widgets/favorite_reminder_settings.dart';
 import '../services/data_service.dart';
 
 

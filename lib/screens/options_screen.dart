@@ -3,10 +3,10 @@ import 'package:flutter_app_yfa/models/info_link_item.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../widgets/favorite_notification_settings.dart';
+import '../widgets/favorite_reminder_settings.dart';
 import '../services/data_service.dart';
 import '../services/notification_service.dart';
-import '../widgets/general_notification_permission_dialog.dart';
+import '../widgets/announcement_permission_dialog.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 
