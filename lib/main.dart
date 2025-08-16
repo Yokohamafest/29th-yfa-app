@@ -5,6 +5,7 @@ import 'package:flutter_app_yfa/main_scaffold.dart';
 import 'services/notification_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'dart:async';
+import '../utils/app_colors.dart';
 
 // ここにFirebaseの初期化コードが入る
 // ignore: unused_element
@@ -51,6 +52,16 @@ class MyApp extends StatelessWidget {
         fontFamily: 'NotoSansJP',
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: AppColors.secondary,
+          foregroundColor: Colors.white,
+          titleTextStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+        ),
+        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+          selectedItemColor: AppColors.primary,
+          unselectedItemColor: Colors.grey,
+          type: BottomNavigationBarType.fixed,
+        ),
       ),
       home: const MainScaffold(),
     );

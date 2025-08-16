@@ -5,7 +5,6 @@ import '../widgets/event_card.dart';
 import '../widgets/favorite_reminder_settings.dart';
 import '../services/data_service.dart';
 
-
 class ScheduleEntry {
   final EventItem event;
   final TimeSlot timeSlot;
@@ -105,7 +104,10 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('お気に入り企画', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'お気に入り企画',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         actions: [
           Builder(
             builder: (context) {
@@ -119,7 +121,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                       ),
                     ),
                     builder: (context) {
-                      return FavoriteNotificationSettings(onSettingsChanged: widget.onSettingsChanged,);
+                      return FavoriteNotificationSettings(
+                        onSettingsChanged: widget.onSettingsChanged,
+                      );
                     },
                   );
                 },
@@ -130,7 +134,6 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 ),
                 style: TextButton.styleFrom(
                   side: const BorderSide(color: Colors.white, width: 0.8),
-                  backgroundColor: Color.fromARGB(255, 72, 151, 209),
                   foregroundColor:
                       Theme.of(context).appBarTheme.iconTheme?.color ??
                       Colors.white,
@@ -140,9 +143,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             },
           ),
           const SizedBox(width: 8),
-],
-        backgroundColor: const Color.fromARGB(255, 84, 164, 219),
-        foregroundColor: Colors.white,
+        ],
       ),
       body: FutureBuilder<List<EventItem>>(
         future: _eventsFuture,
@@ -160,12 +161,16 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           final allEvents = snapshot.data!;
 
           final favoritedEvents = allEvents
-              .where((event) =>
-                  widget.favoriteEventIds.contains(event.id) && !event.hideFromList)
+              .where(
+                (event) =>
+                    widget.favoriteEventIds.contains(event.id) &&
+                    !event.hideFromList,
+              )
               .toList();
 
-          final allDayEvents =
-              favoritedEvents.where((event) => event.timeSlots.isEmpty).toList();
+          final allDayEvents = favoritedEvents
+              .where((event) => event.timeSlots.isEmpty)
+              .toList();
 
           final List<ScheduleEntry> scheduleItems = [];
           final dayToFilter = _selectedDay == FestivalDay.dayOne ? 14 : 15;
@@ -189,7 +194,10 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                     if (allDayEvents.isNotEmpty) ...[
                       const Text(
                         '常時開催企画',
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       ...allDayEvents.map(
                         (event) => EventCard(
@@ -203,7 +211,10 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                     ],
                     const Text(
                       '時間指定企画',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Center(

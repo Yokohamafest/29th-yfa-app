@@ -208,7 +208,6 @@ class _EventListScreenState extends State<EventListScreen> {
                 ),
                 style: TextButton.styleFrom(
                   side: const BorderSide(color: Colors.white, width: 0.8),
-                  backgroundColor: Color.fromARGB(255, 72, 151, 209),
                   foregroundColor:
                       Theme.of(context).appBarTheme.iconTheme?.color ??
                       Colors.white,
@@ -219,8 +218,6 @@ class _EventListScreenState extends State<EventListScreen> {
           ),
           const SizedBox(width: 8),
         ],
-        backgroundColor: Color.fromARGB(255, 84, 164, 219),
-        foregroundColor: Colors.white,
       ),
       endDrawer: Drawer(
         child: ListView(

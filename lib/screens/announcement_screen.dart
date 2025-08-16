@@ -52,10 +52,7 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
       appBar: AppBar(
         title: const Text(
           'お知らせ',
-          style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Color.fromARGB(255, 84, 164, 219),
-        foregroundColor: Colors.white,
       ),
 
       body: FutureBuilder<List<AnnouncementItem>>(

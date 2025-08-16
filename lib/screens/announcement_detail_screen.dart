@@ -1,4 +1,5 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:flutter_app_yfa/utils/app_colors.dart';
 import 'package:intl/intl.dart';
 import '../models/announcement_item.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
@@ -19,7 +20,7 @@ class AnnouncementDetailScreen extends StatelessWidget {
           'お知らせ詳細',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Color.fromARGB(255, 84, 164, 219),
+        backgroundColor: (AppColors.secondary),
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(

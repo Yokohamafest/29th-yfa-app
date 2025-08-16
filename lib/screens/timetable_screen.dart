@@ -49,14 +49,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'タイムテーブル',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Color.fromARGB(255, 84, 164, 219),
-        foregroundColor: Colors.white,
-      ),
+      appBar: AppBar(title: const Text('タイムテーブル')),
       body: FutureBuilder<List<EventItem>>(
         future: _eventsFuture,
         builder: (context, snapshot) {

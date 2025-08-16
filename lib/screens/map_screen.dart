@@ -12,6 +12,7 @@ import '../services/data_service.dart';
 import '../widgets/tag_widget.dart';
 import '../models/enum_extensions.dart';
 import '../services/notification_service.dart';
+import '../utils/app_colors.dart';
 
 enum BuildingSelection { campus, building2, building3, building4 }
 
@@ -510,7 +511,12 @@ class _MapScreenState extends State<MapScreen> {
                                             context,
                                             MaterialPageRoute(
                                               builder: (context) =>
-                                                  OptionsScreen(onSettingsChanged: widget.onSettingsChanged, notificationService: NotificationService(),),
+                                                  OptionsScreen(
+                                                    onSettingsChanged: widget
+                                                        .onSettingsChanged,
+                                                    notificationService:
+                                                        NotificationService(),
+                                                  ),
                                             ),
                                           );
                                           break;
@@ -1058,7 +1064,6 @@ class _MapScreenState extends State<MapScreen> {
                     ),
                     style: TextButton.styleFrom(
                       side: const BorderSide(color: Colors.white, width: 0.8),
-                      backgroundColor: Color.fromARGB(255, 72, 151, 209),
                       foregroundColor:
                           Theme.of(context).appBarTheme.iconTheme?.color ??
                           Colors.white,
@@ -1068,8 +1073,6 @@ class _MapScreenState extends State<MapScreen> {
                 },
               ),
             ],
-            backgroundColor: Color.fromARGB(255, 84, 164, 219),
-            foregroundColor: Colors.white,
           ),
           endDrawer: _buildFilterDrawer(),
           body: Column(
@@ -1090,7 +1093,9 @@ class _MapScreenState extends State<MapScreen> {
                           width: MediaQuery.of(context).size.width,
                           fit: BoxFit.fitWidth,
                           errorBuilder: (context, error, stackTrace) {
-                            return const Center(child: Text('マップ画像を読み込めませんでした'));
+                            return const Center(
+                              child: Text('マップ画像を読み込めませんでした'),
+                            );
                           },
                         ),
 
@@ -1099,7 +1104,12 @@ class _MapScreenState extends State<MapScreen> {
                             builder: (context, constraints) {
                               return Stack(
                                 children: currentPins.map((pin) {
-                                  return _buildMapPin(pin, constraints, _allEvents!, _allPins!);
+                                  return _buildMapPin(
+                                    pin,
+                                    constraints,
+                                    _allEvents!,
+                                    _allPins!,
+                                  );
                                 }).toList(),
                               );
                             },
@@ -1207,13 +1217,11 @@ class _MapPinWidgetState extends State<MapPinWidget>
       builder: (context, child) {
         final borderColor = widget.isBlinking
             ? Color.lerp(
-                Colors.red.shade700,
-                Colors.yellow.shade700,
+                AppColors.primary,
+                AppColors.tertiary,
                 _animationController.value,
               )!
-            : (widget.isHighlighted
-                  ? Colors.yellow.shade700
-                  : Colors.grey.shade400);
+            : (widget.isHighlighted ? AppColors.primary : Colors.grey.shade400);
 
         final borderWidth = widget.isBlinking || widget.isHighlighted
             ? 3.0
@@ -1240,7 +1248,7 @@ class _MapPinWidgetState extends State<MapPinWidget>
           child: serviceIcon != null
               ? Icon(
                   serviceIcon,
-                  color: Colors.blue.shade800,
+                  color: AppColors.primary,
                   size: widget.pin.iconSize ?? 20,
                 )
               : Text(

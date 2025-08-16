@@ -8,13 +8,17 @@ import '../services/data_service.dart';
 import '../services/notification_service.dart';
 import '../widgets/announcement_permission_dialog.dart';
 import 'package:permission_handler/permission_handler.dart';
-
+import '../utils/app_colors.dart';
 
 class OptionsScreen extends StatefulWidget {
   final VoidCallback onSettingsChanged;
   final NotificationService notificationService;
 
-  const OptionsScreen({super.key, required this.onSettingsChanged, required this.notificationService});
+  const OptionsScreen({
+    super.key,
+    required this.onSettingsChanged,
+    required this.notificationService,
+  });
 
   @override
   State<OptionsScreen> createState() => _OptionsScreenState();
@@ -109,7 +113,6 @@ class _OptionsScreenState extends State<OptionsScreen> {
     }
   }
 
-
   IconData _getIconForName(String name) {
     switch (name) {
       case 'public':
@@ -126,21 +129,17 @@ class _OptionsScreenState extends State<OptionsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'オプション',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Color.fromARGB(255, 84, 164, 219),
-        foregroundColor: Colors.white,
-      ),
+      appBar: AppBar(title: const Text('オプション')),
 
       body: ListView(
         children: [
           const ListTile(
             title: Text(
               '通知設定',
-              style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
 
@@ -151,13 +150,18 @@ class _OptionsScreenState extends State<OptionsScreen> {
             onChanged: _updateGeneralNotificationSetting,
           ),
 
-          FavoriteNotificationSettings(onSettingsChanged: widget.onSettingsChanged,),
+          FavoriteNotificationSettings(
+            onSettingsChanged: widget.onSettingsChanged,
+          ),
           const Divider(),
 
           const ListTile(
             title: Text(
               'データ管理',
-              style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           ListTile(
@@ -171,7 +175,10 @@ class _OptionsScreenState extends State<OptionsScreen> {
           const ListTile(
             title: Text(
               '情報・サポート',
-              style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           ListTile(

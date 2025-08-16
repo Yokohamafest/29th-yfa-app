@@ -242,10 +242,7 @@ class _MainScaffoldState extends State<MainScaffold> {
           BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'お気に入り'),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: const Color.fromARGB(255, 15, 114, 175),
-        unselectedItemColor: Colors.grey,
         onTap: _onItemTapped,
-        type: BottomNavigationBarType.fixed,
       ),
     );
   }

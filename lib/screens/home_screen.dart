@@ -11,6 +11,7 @@ import '../models/spotlight_item.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/data_service.dart';
 import '../services/notification_service.dart';
+import '../utils/app_colors.dart';
 
 class HomeScreen extends StatefulWidget {
   final Set<String> favoriteEventIds;
@@ -153,7 +154,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => OptionsScreen(onSettingsChanged: widget.onSettingsChanged, notificationService: NotificationService(),),
+                    builder: (context) => OptionsScreen(
+                      onSettingsChanged: widget.onSettingsChanged,
+                      notificationService: NotificationService(),
+                    ),
                   ),
                 );
               },
@@ -168,7 +172,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             children: [
               Expanded(
                 child: Container(
-                  color: const Color.fromARGB(255, 15, 114, 175),
+                  color: AppColors.primary,
                 ),
               ),
             ],
@@ -214,7 +218,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             gradient: LinearGradient(
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
-                              colors: [Color(0xFF54A4DB), Colors.white],
+                              colors: [AppColors.secondary, Colors.white],
                             ),
                           ),
                         ),
@@ -290,7 +294,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ),
 
                     Container(
-                      color: const Color.fromARGB(255, 15, 114, 175),
+                      color: AppColors.primary,
                       width: double.infinity,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
@@ -302,7 +306,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           children: [
                             _buildAnnouncementsSection(context, announcements),
                             const SizedBox(height: 32),
-                            _buildSpotlightCarousel(context, spotlights, allEvents),
+                            _buildSpotlightCarousel(
+                              context,
+                              spotlights,
+                              allEvents,
+                            ),
                           ],
                         ),
                       ),
@@ -331,7 +339,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   child: IconButton(
                     icon: const Icon(Icons.menu),
                     iconSize: 30,
-                    color: const Color.fromARGB(255, 15, 114, 175),
+                    color: AppColors.primary,
                     tooltip: 'メニューを開く',
                     onPressed: () {
                       Scaffold.of(context).openDrawer();
@@ -346,7 +354,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildAnnouncementsSection(BuildContext context, List<AnnouncementItem> announcements) {
+  Widget _buildAnnouncementsSection(
+    BuildContext context,
+    List<AnnouncementItem> announcements,
+  ) {
     final latestAnnouncements = (List.of(
       announcements,
     )..sort((a, b) => b.publishedAt.compareTo(a.publishedAt))).take(3);
@@ -390,9 +401,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ListTile(
                 title: const Text(
                   'お知らせ一覧',
-                  style: TextStyle(color: Colors.blue),
+                  style: TextStyle(color: AppColors.primary),
                 ),
-                trailing: const Icon(Icons.arrow_forward, color: Colors.blue),
+                trailing: const Icon(Icons.arrow_forward, color: AppColors.primary),
                 onTap: () {
                   Navigator.push(
                     context,
@@ -409,7 +420,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildSpotlightCarousel(BuildContext context, List<SpotlightItem> spotlights, List<EventItem> allEvents) {
+  Widget _buildSpotlightCarousel(
+    BuildContext context,
+    List<SpotlightItem> spotlights,
+    List<EventItem> allEvents,
+  ) {
     final visibleSpotlights = spotlights.where((s) => s.isVisible).toList();
 
     if (visibleSpotlights.isEmpty) {
