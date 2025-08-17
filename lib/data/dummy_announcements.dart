@@ -5,7 +5,7 @@ final List<AnnouncementItem> dummyAnnouncements = [
     id: 'anno_001',
     title: '【重要】お笑いライブについて',
     content:
-        'text text text text text text text text text text text text text text text text text text text text ',
+        'text text text text text text text text text text text text text text text text text text text text [横浜祭公式サイト](https://yokohama-fest.net/29th)はこちら。',
     publishedAt: DateTime(2025, 9, 15, 10, 30),
   ),
   AnnouncementItem(

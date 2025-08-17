@@ -5,6 +5,10 @@ import 'package:flutter_app_yfa/screens/home_screen.dart';
 import 'package:flutter_app_yfa/screens/map_screen.dart';
 import 'package:flutter_app_yfa/screens/timetable_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'services/data_service.dart';
+import 'services/notification_service.dart';
+import 'models/event_item.dart';
+import 'widgets/reminder_permission_dialog.dart';
 
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});
@@ -14,7 +18,10 @@ class MainScaffold extends StatefulWidget {
 }
 
 class _MainScaffoldState extends State<MainScaffold> {
-  // --- 状態変数 ---
+  final DataService _dataService = DataService();
+  final NotificationService _notificationService = NotificationService();
+  List<EventItem>? _allEvents;
+
   int _selectedIndex = 0;
   final Set<String> _favoriteEventIds = {};
   String? _highlightedEventId;
@@ -22,7 +29,72 @@ class _MainScaffoldState extends State<MainScaffold> {
   @override
   void initState() {
     super.initState();
+    _dataService.getEvents().then((events) {
+      if (mounted) {
+        setState(() {
+          _allEvents = events;
+        });
+      }
+    });
     _loadFavorites();
+  }
+
+  void _rescheduleAllReminders() async {
+    if (_allEvents == null) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final remindersEnabled = prefs.getBool('reminders_enabled') ?? true;
+
+    if (!remindersEnabled) {
+      for (final eventId in _favoriteEventIds) {
+        EventItem? event;
+        try { event = _allEvents!.firstWhere((e) => e.id == eventId); } catch (e) { event = null; }
+        if (event != null) {
+          await _notificationService.cancelReminder(event);
+        }
+      }
+      return;
+    }
+
+    final permissionsStatus = await _notificationService.checkPermissions();
+    if (!permissionsStatus.allGranted) {
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => NotificationPermissionDialog(permissionsStatus: permissionsStatus),
+        );
+      }
+      return;
+    }
+
+    final reminderMinutesSettings = {
+      5: prefs.getBool('reminder_5_min_enabled') ?? false,
+      15: prefs.getBool('reminder_15_min_enabled') ?? true,
+      30: prefs.getBool('reminder_30_min_enabled') ?? false,
+      60: prefs.getBool('reminder_60_min_enabled') ?? false,
+    };
+
+    for (final eventId in _favoriteEventIds) {
+      EventItem? event;
+      try { event = _allEvents!.firstWhere((e) => e.id == eventId); } catch (e) { event = null; }
+      if (event == null) continue;
+
+      await _notificationService.cancelReminder(event);
+      reminderMinutesSettings.forEach((minutes, isEnabled) {
+        if (isEnabled) {
+          _notificationService.scheduleReminder(context, event!, minutes);
+        }
+      });
+    }
+
+    if(mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('お気に入りの通知設定を更新しました。'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   Future<void> _loadFavorites() async {
@@ -40,9 +112,52 @@ class _MainScaffoldState extends State<MainScaffold> {
     await prefs.setStringList('favorite_events', _favoriteEventIds.toList());
   }
 
-  void _toggleFavorite(String eventId) {
+  void _toggleFavorite(String eventId) async {
+    if (_allEvents == null) return;
+    final isFavorited = _favoriteEventIds.contains(eventId);
+
+    if (isFavorited) {
+      EventItem? event;
+      try { event = _allEvents!.firstWhere((e) => e.id == eventId); } catch (e) { event = null; }
+      if (event != null) {
+        await _notificationService.cancelReminder(event);
+      }
+    } else {
+      final prefs = await SharedPreferences.getInstance();
+      final remindersEnabled = prefs.getBool('reminders_enabled') ?? true;
+
+      if (remindersEnabled) {
+        final permissionsStatus = await _notificationService.checkPermissions();
+
+        if (permissionsStatus.allGranted) {
+          EventItem? event;
+          try { event = _allEvents!.firstWhere((e) => e.id == eventId); } catch (e) { event = null; }
+          if (event != null) {
+            final reminderMinutesSettings = {
+              5: prefs.getBool('reminder_5_min_enabled') ?? false,
+              15: prefs.getBool('reminder_15_min_enabled') ?? true,
+              30: prefs.getBool('reminder_30_min_enabled') ?? false,
+              60: prefs.getBool('reminder_60_min_enabled') ?? false,
+            };
+            reminderMinutesSettings.forEach((minutes, isEnabled) {
+              if (isEnabled) {
+                _notificationService.scheduleReminder(context, event!, minutes);
+              }
+            });
+          }
+        } else {
+          if (mounted) {
+            showDialog(
+              context: context,
+              builder: (context) => NotificationPermissionDialog(permissionsStatus: permissionsStatus),
+            );
+          }
+        }
+      }
+    }
+
     setState(() {
-      if (_favoriteEventIds.contains(eventId)) {
+      if (isFavorited) {
         _favoriteEventIds.remove(eventId);
       } else {
         _favoriteEventIds.add(eventId);
@@ -85,6 +200,7 @@ class _MainScaffoldState extends State<MainScaffold> {
         onToggleFavorite: _toggleFavorite,
         onNavigateToMap: _navigateToMapAndHighlight,
         changeTab: changeTab,
+        onSettingsChanged: _rescheduleAllReminders,
       ),
       TimetableScreen(
         favoriteEventIds: _favoriteEventIds,
@@ -98,6 +214,7 @@ class _MainScaffoldState extends State<MainScaffold> {
         onToggleFavorite: _toggleFavorite,
         onNavigateToMap: _navigateToMapAndHighlight,
         changeTab: changeTab,
+        onSettingsChanged: _rescheduleAllReminders,
       ),
       EventListScreen(
         favoriteEventIds: _favoriteEventIds,
@@ -110,6 +227,7 @@ class _MainScaffoldState extends State<MainScaffold> {
         onToggleFavorite: _toggleFavorite,
         onNavigateToMap: _navigateToMapAndHighlight,
         changeTab: changeTab,
+        onSettingsChanged: _rescheduleAllReminders,
       ),
     ];
 
@@ -124,10 +242,7 @@ class _MainScaffoldState extends State<MainScaffold> {
           BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'お気に入り'),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: const Color.fromARGB(255, 15, 114, 175),
-        unselectedItemColor: Colors.grey,
         onTap: _onItemTapped,
-        type: BottomNavigationBarType.fixed,
       ),
     );
   }

@@ -1,6 +1,10 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/event_item.dart';
+import '../widgets/tag_widget.dart';
+import '../models/enum_extensions.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class EventDetailScreen extends StatefulWidget {
   final EventItem event;
@@ -21,24 +25,6 @@ class EventDetailScreen extends StatefulWidget {
 }
 
 class _EventDetailScreenState extends State<EventDetailScreen> {
-  Widget _buildTag(String text, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-      decoration: BoxDecoration(
-        color: color.withAlpha(51),
-        borderRadius: BorderRadius.circular(8.0),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: color,
-          fontWeight: FontWeight.bold,
-          fontSize: 10,
-        ),
-      ),
-    );
-  }
-
   Widget _buildInfoRow({
     required IconData icon,
     required String title,
@@ -80,12 +66,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          widget.event.title,
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Color.fromARGB(255, 84, 164, 219),
-        foregroundColor: Colors.white,
+        title: Text(widget.event.title),
         actions: [
           IconButton(
             icon: Icon(
@@ -143,10 +124,17 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     spacing: 8.0,
                     runSpacing: 4.0,
                     children: [
-                      _buildTag(widget.event.date.name, Colors.green),
-                      _buildTag(widget.event.area.name, Colors.orange),
+                      TagWidget(
+                        text: widget.event.date.name,
+                        color: Colors.green,
+                      ),
+                      TagWidget(
+                        text: widget.event.area.name,
+                        color: Colors.orange,
+                      ),
                       ...widget.event.categories.map(
-                        (category) => _buildTag(category.name, Colors.blue),
+                        (category) =>
+                            TagWidget(text: category.name, color: Colors.blue),
                       ),
                     ],
                   ),
@@ -183,8 +171,17 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     ),
                   ),
                   const Divider(height: 32.0),
-                  // ...
-                  Text(widget.event.description /* ... */),
+                  MarkdownBody(
+                    data: widget.event.description,
+                    styleSheet: MarkdownStyleSheet(
+                      p: const TextStyle(fontSize: 16, height: 1.7),
+                    ),
+                    onTapLink: (text, href, title) {
+                      if (href != null) {
+                        launchUrl(Uri.parse(href));
+                      }
+                    },
+                  ),
                 ],
               ),
             ),

@@ -1,6 +1,8 @@
 ﻿import 'package:flutter/material.dart';
 import '../models/event_item.dart';
 import '../screens/event_detail_screen.dart';
+import 'tag_widget.dart';
+import '../models/enum_extensions.dart';
 
 class EventCard extends StatelessWidget {
   final EventItem event;
@@ -15,25 +17,6 @@ class EventCard extends StatelessWidget {
     required this.onToggleFavorite,
     required this.onNavigateToMap,
   });
-
-  // タグの見た目を作るヘルパーウィジェット
-  Widget _buildTag(String text, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 3.0),
-      decoration: BoxDecoration(
-        color: color.withAlpha(51),
-        borderRadius: BorderRadius.circular(8.0),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: color,
-          fontWeight: FontWeight.bold,
-          fontSize: 10,
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -131,22 +114,19 @@ class EventCard extends StatelessWidget {
                       ),
                       const Spacer(),
 
-                      // 【変更点】タグ表示エリアをLayoutBuilderで囲む
                       LayoutBuilder(
                         builder: (context, constraints) {
                           var tagWidgets = <Widget>[];
                           double currentWidth = 0;
 
-                          // "+n"タグのおおよその幅を確保
                           final plusNTagsWidth = 40.0;
 
                           for (var tagData in allTags) {
-                            final tag = _buildTag(
-                              tagData['text'] as String,
-                              tagData['color'] as Color,
+                            final tag = TagWidget(
+                              text:tagData['text'] as String,
+                              color:tagData['color'] as Color,
                             );
 
-                            // 各タグの幅を、TextPainterを使って事前に計測
                             final painter = TextPainter(
                               text: TextSpan(
                                 text: tagData['text'] as String,
@@ -158,7 +138,6 @@ class EventCard extends StatelessWidget {
                               textDirection: TextDirection.ltr,
                             )..layout();
 
-                            // padding(6*2=12)とmargin(6)を加味したおおよその幅
                             final tagWidth = painter.width + 12 + 6;
 
                             if (currentWidth + tagWidth <
@@ -182,7 +161,7 @@ class EventCard extends StatelessWidget {
                             children: [
                               ...tagWidgets,
                               if (hiddenCount > 0)
-                                _buildTag('+$hiddenCount', Colors.grey),
+                                TagWidget(text:'+$hiddenCount', color:Colors.grey),
                             ],
                           );
                         },

@@ -1,9 +1,9 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../data/dummy_events.dart';
 import '../models/event_item.dart';
 import 'event_detail_screen.dart';
 import 'dart:math' as math;
+import '../services/data_service.dart';
 
 class TimetableScreen extends StatefulWidget {
   final Set<String> favoriteEventIds;
@@ -28,10 +28,13 @@ class _TimetableScreenState extends State<TimetableScreen> {
   final double _hourHeight = 120.0;
   final double _leftColumnWidth = 50.0;
 
+  final DataService _dataService = DataService();
+  late Future<List<EventItem>> _eventsFuture;
 
   @override
   void initState() {
     super.initState();
+    _eventsFuture = _dataService.getEvents();
     _selectedDay = _getInitialSelectedDay();
   }
 
@@ -46,75 +49,97 @@ class _TimetableScreenState extends State<TimetableScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'タイムテーブル',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Color.fromARGB(255, 84, 164, 219),
-        foregroundColor: Colors.white,
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: ToggleButtons(
-              isSelected: [
-                _selectedDay == FestivalDay.dayOne,
-                _selectedDay == FestivalDay.dayTwo,
-              ],
-              onPressed: (index) {
-                setState(() {
-                  _selectedDay = (index == 0)
-                      ? FestivalDay.dayOne
-                      : FestivalDay.dayTwo;
-                });
-              },
-              borderRadius: BorderRadius.circular(8.0),
-              children: const [
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Text('1日目 (9/14)'),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Text('2日目 (9/15)'),
-                ),
-              ],
-            ),
-          ),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(width: _leftColumnWidth),
-              _buildHeaderCell('体育館ステージ', Colors.orange.shade400),
-              SizedBox(width: 3),
-              _buildHeaderCell('31Aステージ', Colors.green.shade400),
-              SizedBox(width: 3),
-              _buildHeaderCell('32Aステージ', Colors.blue.shade400),
-            ],
-          ),
+      appBar: AppBar(title: const Text('タイムテーブル')),
+      body: FutureBuilder<List<EventItem>>(
+        future: _eventsFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return const Center(child: Text('データの読み込みに失敗しました'));
+          }
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('表示できる企画のデータがありません'));
+          }
 
-          Expanded(
-            child: SingleChildScrollView(
-              child: Stack(
+          final allEvents = snapshot.data!;
+
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: ToggleButtons(
+                  isSelected: [
+                    _selectedDay == FestivalDay.dayOne,
+                    _selectedDay == FestivalDay.dayTwo,
+                  ],
+                  onPressed: (index) {
+                    setState(() {
+                      _selectedDay = (index == 0)
+                          ? FestivalDay.dayOne
+                          : FestivalDay.dayTwo;
+                    });
+                  },
+                  borderRadius: BorderRadius.circular(8.0),
+                  children: const [
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: Text('1日目 (9/14)'),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: Text('2日目 (9/15)'),
+                    ),
+                  ],
+                ),
+              ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildGridAndTimeAxis(),
-                  Row(
-                    children: [
-                      SizedBox(width: _leftColumnWidth),
-                      _buildStageColumn('体育館', Colors.orange.shade400),
-                      const SizedBox(width: 3), // 企画列の間の隙間
-                      _buildStageColumn('31A', Colors.green.shade400),
-                      const SizedBox(width: 3), // 企画列の間の隙間
-                      _buildStageColumn('32A', Colors.blue.shade400),
-                    ],
-                  ),
+                  SizedBox(width: _leftColumnWidth),
+                  _buildHeaderCell('体育館ステージ', Colors.orange.shade400),
+                  SizedBox(width: 3),
+                  _buildHeaderCell('31Aステージ', Colors.green.shade400),
+                  SizedBox(width: 3),
+                  _buildHeaderCell('32Aステージ', Colors.blue.shade400),
                 ],
               ),
-            ),
-          ),
-        ],
+
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Stack(
+                    children: [
+                      _buildGridAndTimeAxis(),
+                      Row(
+                        children: [
+                          SizedBox(width: _leftColumnWidth),
+                          _buildStageColumn(
+                            '体育館',
+                            Colors.orange.shade400,
+                            allEvents,
+                          ),
+                          const SizedBox(width: 3),
+                          _buildStageColumn(
+                            '31A',
+                            Colors.green.shade400,
+                            allEvents,
+                          ),
+                          const SizedBox(width: 3),
+                          _buildStageColumn(
+                            '32A',
+                            Colors.blue.shade400,
+                            allEvents,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -197,8 +222,12 @@ class _TimetableScreenState extends State<TimetableScreen> {
     );
   }
 
-  Widget _buildStageColumn(String locationName, Color backgroundColor) {
-    final eventsForStage = dummyEvents.where((event) {
+  Widget _buildStageColumn(
+    String locationName,
+    Color backgroundColor,
+    List<EventItem> allEvents,
+  ) {
+    final eventsForStage = allEvents.where((event) {
       final isSameLocation = event.location == locationName;
       final isTimed = event.timeSlots.isNotEmpty;
       return isSameLocation && isTimed;

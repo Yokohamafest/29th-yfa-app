@@ -1,29 +1,45 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:flutter_app_yfa/models/info_link_item.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../widgets/favorite_notification_settings.dart';
+import '../widgets/favorite_reminder_settings.dart';
+import '../services/data_service.dart';
+import '../services/notification_service.dart';
+import '../widgets/announcement_permission_dialog.dart';
+import 'package:permission_handler/permission_handler.dart';
+import '../utils/app_colors.dart';
 
 class OptionsScreen extends StatefulWidget {
-  const OptionsScreen({super.key});
+  final VoidCallback onSettingsChanged;
+  final NotificationService notificationService;
+
+  const OptionsScreen({
+    super.key,
+    required this.onSettingsChanged,
+    required this.notificationService,
+  });
 
   @override
   State<OptionsScreen> createState() => _OptionsScreenState();
 }
 
 class _OptionsScreenState extends State<OptionsScreen> {
+  final DataService _dataService = DataService();
   String _appVersion = '';
 
   bool _generalNotificationsEnabled = true;
+
+  late Future<List<InfoLinkItem>> _infoLinksFuture;
 
   @override
   void initState() {
     super.initState();
     _loadAppVersion();
     _loadGeneralNotificationSetting();
+    _infoLinksFuture = _dataService.getInfoLinks();
   }
 
-  // アプリのバージョン情報を読み込む
   Future<void> _loadAppVersion() async {
     final packageInfo = await PackageInfo.fromPlatform();
     setState(() {
@@ -85,26 +101,45 @@ class _OptionsScreenState extends State<OptionsScreen> {
     setState(() {
       _generalNotificationsEnabled = value;
     });
+
+    if (value == true) {
+      final status = await Permission.notification.status;
+      if (!status.isGranted && mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => const GeneralNotificationPermissionDialog(),
+        );
+      }
+    }
+  }
+
+  IconData _getIconForName(String name) {
+    switch (name) {
+      case 'public':
+        return Icons.public;
+      case 'feedback_outlined':
+        return Icons.feedback_outlined;
+      case 'privacy_tip_outlined':
+        return Icons.privacy_tip_outlined;
+      default:
+        return Icons.info_outline;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'オプション',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Color.fromARGB(255, 84, 164, 219),
-        foregroundColor: Colors.white,
-      ),
+      appBar: AppBar(title: const Text('オプション')),
 
       body: ListView(
         children: [
           const ListTile(
             title: Text(
               '通知設定',
-              style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
 
@@ -115,14 +150,18 @@ class _OptionsScreenState extends State<OptionsScreen> {
             onChanged: _updateGeneralNotificationSetting,
           ),
 
-          const FavoriteNotificationSettings(),
+          FavoriteNotificationSettings(
+            onSettingsChanged: widget.onSettingsChanged,
+          ),
           const Divider(),
 
-          // --- データ管理 ---
           const ListTile(
             title: Text(
               'データ管理',
-              style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           ListTile(
@@ -136,7 +175,10 @@ class _OptionsScreenState extends State<OptionsScreen> {
           const ListTile(
             title: Text(
               '情報・サポート',
-              style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           ListTile(
@@ -144,25 +186,48 @@ class _OptionsScreenState extends State<OptionsScreen> {
             title: const Text('このアプリについて'),
             subtitle: Text(_appVersion),
             onTap: () {
-              // TODO: アプリのクレジットなどを表示するダイアログ
+              showAboutDialog(
+                context: context,
+                applicationIcon: Image.asset(
+                  'assets/icon/app_icon.png',
+                  width: 50,
+                  height: 50,
+                ),
+                applicationName: '横浜祭2025 公式アプリ',
+                applicationVersion: _appVersion,
+
+                applicationLegalese: '© 2025 横浜祭実行委員会',
+                children: [
+                  const SizedBox(height: 24),
+                  const Text(
+                    'このアプリは、第29回横浜祭をより楽しむために開発されました。',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ],
+              );
             },
           ),
-          ListTile(
-            leading: const Icon(Icons.public),
-            title: const Text('横浜祭公式サイト'),
-            onTap: () => _launchURL('https://yokohama-fest.net/29th'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.feedback_outlined),
-            title: const Text('お問い合わせ'),
-            onTap: () => _launchURL('https://yokohama-fest.net/29th/form'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.privacy_tip_outlined),
-            title: const Text('プライバシーポリシー'),
-            onTap: () => _launchURL(
-              'https://yokohama-fest.net/29th',
-            ), // TODO: プライバシーポリシーのURLに要変更
+          FutureBuilder<List<InfoLinkItem>>(
+            future: _infoLinksFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const SizedBox.shrink();
+              }
+              if (snapshot.hasError || !snapshot.hasData) {
+                return const ListTile(title: Text('情報を読み込めませんでした'));
+              }
+
+              final links = snapshot.data!;
+              return Column(
+                children: links.map((link) {
+                  return ListTile(
+                    leading: Icon(_getIconForName(link.iconName)),
+                    title: Text(link.title),
+                    onTap: () => _launchURL(link.url),
+                  );
+                }).toList(),
+              );
+            },
           ),
         ],
       ),
