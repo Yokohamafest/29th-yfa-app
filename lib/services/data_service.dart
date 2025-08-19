@@ -1,56 +1,116 @@
-﻿import '../data/dummy_announcements.dart';
-import '../data/dummy_events.dart';
-import '../data/dummy_map_data.dart';
-import '../data/dummy_spotlights.dart';
-import '../data/dummy_info_links.dart';
+﻿import 'dart:convert';
+import 'dart:async';
+import 'package:http/http.dart' as http;
+import 'package:firebase_messaging/firebase_messaging.dart';
+
 import '../models/announcement_item.dart';
 import '../models/event_item.dart';
 import '../models/map_models.dart';
 import '../models/spotlight_item.dart';
 import '../models/info_link_item.dart';
 
-// アプリの全てのデータ供給を担当するクラス
 class DataService {
-  // 企画情報を取得する（将来的にはおそらくここでFirebaseから取得）
-  Future<List<EventItem>> getEvents() async {
-    // 現在はダミーデータを返す
-    // Future.delayedを追加して、実際のネットワーク通信を再現している
-    await Future.delayed(const Duration(milliseconds: 500));
-    return dummyEvents;
+  // ローカルテスト用のベースURL (Android Emulator用)
+  final String _baseUrl =
+      "http://192.168.8.90:5001/yokohama-fest-29-dev/asia-northeast1";
+
+  Future<List<dynamic>> _get(String urlString) async {
+    final url = Uri.parse(urlString);
+    try {
+      final response = await http.get(url).timeout(const Duration(seconds: 15));
+      if (response.statusCode == 200) {
+        return jsonDecode(utf8.decode(response.bodyBytes));
+      } else {
+        throw Exception(
+          'Failed to load data from $urlString. Status code: ${response.statusCode}',
+        );
+      }
+    } on TimeoutException {
+      throw Exception('Server connection timed out for $urlString.');
+    } catch (e) {
+      print('Error fetching $urlString: $e');
+      rethrow;
+    }
   }
 
-  // シャッフル済みの企画情報を取得する
-  // データ取得の処理は上のgetEventsを利用している
+  // --- GET系API ---
+  Future<List<EventItem>> getEvents() async {
+    final url =
+        "http://192.168.8.90:5001/yokohama-festival-29-dev/asia-northeast1/events";
+    final jsonList = await _get(url);
+    return jsonList.map((json) => EventItem.fromJson(json)).toList();
+  }
+
+  // ▼▼▼ このメソッドを復活させました ▼▼▼
   Future<List<EventItem>> getShuffledEvents() async {
+    // まずはgetEvents()ですべての企画を取得
     final allEvents = await getEvents();
+    // hideFromListがfalseのものだけをフィルタリングして、シャッフルして返す
     return allEvents.where((event) => !event.hideFromList).toList()..shuffle();
   }
+  // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
-  // お知らせ情報を取得する
   Future<List<AnnouncementItem>> getAnnouncements() async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    return dummyAnnouncements;
+    final jsonList = await _get("$_baseUrl/announcements");
+    return jsonList.map((json) => AnnouncementItem.fromJson(json)).toList();
   }
 
-  // 注目企画の情報を取得する
   Future<List<SpotlightItem>> getSpotlights() async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    return dummySpotlights;
+    final jsonList = await _get("$_baseUrl/spotlights");
+    return jsonList.map((json) => SpotlightItem.fromJson(json)).toList();
   }
 
-  // マップの情報を取得する
   Future<List<MapInfo>> getMaps() async {
-    return Future.value(allMaps);
+    final jsonList = await _get("$_baseUrl/maps");
+    return jsonList.map((json) => MapInfo.fromJson(json)).toList();
   }
 
-  // ピンの情報を取得する
   Future<List<MapPin>> getPins() async {
-    return Future.value(allPins);
+    final jsonList = await _get("$_baseUrl/pins");
+    return jsonList.map((json) => MapPin.fromJson(json)).toList();
   }
 
-  // オプション画面の情報・サポートのリンクを取得する
   Future<List<InfoLinkItem>> getInfoLinks() async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    return dummyInfoLinks;
+    final jsonList = await _get("$_baseUrl/infolinks");
+    return jsonList.map((json) => InfoLinkItem.fromJson(json)).toList();
+  }
+
+  // --- POST系API ---
+  Future<void> registerDeviceToken() async {
+    try {
+      final fcmToken = await FirebaseMessaging.instance.getToken();
+      if (fcmToken == null) return;
+
+      final url = Uri.parse('$_baseUrl/devices');
+      await http
+          .post(
+            url,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'token': fcmToken}),
+          )
+          .timeout(const Duration(seconds: 15));
+      print("Device token registered to EMULATOR.");
+    } catch (e) {
+      print("Failed to register token: $e");
+    }
+  }
+
+  Future<void> updateNotificationPreference(bool isEnabled) async {
+    try {
+      final fcmToken = await FirebaseMessaging.instance.getToken();
+      if (fcmToken == null) return;
+
+      final url = Uri.parse('$_baseUrl/updateNotificationPreference');
+      await http
+          .post(
+            url,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'token': fcmToken, 'enabled': isEnabled}),
+          )
+          .timeout(const Duration(seconds: 15));
+      print("Notification preference updated on EMULATOR.");
+    } catch (e) {
+      print("Failed to update preference: $e");
+    }
   }
 }

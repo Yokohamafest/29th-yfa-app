@@ -23,6 +23,15 @@ class MapInfo {
     required this.name,
     required this.imagePath,
   });
+
+  factory MapInfo.fromJson(Map<String, dynamic> json) {
+    return MapInfo(
+      id: MapType.values.byName(json['id']),
+      name: json['name'],
+      imagePath: json['imagePath'],
+    );
+  }
+
 }
 
 // ピンの種類

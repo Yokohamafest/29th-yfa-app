@@ -102,6 +102,8 @@ class _OptionsScreenState extends State<OptionsScreen> {
       _generalNotificationsEnabled = value;
     });
 
+    DataService().updateNotificationPreference(value);
+
     if (value == true) {
       final status = await Permission.notification.status;
       if (!status.isGranted && mounted) {

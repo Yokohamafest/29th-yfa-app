@@ -148,7 +148,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: widget.event.timeSlots.map((slot) {
                               return Text(
-                                '${dayFormatter.format(slot.startTime)} ${timeFormatter.format(slot.startTime)} - ${timeFormatter.format(slot.endTime)}',
+                                '${dayFormatter.format(slot.startTime.toLocal())} ${timeFormatter.format(slot.startTime.toLocal())} - ${timeFormatter.format(slot.endTime.toLocal())}',
                                 style: const TextStyle(fontSize: 16),
                               );
                             }).toList(),

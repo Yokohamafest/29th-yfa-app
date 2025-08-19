@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:intl/date_symbol_data_local.dart';
-import 'package:flutter_app_yfa/main_scaffold.dart';
-import 'services/notification_service.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'dart:async';
 import '../utils/app_colors.dart';
+import 'screens/loading_screen.dart';
 
 // ここにFirebaseの初期化コードが入る
 // ignore: unused_element
@@ -14,38 +10,20 @@ Future<void> _firebaseMessagingBackgroundHandler(dynamic message) async {
   debugPrint("Handling a background message: ${message.messageId}");
 }
 
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
 
-  final NotificationService notificationService = NotificationService();
-  await notificationService.init();
-
-  await notificationService.flutterLocalNotificationsPlugin
-      .resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin
-      >()
-      ?.requestNotificationsPermission();
-
-  // Firebaseのコードが入る部分
-  // await Firebase.initializeApp();
-  // FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-  //
-
-  await initializeDateFormatting('ja_JP');
-
-  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-
-  runApp(MyApp(notificationService: notificationService));
+// main関数から async と await を削除
+void main() {
+  // WidgetsFlutterBinding.ensureInitialized(); // これも不要になることが多い
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final NotificationService notificationService;
-  const MyApp({super.key,  required this.notificationService});
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: '29th Yokohama Festival',
+      title: '29th Yokohama Festival App',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
@@ -63,7 +41,9 @@ class MyApp extends StatelessWidget {
           type: BottomNavigationBarType.fixed,
         ),
       ),
-      home: const MainScaffold(),
+      // ■ 最初の画面を新しいLoadingScreenに変更
+      home: const LoadingScreen(),
     );
   }
 }
+
