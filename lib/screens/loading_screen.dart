@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import '../main_scaffold.dart';
 import '../services/data_service.dart';
 import '../firebase_options.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 class LoadingScreen extends StatefulWidget {
   const LoadingScreen({super.key});
@@ -29,6 +30,10 @@ class _LoadingScreenState extends State<LoadingScreen> {
         options: DefaultFirebaseOptions.currentPlatform,
       );
       print("3. Firebase.initializeApp() 完了");
+
+      // ▼▼▼ この行を追加 ▼▼▼
+      await initializeDateFormatting('ja_JP');
+      // ▲▲▲▲▲▲▲▲▲▲▲
 
       await DataService().registerDeviceToken();
       print("4. registerDeviceToken() 完了");

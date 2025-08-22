@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'package:firebase_messaging/firebase_messaging.dart';
 
+// 各モデルのインポート文（あなたのプロジェクトに合わせてください）
 import '../models/announcement_item.dart';
 import '../models/event_item.dart';
 import '../models/map_models.dart';
@@ -10,68 +11,65 @@ import '../models/spotlight_item.dart';
 import '../models/info_link_item.dart';
 
 class DataService {
-  // ローカルテスト用のベースURL (Android Emulator用)
-  final String _baseUrl =
-      "http://192.168.8.90:5001/yokohama-fest-29-dev/asia-northeast1";
+  // ■■■ v1形式に統一された、共通のベースURL ■■■
+  // (あなたのPCのIPアドレス、または本番用にhttps://...を記述)
+  final String _baseUrl = "-eamyonqwna-an.a.run.app";
 
-  Future<List<dynamic>> _get(String urlString) async {
-    final url = Uri.parse(urlString);
+  // 汎用的なGETリクエスト処理
+  Future<List<dynamic>> _get(String endpoint) async {
+    final url = Uri.parse('https://$endpoint$_baseUrl');
+    print('>>> Requesting API at: $url');
     try {
       final response = await http.get(url).timeout(const Duration(seconds: 15));
       if (response.statusCode == 200) {
         return jsonDecode(utf8.decode(response.bodyBytes));
       } else {
         throw Exception(
-          'Failed to load data from $urlString. Status code: ${response.statusCode}',
+          'Failed to load data from $endpoint. Status code: ${response.statusCode}',
         );
       }
     } on TimeoutException {
-      throw Exception('Server connection timed out for $urlString.');
+      throw Exception('Server connection timed out for $endpoint.');
     } catch (e) {
-      print('Error fetching $urlString: $e');
+      print('Error fetching $endpoint: $e');
       rethrow;
     }
   }
 
-  // --- GET系API ---
+  // --- GET系API (全てシンプルな形に統一) ---
+
   Future<List<EventItem>> getEvents() async {
-    final url =
-        "http://192.168.8.90:5001/yokohama-festival-29-dev/asia-northeast1/events";
-    final jsonList = await _get(url);
+    final jsonList = await _get('events');
     return jsonList.map((json) => EventItem.fromJson(json)).toList();
   }
 
-  // ▼▼▼ このメソッドを復活させました ▼▼▼
   Future<List<EventItem>> getShuffledEvents() async {
-    // まずはgetEvents()ですべての企画を取得
     final allEvents = await getEvents();
-    // hideFromListがfalseのものだけをフィルタリングして、シャッフルして返す
     return allEvents.where((event) => !event.hideFromList).toList()..shuffle();
   }
-  // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
   Future<List<AnnouncementItem>> getAnnouncements() async {
-    final jsonList = await _get("$_baseUrl/announcements");
+    final jsonList = await _get('announcements');
     return jsonList.map((json) => AnnouncementItem.fromJson(json)).toList();
   }
 
   Future<List<SpotlightItem>> getSpotlights() async {
-    final jsonList = await _get("$_baseUrl/spotlights");
+    final jsonList = await _get('spotlights');
     return jsonList.map((json) => SpotlightItem.fromJson(json)).toList();
   }
 
   Future<List<MapInfo>> getMaps() async {
-    final jsonList = await _get("$_baseUrl/maps");
+    final jsonList = await _get('maps');
     return jsonList.map((json) => MapInfo.fromJson(json)).toList();
   }
 
   Future<List<MapPin>> getPins() async {
-    final jsonList = await _get("$_baseUrl/pins");
+    final jsonList = await _get('pins');
     return jsonList.map((json) => MapPin.fromJson(json)).toList();
   }
 
   Future<List<InfoLinkItem>> getInfoLinks() async {
-    final jsonList = await _get("$_baseUrl/infolinks");
+    final jsonList = await _get('infolinks');
     return jsonList.map((json) => InfoLinkItem.fromJson(json)).toList();
   }
 
