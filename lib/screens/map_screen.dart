@@ -13,6 +13,7 @@ import '../widgets/tag_widget.dart';
 import '../models/enum_extensions.dart';
 import '../services/notification_service.dart';
 import '../utils/app_colors.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 enum BuildingSelection { campus, building2, building3, building4 }
 
@@ -1088,15 +1089,21 @@ class _MapScreenState extends State<MapScreen> {
                   child: Center(
                     child: Stack(
                       children: [
-                        Image.asset(
-                          _currentMap!.imagePath,
-                          width: MediaQuery.of(context).size.width,
-                          fit: BoxFit.fitWidth,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Center(
-                              child: Text('マップ画像を読み込めませんでした'),
-                            );
-                          },
+                        CachedNetworkImage(
+                          imageUrl: _currentMap!.imagePath,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Container(
+                            color: Colors.grey[300],
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            color: Colors.grey[300],
+                            child: const Center(
+                              child: Icon(
+                                Icons.image_not_supported,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ),
                         ),
 
                         Positioned.fill(

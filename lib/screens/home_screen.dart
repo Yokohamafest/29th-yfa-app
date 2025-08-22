@@ -12,6 +12,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../services/data_service.dart';
 import '../services/notification_service.dart';
 import '../utils/app_colors.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class HomeScreen extends StatefulWidget {
   final Set<String> favoriteEventIds;
@@ -495,12 +496,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       }
                     }
                   },
-                  child: Image.asset(
-                    spotlight.imagePath,
+                  child: CachedNetworkImage(
+                    imageUrl: spotlight.imagePath,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return const Center(child: Text('画像読込エラー'));
-                    },
+                    placeholder: (context, url) => Container(
+                      color: Colors.grey[300],
+                    ),
+                    errorWidget: (context, url, error) => Container(
+                      color: Colors.grey[300],
+                      child: const Center(
+                        child: Icon(
+                          Icons.image_not_supported,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               );

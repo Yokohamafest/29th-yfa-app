@@ -3,6 +3,7 @@ import '../models/event_item.dart';
 import '../screens/event_detail_screen.dart';
 import 'tag_widget.dart';
 import '../models/enum_extensions.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class EventCard extends StatelessWidget {
   final EventItem event;
@@ -54,20 +55,21 @@ class EventCard extends StatelessWidget {
             children: [
               AspectRatio(
                 aspectRatio: 1 / 1,
-                child: Image.asset(
-                  event.imagePath,
+                child: CachedNetworkImage(
+                  imageUrl: event.imagePath,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: Colors.grey[300],
-                      child: const Center(
-                        child: Icon(
-                          Icons.image_not_supported,
-                          color: Colors.grey,
-                        ),
+                  placeholder: (context, url) => Container(
+                    color: Colors.grey[300],
+                  ),
+                  errorWidget: (context, url, error) => Container(
+                    color: Colors.grey[300],
+                    child: const Center(
+                      child: Icon(
+                        Icons.image_not_supported,
+                        color: Colors.grey,
                       ),
-                    );
-                  },
+                    ),
+                  ),
                 ),
               ),
               Expanded(
