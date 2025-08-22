@@ -11,13 +11,19 @@ import '../models/spotlight_item.dart';
 import '../models/info_link_item.dart';
 
 class DataService {
-  // ■■■ v1形式に統一された、共通のベースURL ■■■
-  // (あなたのPCのIPアドレス、または本番用にhttps://...を記述)
-  final String _baseUrl = "-eamyonqwna-an.a.run.app";
+  final String eventsUrl = "https://events-eamyonqwna-an.a.run.app";
+  final String announcementsUrl =
+      "https://announcements-eamyonqwna-an.a.run.app";
+  final String spotlightsUrl = "https://spotlights-eamyonqwna-an.a.run.app";
+  final String mapsUrl = "https://maps-eamyonqwna-an.a.run.app";
+  final String pinsUrl = "https://pins-eamyonqwna-an.a.run.app";
+  final String infolinksUrl = "https://infolinks-eamyonqwna-an.a.run.app";
+  final String devicesUrl = "https://devices-eamyonqwna-an.a.run.app";
+  final String updateNotificationPreferenceUrl =
+      "https://updatenotificationpreference-eamyonqwna-an.a.run.app";
 
-  // 汎用的なGETリクエスト処理
-  Future<List<dynamic>> _get(String endpoint) async {
-    final url = Uri.parse('https://$endpoint$_baseUrl');
+  Future<List<dynamic>> _get(String endpointUrl) async {
+    final url = Uri.parse(endpointUrl);
     print('>>> Requesting API at: $url');
     try {
       final response = await http.get(url).timeout(const Duration(seconds: 15));
@@ -25,13 +31,13 @@ class DataService {
         return jsonDecode(utf8.decode(response.bodyBytes));
       } else {
         throw Exception(
-          'Failed to load data from $endpoint. Status code: ${response.statusCode}',
+          'Failed to load data from $endpointUrl. Status code: ${response.statusCode}',
         );
       }
     } on TimeoutException {
-      throw Exception('Server connection timed out for $endpoint.');
+      throw Exception('Server connection timed out for $endpointUrl.');
     } catch (e) {
-      print('Error fetching $endpoint: $e');
+      print('Error fetching $endpointUrl: $e');
       rethrow;
     }
   }
@@ -39,7 +45,7 @@ class DataService {
   // --- GET系API (全てシンプルな形に統一) ---
 
   Future<List<EventItem>> getEvents() async {
-    final jsonList = await _get('events');
+    final jsonList = await _get(eventsUrl);
     return jsonList.map((json) => EventItem.fromJson(json)).toList();
   }
 
@@ -49,27 +55,27 @@ class DataService {
   }
 
   Future<List<AnnouncementItem>> getAnnouncements() async {
-    final jsonList = await _get('announcements');
+    final jsonList = await _get(announcementsUrl);
     return jsonList.map((json) => AnnouncementItem.fromJson(json)).toList();
   }
 
   Future<List<SpotlightItem>> getSpotlights() async {
-    final jsonList = await _get('spotlights');
+    final jsonList = await _get(spotlightsUrl);
     return jsonList.map((json) => SpotlightItem.fromJson(json)).toList();
   }
 
   Future<List<MapInfo>> getMaps() async {
-    final jsonList = await _get('maps');
+    final jsonList = await _get(mapsUrl);
     return jsonList.map((json) => MapInfo.fromJson(json)).toList();
   }
 
   Future<List<MapPin>> getPins() async {
-    final jsonList = await _get('pins');
+    final jsonList = await _get(pinsUrl);
     return jsonList.map((json) => MapPin.fromJson(json)).toList();
   }
 
   Future<List<InfoLinkItem>> getInfoLinks() async {
-    final jsonList = await _get('infolinks');
+    final jsonList = await _get(infolinksUrl);
     return jsonList.map((json) => InfoLinkItem.fromJson(json)).toList();
   }
 
@@ -79,7 +85,7 @@ class DataService {
       final fcmToken = await FirebaseMessaging.instance.getToken();
       if (fcmToken == null) return;
 
-      final url = Uri.parse('$_baseUrl/devices');
+      final url = Uri.parse(devicesUrl);
       await http
           .post(
             url,
@@ -98,7 +104,7 @@ class DataService {
       final fcmToken = await FirebaseMessaging.instance.getToken();
       if (fcmToken == null) return;
 
-      final url = Uri.parse('$_baseUrl/updateNotificationPreference');
+      final url = Uri.parse(updateNotificationPreferenceUrl);
       await http
           .post(
             url,
