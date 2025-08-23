@@ -86,6 +86,7 @@ class MapPin {
   final String? detailText;
   final bool showDetailText;
   final PinLink? link;
+  final bool hideUntilZoomed;
 
   const MapPin({
     required this.id,
@@ -94,12 +95,13 @@ class MapPin {
     required this.type,
     required this.title,
     this.parentBuildingId,
-    this.fontSize,
+    this.fontSize, // デフォルトは10
     this.iconSize,
     this.padding,
     this.detailText,
     this.showDetailText = true,
     this.link,
+    this.hideUntilZoomed = false,
   });
 
   factory MapPin.fromJson(Map<String, dynamic> json) {
@@ -134,6 +136,7 @@ class MapPin {
       padding: padding,
       detailText: json['detailText'],
       link: json['link'] != null ? PinLink.fromJson(json['link']) : null,
+      hideUntilZoomed: json['hideUntilZoomed'] ?? false,
     );
   }
 }

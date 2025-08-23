@@ -67,6 +67,11 @@ class _MapScreenState extends State<MapScreen> {
 
   late final Map<BuildingSelection, List<MapInfo>> _floorMapsByBuilding;
 
+  final TransformationController _transformationController =
+      TransformationController();
+  double _currentScale = 1.0;
+  static const double _zoomThreshold = 2.5;
+
   @override
   void initState() {
     super.initState();
@@ -105,6 +110,19 @@ class _MapScreenState extends State<MapScreen> {
         });
       }
     });
+    _transformationController.addListener(() {
+      if (mounted) {
+        setState(() {
+          _currentScale = _transformationController.value.getMaxScaleOnAxis();
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _transformationController.dispose();
+    super.dispose();
   }
 
   Future<void> _launchURL(Uri url) async {
@@ -1084,6 +1102,7 @@ class _MapScreenState extends State<MapScreen> {
 
               Expanded(
                 child: InteractiveViewer(
+                  transformationController: _transformationController,
                   minScale: 0.5,
                   maxScale: 5.0,
                   child: Center(
@@ -1092,9 +1111,8 @@ class _MapScreenState extends State<MapScreen> {
                         CachedNetworkImage(
                           imageUrl: _currentMap!.imagePath,
                           fit: BoxFit.cover,
-                          placeholder: (context, url) => Container(
-                            color: Colors.grey[300],
-                          ),
+                          placeholder: (context, url) =>
+                              Container(color: Colors.grey[300]),
                           errorWidget: (context, url, error) => Container(
                             color: Colors.grey[300],
                             child: const Center(
@@ -1110,14 +1128,22 @@ class _MapScreenState extends State<MapScreen> {
                           child: LayoutBuilder(
                             builder: (context, constraints) {
                               return Stack(
-                                children: currentPins.map((pin) {
-                                  return _buildMapPin(
-                                    pin,
-                                    constraints,
-                                    _allEvents!,
-                                    _allPins!,
-                                  );
-                                }).toList(),
+                                children: currentPins
+                                    .where((pin) {
+                                      if (pin.hideUntilZoomed) {
+                                        return _currentScale >= _zoomThreshold;
+                                      }
+                                      return true;
+                                    })
+                                    .map((pin) {
+                                      return _buildMapPin(
+                                        pin,
+                                        constraints,
+                                        _allEvents!,
+                                        _allPins!,
+                                      );
+                                    })
+                                    .toList(),
                               );
                             },
                           ),
@@ -1224,15 +1250,32 @@ class _MapPinWidgetState extends State<MapPinWidget>
       builder: (context, child) {
         final borderColor = widget.isBlinking
             ? Color.lerp(
-                AppColors.primary,
-                AppColors.tertiary,
+                Colors.orangeAccent,
+                Colors.redAccent,
                 _animationController.value,
               )!
-            : (widget.isHighlighted ? AppColors.primary : Colors.grey.shade400);
+            : (widget.isHighlighted
+                  ? Colors.orangeAccent
+                  : Colors.grey.shade400);
 
-        final borderWidth = widget.isBlinking || widget.isHighlighted
-            ? 3.0
-            : 1.0;
+        BoxShadow? glowShadow;
+
+        if (widget.isBlinking) {
+          final spread = 2.0 + (_animationController.value * 5.0);
+          final opacity = 255 + (0.5 + (_animationController.value * 0.4));
+
+          glowShadow = BoxShadow(
+            color: Colors.orangeAccent.withAlpha(opacity.toInt()),
+            blurRadius: 8.0,
+            spreadRadius: spread,
+          );
+        } else if (widget.isHighlighted) {
+          glowShadow = const BoxShadow(
+            color: Colors.orangeAccent,
+            blurRadius: 8.0,
+            spreadRadius: 2.0,
+          );
+        }
 
         return Container(
           width: widget.width,
@@ -1243,13 +1286,18 @@ class _MapPinWidgetState extends State<MapPinWidget>
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(8.0),
-            border: Border.all(color: borderColor, width: borderWidth),
-            boxShadow: const [
-              BoxShadow(
+            // 枠線の色は上記で定義したものを使用 (太さは常に1.0)
+            border: Border.all(color: borderColor, width: 1.0),
+            // boxShadowを修正
+            boxShadow: [
+              // 通常時の影
+              const BoxShadow(
                 color: Colors.black26,
                 blurRadius: 4,
                 offset: Offset(0, 2),
               ),
+              // 上記で定義したglowShadowが存在する場合のみ、リストに追加
+              if (glowShadow != null) glowShadow,
             ],
           ),
           child: serviceIcon != null
