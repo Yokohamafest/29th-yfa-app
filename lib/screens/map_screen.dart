@@ -72,6 +72,8 @@ class _MapScreenState extends State<MapScreen> {
   double _currentScale = 1.0;
   static const double _zoomThreshold = 2.5;
 
+  String? _highlightedPinIdForNavigation;
+
   @override
   void initState() {
     super.initState();
@@ -214,19 +216,27 @@ class _MapScreenState extends State<MapScreen> {
       _selectedBuilding = targetBuilding;
       _currentMap = targetMap;
       _blinkingPinId = targetPin!.id;
+      _highlightedPinIdForNavigation = targetPin.id;
       _highlightedPinIds = {};
     });
 
-    Future.delayed(const Duration(seconds: 15), () {
+    Future.delayed(const Duration(seconds: 10), () {
       if (mounted) {
         setState(() {
           _blinkingPinId = null;
+          _highlightedPinIdForNavigation = null;
         });
       }
     });
   }
 
   void _applyFilters() {
+    if (_highlightedPinIdForNavigation != null) {
+      setState(() {
+        _highlightedPinIdForNavigation = null;
+      });
+    }
+
     final newHighlightedPinIds = <String>{};
     bool isFilterActive = false;
 
@@ -1000,6 +1010,7 @@ class _MapScreenState extends State<MapScreen> {
             onSelectionChanged: (newSelection) {
               setState(() {
                 _selectedBuilding = newSelection.first;
+                _highlightedPinIdForNavigation = null;
                 if (_selectedBuilding == BuildingSelection.campus) {
                   _currentMap = _allMaps!.firstWhere(
                     (m) => m.id == MapType.campus,
@@ -1027,6 +1038,7 @@ class _MapScreenState extends State<MapScreen> {
           onPressed: (index) {
             setState(() {
               _currentMap = floors[index];
+              _highlightedPinIdForNavigation = null;
             });
           },
           borderRadius: BorderRadius.circular(8.0),
@@ -1130,6 +1142,10 @@ class _MapScreenState extends State<MapScreen> {
                               return Stack(
                                 children: currentPins
                                     .where((pin) {
+                                      if (pin.id ==
+                                          _highlightedPinIdForNavigation) {
+                                        return true;
+                                      }
                                       if (pin.hideUntilZoomed) {
                                         return _currentScale >= _zoomThreshold;
                                       }
