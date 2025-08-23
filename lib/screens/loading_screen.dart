@@ -6,6 +6,7 @@ import '../firebase_options.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import '../services/notification_service.dart';
+import 'package:flutter/services.dart';
 
 class LoadingScreen extends StatefulWidget {
   const LoadingScreen({super.key});
@@ -27,6 +28,10 @@ class _LoadingScreenState extends State<LoadingScreen> {
 
       WidgetsFlutterBinding.ensureInitialized();
       print("2. Binding 初期化完了");
+
+      await SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+      ]);
 
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
