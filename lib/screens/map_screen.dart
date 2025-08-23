@@ -14,6 +14,8 @@ import '../models/enum_extensions.dart';
 import '../services/notification_service.dart';
 import '../utils/app_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../widgets/map_tutorial_overlay.dart';
 
 enum BuildingSelection { campus, building2, building3, building4 }
 
@@ -74,6 +76,8 @@ class _MapScreenState extends State<MapScreen> {
 
   String? _highlightedPinIdForNavigation;
 
+  bool _showTutorialOverlay = false;
+
   @override
   void initState() {
     super.initState();
@@ -119,12 +123,24 @@ class _MapScreenState extends State<MapScreen> {
         });
       }
     });
+    _checkIfShowTutorial();
   }
 
   @override
   void dispose() {
     _transformationController.dispose();
     super.dispose();
+  }
+
+  Future<void> _checkIfShowTutorial() async {
+    final prefs = await SharedPreferences.getInstance();
+    final bool hasShown = prefs.getBool('has_shown_map_tutorial') ?? false;
+
+    if (!hasShown && mounted) {
+      setState(() {
+        _showTutorialOverlay = true;
+      });
+    }
   }
 
   Future<void> _launchURL(Uri url) async {
@@ -1057,122 +1073,147 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<dynamic>>(
-      future: _mapDataFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting ||
-            _currentMap == null) {
-          return Scaffold(
-            appBar: AppBar(title: const Text('マップ')),
-            body: const Center(child: CircularProgressIndicator()),
-          );
-        }
-        if (snapshot.hasError) {
-          return Scaffold(
-            appBar: AppBar(title: const Text('マップ')),
-            body: const Center(child: Text('データの読み込みに失敗しました')),
-          );
-        }
+    return Stack(
+      children: [
+        FutureBuilder<List<dynamic>>(
+          future: _mapDataFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting ||
+                _currentMap == null) {
+              return Scaffold(
+                appBar: AppBar(title: const Text('マップ')),
+                body: const Center(child: CircularProgressIndicator()),
+              );
+            }
+            if (snapshot.hasError) {
+              return Scaffold(
+                appBar: AppBar(title: const Text('マップ')),
+                body: const Center(child: Text('データの読み込みに失敗しました')),
+              );
+            }
 
-        final currentPins = _allPins!
-            .where((p) => p.mapId == _currentMap!.id)
-            .toList();
+            final currentPins = _allPins!
+                .where((p) => p.mapId == _currentMap!.id)
+                .toList();
 
-        return Scaffold(
-          appBar: AppBar(
-            title: Text("マップ", style: TextStyle(fontWeight: FontWeight.bold)),
-            actions: [
-              Builder(
-                builder: (context) {
-                  return TextButton.icon(
-                    onPressed: () {
-                      Scaffold.of(context).openEndDrawer();
+            return Scaffold(
+              appBar: AppBar(
+                title: Text(
+                  "マップ",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                actions: [
+                  Builder(
+                    builder: (context) {
+                      return TextButton.icon(
+                        onPressed: () {
+                          Scaffold.of(context).openEndDrawer();
+                        },
+                        icon: const Icon(Icons.search),
+                        label: const Text(
+                          'マップピン検索',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        style: TextButton.styleFrom(
+                          side: const BorderSide(
+                            color: Colors.white,
+                            width: 0.8,
+                          ),
+                          foregroundColor:
+                              Theme.of(context).appBarTheme.iconTheme?.color ??
+                              Colors.white,
+                          shadowColor: Colors.black,
+                        ),
+                      );
                     },
-                    icon: const Icon(Icons.search),
-                    label: const Text(
-                      'マップピン検索',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    style: TextButton.styleFrom(
-                      side: const BorderSide(color: Colors.white, width: 0.8),
-                      foregroundColor:
-                          Theme.of(context).appBarTheme.iconTheme?.color ??
-                          Colors.white,
-                      shadowColor: Colors.black,
-                    ),
-                  );
-                },
+                  ),
+                ],
               ),
-            ],
-          ),
-          endDrawer: _buildFilterDrawer(),
-          body: Column(
-            children: [
-              _buildBuildingSelector(),
-              if (_selectedBuilding != BuildingSelection.campus)
-                _buildFloorSelector(),
+              endDrawer: _buildFilterDrawer(),
+              body: Column(
+                children: [
+                  _buildBuildingSelector(),
+                  if (_selectedBuilding != BuildingSelection.campus)
+                    _buildFloorSelector(),
 
-              Expanded(
-                child: InteractiveViewer(
-                  transformationController: _transformationController,
-                  minScale: 0.5,
-                  maxScale: 5.0,
-                  child: Center(
-                    child: Stack(
-                      children: [
-                        CachedNetworkImage(
-                          imageUrl: _currentMap!.imagePath,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) =>
-                              Container(color: Colors.grey[300]),
-                          errorWidget: (context, url, error) => Container(
-                            color: Colors.grey[300],
-                            child: const Center(
-                              child: Icon(
-                                Icons.image_not_supported,
-                                color: Colors.grey,
+                  Expanded(
+                    child: InteractiveViewer(
+                      transformationController: _transformationController,
+                      minScale: 0.5,
+                      maxScale: 5.0,
+                      child: Center(
+                        child: Stack(
+                          children: [
+                            CachedNetworkImage(
+                              imageUrl: _currentMap!.imagePath,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) =>
+                                  Container(color: Colors.grey[300]),
+                              errorWidget: (context, url, error) => Container(
+                                color: Colors.grey[300],
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.image_not_supported,
+                                    color: Colors.grey,
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
-                        ),
 
-                        Positioned.fill(
-                          child: LayoutBuilder(
-                            builder: (context, constraints) {
-                              return Stack(
-                                children: currentPins
-                                    .where((pin) {
-                                      if (pin.id ==
-                                          _highlightedPinIdForNavigation) {
-                                        return true;
-                                      }
-                                      if (pin.hideUntilZoomed) {
-                                        return _currentScale >= _zoomThreshold;
-                                      }
-                                      return true;
-                                    })
-                                    .map((pin) {
-                                      return _buildMapPin(
-                                        pin,
-                                        constraints,
-                                        _allEvents!,
-                                        _allPins!,
-                                      );
-                                    })
-                                    .toList(),
-                              );
-                            },
-                          ),
+                            Positioned.fill(
+                              child: LayoutBuilder(
+                                builder: (context, constraints) {
+                                  return Stack(
+                                    children: currentPins
+                                        .where((pin) {
+                                          if (pin.id ==
+                                              _highlightedPinIdForNavigation) {
+                                            return true;
+                                          }
+                                          if (pin.hideUntilZoomed) {
+                                            return _currentScale >=
+                                                _zoomThreshold;
+                                          }
+                                          return true;
+                                        })
+                                        .map((pin) {
+                                          return _buildMapPin(
+                                            pin,
+                                            constraints,
+                                            _allEvents!,
+                                            _allPins!,
+                                          );
+                                        })
+                                        .toList(),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
+                ],
               ),
-            ],
+            );
+          },
+        ),
+        if (_showTutorialOverlay)
+          MapTutorialOverlay(
+            onDismiss: () async {
+              // オーバーレイが閉じられたら
+              final prefs = await SharedPreferences.getInstance();
+              // 「表示済み」のフラグを保存
+              await prefs.setBool('has_shown_map_tutorial', true);
+              if (mounted) {
+                setState(() {
+                  _showTutorialOverlay = false; // 表示フラグを下ろす
+                });
+              }
+            },
           ),
-        );
-      },
+      ],
     );
   }
 }
