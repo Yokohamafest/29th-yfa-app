@@ -4,6 +4,8 @@ import '../main_scaffold.dart';
 import '../services/data_service.dart';
 import '../firebase_options.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import '../services/notification_service.dart';
 
 class LoadingScreen extends StatefulWidget {
   const LoadingScreen({super.key});
@@ -31,9 +33,20 @@ class _LoadingScreenState extends State<LoadingScreen> {
       );
       print("3. Firebase.initializeApp() 完了");
 
-      // ▼▼▼ この行を追加 ▼▼▼
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        print('Got a message whilst in the foreground!');
+
+        if (message.notification != null) {
+          print('Message contained a notification: ${message.notification}');
+          final notificationService = NotificationService();
+          notificationService.showPushNotification(
+            title: message.notification!.title ?? '新しいお知らせ',
+            body: message.notification!.body ?? '',
+          );
+        }
+      });
+
       await initializeDateFormatting('ja_JP');
-      // ▲▲▲▲▲▲▲▲▲▲▲
 
       await DataService().registerDeviceToken();
       print("4. registerDeviceToken() 完了");

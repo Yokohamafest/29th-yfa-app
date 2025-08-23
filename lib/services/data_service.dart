@@ -2,8 +2,7 @@
 import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'package:firebase_messaging/firebase_messaging.dart';
-
-// 各モデルのインポート文（あなたのプロジェクトに合わせてください）
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/announcement_item.dart';
 import '../models/event_item.dart';
 import '../models/map_models.dart';
@@ -22,30 +21,44 @@ class DataService {
   final String updateNotificationPreferenceUrl =
       "https://updatenotificationpreference-eamyonqwna-an.a.run.app";
 
-  Future<List<dynamic>> _get(String endpointUrl) async {
-    final url = Uri.parse(endpointUrl);
-    print('>>> Requesting API at: $url');
+  Future<List<dynamic>> _get(String cacheKey, String urlString) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final cachedData = prefs.getString(cacheKey);
+    final lastFetchTime = prefs.getInt('${cacheKey}_time');
+
+    if (cachedData != null && lastFetchTime != null) {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      if ((now - lastFetchTime) < (5 * 60 * 1000)) {
+        print("✅ Loading from CACHE: $cacheKey");
+        return jsonDecode(cachedData);
+      }
+    }
+
+    print("☁️ Loading from NETWORK: $cacheKey");
+    final url = Uri.parse(urlString);
     try {
       final response = await http.get(url).timeout(const Duration(seconds: 15));
       if (response.statusCode == 200) {
-        return jsonDecode(utf8.decode(response.bodyBytes));
+        final rawJson = utf8.decode(response.bodyBytes);
+        await prefs.setString(cacheKey, rawJson);
+        await prefs.setInt('${cacheKey}_time', DateTime.now().millisecondsSinceEpoch);
+        return jsonDecode(rawJson);
       } else {
-        throw Exception(
-          'Failed to load data from $endpointUrl. Status code: ${response.statusCode}',
-        );
+        throw Exception('Failed to load data from $urlString');
       }
-    } on TimeoutException {
-      throw Exception('Server connection timed out for $endpointUrl.');
     } catch (e) {
-      print('Error fetching $endpointUrl: $e');
+      if (cachedData != null) {
+        print("⚠️ Network error, returning STALE CACHE for $cacheKey");
+        return jsonDecode(cachedData);
+      }
+      print('Error fetching $cacheKey: $e');
       rethrow;
     }
   }
 
-  // --- GET系API (全てシンプルな形に統一) ---
-
   Future<List<EventItem>> getEvents() async {
-    final jsonList = await _get(eventsUrl);
+    final jsonList = await _get('events_cache', eventsUrl);
     return jsonList.map((json) => EventItem.fromJson(json)).toList();
   }
 
@@ -55,27 +68,27 @@ class DataService {
   }
 
   Future<List<AnnouncementItem>> getAnnouncements() async {
-    final jsonList = await _get(announcementsUrl);
+    final jsonList = await _get('announcements_cache', announcementsUrl);
     return jsonList.map((json) => AnnouncementItem.fromJson(json)).toList();
   }
 
   Future<List<SpotlightItem>> getSpotlights() async {
-    final jsonList = await _get(spotlightsUrl);
+    final jsonList = await _get('spotlights_cache', spotlightsUrl);
     return jsonList.map((json) => SpotlightItem.fromJson(json)).toList();
   }
 
   Future<List<MapInfo>> getMaps() async {
-    final jsonList = await _get(mapsUrl);
+    final jsonList = await _get('maps_cache', mapsUrl);
     return jsonList.map((json) => MapInfo.fromJson(json)).toList();
   }
 
   Future<List<MapPin>> getPins() async {
-    final jsonList = await _get(pinsUrl);
+    final jsonList = await _get('pins_cache', pinsUrl);
     return jsonList.map((json) => MapPin.fromJson(json)).toList();
   }
 
   Future<List<InfoLinkItem>> getInfoLinks() async {
-    final jsonList = await _get(infolinksUrl);
+    final jsonList = await _get('infolinks_cache', infolinksUrl);
     return jsonList.map((json) => InfoLinkItem.fromJson(json)).toList();
   }
 
