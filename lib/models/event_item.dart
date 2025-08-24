@@ -75,19 +75,19 @@ class EventItem {
 
   factory EventItem.fromJson(Map<String, dynamic> json) {
     return EventItem(
-      id: json['id'],
-      title: json['title'],
-      groupName: json['groupName'],
-      description: json['description'],
-      imagePath: json['imagePath'],
-      area: EventArea.values.byName(json['area']),
-      location: json['location'],
+      id: json['id'] ?? " ",
+      title: json['title'] ?? " ",
+      groupName: json['groupName'] ?? " ",
+      description: json['description'] ?? " ",
+      imagePath: json['imagePath'] ?? " ",
+      area: EventArea.values.byName(json['area'] ?? "other"),
+      location: json['location'] ?? " ",
       categories: (json['categories'] as List)
           .map((category) => EventCategory.values.byName(category))
           .toList(),
       hideFromList: json['hideFromList'] ?? false,
       disableDetailsLink: json['disableDetailsLink'] ?? false,
-      date: FestivalDay.values.byName(json['date']),
+      date: FestivalDay.values.byName(json['date'] ?? "dayOne"),
       timeSlots: (json['timeSlots'] as List)
           .map((slot) => TimeSlot.fromJson(slot))
           .toList(),

@@ -17,10 +17,10 @@ class SpotlightItem {
 
   factory SpotlightItem.fromJson(Map<String, dynamic> json) {
     return SpotlightItem(
-      id: json['id'],
-      imagePath: json['imagePath'],
-      actionType: SpotlightActionType.values.byName(json['actionType']),
-      actionValue: json['actionValue'],
+      id: json['id'] ?? " ",
+      imagePath: json['imagePath'] ?? " ",
+      actionType: SpotlightActionType.values.byName(json['actionType'] ?? "url"),
+      actionValue: json['actionValue'] ?? " ",
     );
   }
 }

@@ -26,9 +26,9 @@ class MapInfo {
 
   factory MapInfo.fromJson(Map<String, dynamic> json) {
     return MapInfo(
-      id: MapType.values.byName(json['id']),
-      name: json['name'],
-      imagePath: json['imagePath'],
+      id: MapType.values.byName(json['id'] ?? "campus"),
+      name: json['name'] ?? " ",
+      imagePath: json['imagePath'] ?? " ",
     );
   }
 }
@@ -66,9 +66,9 @@ class PinLink {
 
   factory PinLink.fromJson(Map<String, dynamic> json) {
     return PinLink(
-      text: json['text'],
-      actionType: PinLinkActionType.values.byName(json['actionType']),
-      actionValue: json['actionValue'],
+      text: json['text'] ?? " ",
+      actionType: PinLinkActionType.values.byName(json['actionType'] ?? "timetable"),
+      actionValue: json['actionValue'] ?? " ",
     );
   }
 }
