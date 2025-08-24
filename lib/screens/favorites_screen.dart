@@ -168,14 +168,27 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               )
               .toList();
 
+          final undecidedEvents = favoritedEvents
+              .where((event) => event.timeSlots == null)
+              .toList();
+
           final allDayEvents = favoritedEvents
-              .where((event) => event.timeSlots == null || event.timeSlots!.isEmpty)
+              .where(
+                (event) => event.timeSlots != null && event.timeSlots!.isEmpty,
+              )
+              .toList();
+
+          final timedEvents = favoritedEvents
+              .where(
+                (event) =>
+                    event.timeSlots != null && event.timeSlots!.isNotEmpty,
+              )
               .toList();
 
           final List<ScheduleEntry> scheduleItems = [];
           final dayToFilter = _selectedDay == FestivalDay.dayOne ? 14 : 15;
 
-          for (final event in favoritedEvents) {
+          for (final event in timedEvents) {
             if (event.timeSlots != null) {
               for (final slot in event.timeSlots!) {
                 if (slot.startTime.toLocal().day == dayToFilter) {
@@ -185,7 +198,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             }
           }
           scheduleItems.sort(
-            (a, b) => a.timeSlot.startTime.toLocal().compareTo(b.timeSlot.startTime.toLocal()),
+            (a, b) => a.timeSlot.startTime.toLocal().compareTo(
+              b.timeSlot.startTime.toLocal(),
+            ),
           );
 
           return favoritedEvents.isEmpty
@@ -246,6 +261,25 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                       ),
                     ),
                     ..._buildScheduleWidgets(scheduleItems),
+                    const Divider(height: 32, thickness: 1),
+
+                    if (undecidedEvents.isNotEmpty) ...[
+                      const Text(
+                        '時間未定企画',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      ...undecidedEvents.map(
+                        (event) => EventCard(
+                          event: event,
+                          favoriteEventIds: widget.favoriteEventIds,
+                          onToggleFavorite: widget.onToggleFavorite,
+                          onNavigateToMap: widget.onNavigateToMap,
+                        ),
+                      ),
+                    ],
                   ],
                 );
         },
