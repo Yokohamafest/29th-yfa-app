@@ -62,9 +62,9 @@ class _MapScreenState extends State<MapScreen> {
   bool _filterFavorites = false;
   final Set<PinType> _selectedServiceTypes = {};
   final Map<String, MapType> _buildingPinToFloorMap = {
-    'pin_b2': MapType.building2F1,
-    'pin_b3': MapType.building3F1,
-    'pin_b4': MapType.building4F1,
+    'building_2': MapType.building2F1,
+    'building_3': MapType.building3F1,
+    'building_4': MapType.building4F1,
     //フロアマップを持つ建物のピンのid（pin_b2など）とそのピンから遷移したいフロアマップをMapTypeのenumから選択して対応付ける（建物のマップピンのモーダルからフロアマップへ遷移するため）
     // 1号館および体育館（5号館）はフロアマップがないので、ここには含めない（もしフロアマップを持つ建物が増えたらここにも追加する）
   };
