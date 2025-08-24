@@ -1,12 +1,12 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:flutter/services.dart';
+
 import '../main_scaffold.dart';
 import '../services/data_service.dart';
 import '../firebase_options.dart';
-import 'package:intl/date_symbol_data_local.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
-import '../services/notification_service.dart';
-import 'package:flutter/services.dart';
+import '../widgets/compass_loading_indicator.dart';
 
 class LoadingScreen extends StatefulWidget {
   const LoadingScreen({super.key});
@@ -16,54 +16,48 @@ class LoadingScreen extends StatefulWidget {
 }
 
 class _LoadingScreenState extends State<LoadingScreen> {
+  final ValueNotifier<double> _progressNotifier = ValueNotifier(0.0);
+
   @override
   void initState() {
     super.initState();
     _initialize();
   }
 
+  @override
+  void dispose() {
+    _progressNotifier.dispose();
+    super.dispose();
+  }
+
   Future<void> _initialize() async {
     try {
-      print("1. _initialize() 開始");
-
+      _progressNotifier.value = 0.1;
       WidgetsFlutterBinding.ensureInitialized();
-      print("2. Binding 初期化完了");
-
       await SystemChrome.setPreferredOrientations([
         DeviceOrientation.portraitUp,
       ]);
+      await Future.delayed(const Duration(milliseconds: 100));
 
+      _progressNotifier.value = 0.4;
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
-      print("3. Firebase.initializeApp() 完了");
+      await Future.delayed(const Duration(milliseconds: 100));
 
-      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-        print('Got a message whilst in the foreground!');
-
-        if (message.notification != null) {
-          print('Message contained a notification: ${message.notification}');
-          final notificationService = NotificationService();
-          notificationService.showPushNotification(
-            title: message.notification!.title ?? '新しいお知らせ',
-            body: message.notification!.body ?? '',
-          );
-        }
-      });
-
+      _progressNotifier.value = 0.7;
       await initializeDateFormatting('ja_JP');
+      await Future.delayed(const Duration(milliseconds: 200));
 
-      await DataService().registerDeviceToken();
-      print("4. registerDeviceToken() 完了");
+      DataService().registerDeviceToken();
 
+      _progressNotifier.value = 1.0;
       await Future.delayed(const Duration(milliseconds: 500));
-      print("5. 遅延完了");
 
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const MainScaffold()),
         );
-        print("6. メイン画面へ遷移");
       }
     } catch (e) {
       print("!!!!! 初期化処理中にエラーが発生しました !!!!!");
@@ -73,6 +67,15 @@ class _LoadingScreenState extends State<LoadingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    return Scaffold(
+      body: Center(
+        child: ValueListenableBuilder<double>(
+          valueListenable: _progressNotifier,
+          builder: (context, progress, child) {
+            return CompassLoadingIndicator(progress: progress);
+          },
+        ),
+      ),
+    );
   }
 }
