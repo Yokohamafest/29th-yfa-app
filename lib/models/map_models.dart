@@ -18,10 +18,12 @@ class MapInfo {
   final MapType id;
   final String name;
   final String imagePath;
+  final int sortOrder;
   const MapInfo({
     required this.id,
     required this.name,
     required this.imagePath,
+    required this.sortOrder,
   });
 
   factory MapInfo.fromJson(Map<String, dynamic> json) {
@@ -29,6 +31,7 @@ class MapInfo {
       id: MapType.values.byName(json['id'] ?? "campus"),
       name: json['name'] ?? " ",
       imagePath: json['imagePath'] ?? " ",
+      sortOrder: json['sortOrder'] ?? 99,
     );
   }
 }

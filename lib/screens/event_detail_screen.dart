@@ -96,17 +96,12 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 placeholder: (context, url) => Shimmer.fromColors(
                   baseColor: Colors.grey.shade300,
                   highlightColor: AppColors.tertiary.withAlpha(150),
-                  child: Container(
-                    color: Colors.white,
-                  ),
+                  child: Container(color: Colors.white),
                 ),
                 errorWidget: (context, url, error) => Container(
                   color: Colors.grey[300],
                   child: const Center(
-                    child: Icon(
-                      Icons.image_not_supported,
-                      color: Colors.grey,
-                    ),
+                    child: Icon(Icons.image_not_supported, color: Colors.grey),
                   ),
                 ),
               ),
@@ -150,24 +145,32 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   _buildInfoRow(
                     icon: Icons.schedule,
                     title: '開催日時',
-                    child: widget.event.timeSlots.isEmpty
-                        ? const Text('終日開催', style: TextStyle(fontSize: 16))
-                        : Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: widget.event.timeSlots.map((slot) {
-                              return Text(
-                                '${dayFormatter.format(slot.startTime.toLocal())} ${timeFormatter.format(slot.startTime.toLocal())} - ${timeFormatter.format(slot.endTime.toLocal())}',
-                                style: const TextStyle(fontSize: 16),
-                              );
-                            }).toList(),
-                          ),
+                    child: Builder(
+                      builder: (context) {
+                        if (widget.event.timeSlots == null) {
+                          return const Text('時間未定', style: TextStyle(fontSize: 16));
+                        }
+                        if (widget.event.timeSlots!.isEmpty) {
+                          return const Text('終日開催', style: TextStyle(fontSize: 16));
+                        }
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: widget.event.timeSlots!.map((slot) {
+                            return Text(
+                              '${dayFormatter.format(slot.startTime)} ${timeFormatter.format(slot.endTime)}',
+                              style: const TextStyle(fontSize: 16),
+                            );
+                          }).toList(),
+                        );
+                      },
+                    ),
                   ),
                   const SizedBox(height: 16.0),
                   _buildInfoRow(
                     icon: Icons.location_on,
                     title: '開催場所',
                     child: Text(
-                      '${widget.event.area.name} / ${widget.event.location}',
+                      '${widget.event.area.name} / ${widget.event.locations.join(' & ')}',
                       style: const TextStyle(fontSize: 16),
                     ),
                     trailing: OutlinedButton(
@@ -190,6 +193,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       }
                     },
                   ),
+                  const SizedBox(height: 40.0),
                 ],
               ),
             ),

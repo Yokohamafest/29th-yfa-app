@@ -118,13 +118,22 @@ class _EventListScreenState extends State<EventListScreen> {
           : DateTime(2025, 9, 15, 4, 0);
 
       results = results.where((event) {
-        if (event.timeSlots.isEmpty) {
+        if (event.timeSlots == null) {
+          return false;
+        }
+        if (event.timeSlots!.isEmpty) {
           return !_hideAllDayEvents;
         }
-        return event.timeSlots.any((slot) {
+        return event.timeSlots!.any((slot) {
           return slot.startTime.toLocal().isBefore(filterEnd) &&
               slot.endTime.toLocal().isAfter(filterStart);
         });
+      }).toList();
+    }
+
+    if (_startTimeFilter == null && _endTimeFilter == null && _hideAllDayEvents) {
+      results = results.where((event) {
+        return !(event.timeSlots == null || event.timeSlots!.isEmpty);
       }).toList();
     }
 

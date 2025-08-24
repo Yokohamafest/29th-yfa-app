@@ -95,15 +95,15 @@ class _MapScreenState extends State<MapScreen> {
         _allEvents = data[2] as List<EventItem>;
 
         _floorMapsByBuilding = {
-          BuildingSelection.building2: _allMaps!
-              .where((m) => m.id.name.startsWith('building2'))
-              .toList(),
-          BuildingSelection.building3: _allMaps!
-              .where((m) => m.id.name.startsWith('building3'))
-              .toList(),
-          BuildingSelection.building4: _allMaps!
-              .where((m) => m.id.name.startsWith('building4'))
-              .toList(),
+          BuildingSelection.building2:
+              _allMaps!.where((m) => m.id.name.startsWith('building2')).toList()
+                ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder)),
+          BuildingSelection.building3:
+              _allMaps!.where((m) => m.id.name.startsWith('building3')).toList()
+                ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder)),
+          BuildingSelection.building4:
+              _allMaps!.where((m) => m.id.name.startsWith('building4')).toList()
+                ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder)),
         };
 
         setState(() {
@@ -176,7 +176,7 @@ class _MapScreenState extends State<MapScreen> {
     try {
       targetPin = _allPins!.firstWhere(
         (pin) =>
-            pin.type == PinType.location && pin.title == targetEvent!.location,
+            pin.type == PinType.location && targetEvent!.locations.contains(pin.title),
       );
     } catch (e) {
       targetPin = null;
@@ -290,7 +290,7 @@ class _MapScreenState extends State<MapScreen> {
           bool shouldHighlight = false;
           if (pin.type == PinType.location) {
             shouldHighlight = filteredEvents.any(
-              (event) => event.location == pin.title,
+              (event) => event.locations.contains(pin.title)
             );
           } else if (pin.type == PinType.building) {
             const buildingAreaMap = {
@@ -381,7 +381,7 @@ class _MapScreenState extends State<MapScreen> {
                   }
                 } else if (pin.type == PinType.location) {
                   attachedEvents = visibleEvents
-                      .where((event) => event.location == pin.title)
+                      .where((event) => event.locations.contains(pin.title))
                       .toList();
                 }
 
@@ -1208,13 +1208,11 @@ class _MapScreenState extends State<MapScreen> {
         if (_showTutorialOverlay)
           MapTutorialOverlay(
             onDismiss: () async {
-              // オーバーレイが閉じられたら
               final prefs = await SharedPreferences.getInstance();
-              // 「表示済み」のフラグを保存
               await prefs.setBool('has_shown_map_tutorial', true);
               if (mounted) {
                 setState(() {
-                  _showTutorialOverlay = false; // 表示フラグを下ろす
+                  _showTutorialOverlay = false;
                 });
               }
             },
@@ -1349,17 +1347,13 @@ class _MapPinWidgetState extends State<MapPinWidget>
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(8.0),
-            // 枠線の色は上記で定義したものを使用 (太さは常に1.0)
             border: Border.all(color: borderColor, width: 1.0),
-            // boxShadowを修正
             boxShadow: [
-              // 通常時の影
               const BoxShadow(
                 color: Colors.black26,
                 blurRadius: 4,
                 offset: Offset(0, 2),
               ),
-              // 上記で定義したglowShadowが存在する場合のみ、リストに追加
               if (glowShadow != null) glowShadow,
             ],
           ),

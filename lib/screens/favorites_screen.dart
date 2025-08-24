@@ -169,16 +169,18 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               .toList();
 
           final allDayEvents = favoritedEvents
-              .where((event) => event.timeSlots.isEmpty)
+              .where((event) => event.timeSlots == null || event.timeSlots!.isEmpty)
               .toList();
 
           final List<ScheduleEntry> scheduleItems = [];
           final dayToFilter = _selectedDay == FestivalDay.dayOne ? 14 : 15;
 
           for (final event in favoritedEvents) {
-            for (final slot in event.timeSlots) {
-              if (slot.startTime.toLocal().day == dayToFilter) {
-                scheduleItems.add(ScheduleEntry(event, slot));
+            if (event.timeSlots != null) {
+              for (final slot in event.timeSlots!) {
+                if (slot.startTime.toLocal().day == dayToFilter) {
+                  scheduleItems.add(ScheduleEntry(event, slot));
+                }
               }
             }
           }

@@ -228,14 +228,14 @@ class _TimetableScreenState extends State<TimetableScreen> {
     List<EventItem> allEvents,
   ) {
     final eventsForStage = allEvents.where((event) {
-      final isSameLocation = event.location == locationName;
-      final isTimed = event.timeSlots.isNotEmpty;
+      final isSameLocation = event.locations.contains(locationName);
+      final isTimed = event.timeSlots != null && event.timeSlots!.isNotEmpty;
       return isSameLocation && isTimed;
     }).toList();
 
     final List<Widget> cards = [];
     for (final event in eventsForStage) {
-      for (final timeSlot in event.timeSlots) {
+      for (final timeSlot in event.timeSlots!) {
         if (timeSlot.startTime.toLocal().day !=
             (_selectedDay == FestivalDay.dayOne ? 14 : 15)) {
           continue;
@@ -313,7 +313,8 @@ class _TimetableEventCard extends StatelessWidget {
       titleMaxLines = 1;
       groupNameMaxLines = 1;
     } else {
-      final durationInMinutes = timeSlot.endTime.toLocal()
+      final durationInMinutes = timeSlot.endTime
+          .toLocal()
           .difference(timeSlot.startTime.toLocal())
           .inMinutes;
       final thirtyMinuteBlocks = (durationInMinutes / 30).ceil();
@@ -353,7 +354,6 @@ class _TimetableEventCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  //const SizedBox(height: 12),
                   Text(
                     event.title,
                     style: const TextStyle(
