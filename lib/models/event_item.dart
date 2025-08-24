@@ -32,14 +32,14 @@ enum EventCategory {
 
 class TimeSlot {
   final DateTime startTime;
-  final DateTime endTime;
+  final DateTime? endTime;
 
-  const TimeSlot({required this.startTime, required this.endTime});
+  const TimeSlot({required this.startTime, this.endTime});
 
   factory TimeSlot.fromJson(Map<String, dynamic> json) {
     return TimeSlot(
       startTime: DateTime.parse(json['startTime']),
-      endTime: DateTime.parse(json['endTime']),
+      endTime: json['endTime'] != null ? DateTime.parse(json['endTime']) : null,
     );
   }
 }

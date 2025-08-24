@@ -242,7 +242,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
         }
 
         final start = timeSlot.startTime.toLocal();
-        final end = timeSlot.endTime.toLocal();
+        final end = timeSlot.endTime?.toLocal() ?? DateTime(start.year, start.month, start.day, 20, 0);
         final topPosition =
             ((start.hour - 10) * 60 + start.minute) / 60.0 * _hourHeight;
 
@@ -309,12 +309,13 @@ class _TimetableEventCard extends StatelessWidget {
     int titleMaxLines;
     int groupNameMaxLines;
 
+    final end = timeSlot.endTime?.toLocal() ?? DateTime(timeSlot.startTime.year, timeSlot.startTime.month, timeSlot.startTime.day, 20, 0);
+
     if (cardHeight < 65) {
       titleMaxLines = 1;
       groupNameMaxLines = 1;
     } else {
-      final durationInMinutes = timeSlot.endTime
-          .toLocal()
+      final durationInMinutes = end
           .difference(timeSlot.startTime.toLocal())
           .inMinutes;
       final thirtyMinuteBlocks = (durationInMinutes / 30).ceil();
@@ -384,7 +385,7 @@ class _TimetableEventCard extends StatelessWidget {
                 ),
                 color: Colors.black.withAlpha(204),
                 child: Text(
-                  '${formatter.format(timeSlot.startTime.toLocal())} - ${formatter.format(timeSlot.endTime.toLocal())}',
+                  '${formatter.format(timeSlot.startTime.toLocal())} - ${formatter.format(end.toLocal())}',
                   style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,

@@ -119,6 +119,8 @@ class EventCard extends StatelessWidget {
                           fontSize: 12.0,
                           color: Colors.grey[700],
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const Spacer(),
 

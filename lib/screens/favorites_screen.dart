@@ -68,10 +68,13 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     for (int i = 0; i < scheduleEntries.length; i++) {
       final currentEntry = scheduleEntries[i];
 
+      final startTime = currentEntry.timeSlot.startTime.toLocal();
+      final endTime = currentEntry.timeSlot.endTime?.toLocal() ?? DateTime(startTime.year, startTime.month, startTime.day, 20, 0);
+
       scheduleWidgets.add(
         _buildTimeSlotHeader(
-          currentEntry.timeSlot.startTime.toLocal(),
-          currentEntry.timeSlot.endTime.toLocal(),
+          startTime,
+          endTime,
         ),
       );
       scheduleWidgets.add(

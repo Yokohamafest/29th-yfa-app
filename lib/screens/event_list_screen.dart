@@ -133,8 +133,9 @@ class _EventListScreenState extends State<EventListScreen> {
           return !_hideAllDayEvents;
         }
         return event.timeSlots!.any((slot) {
+          final end = slot.endTime?.toLocal() ?? DateTime(slot.startTime.year, slot.startTime.month, slot.startTime.day, 20, 0);
           return slot.startTime.toLocal().isBefore(filterEnd) &&
-              slot.endTime.toLocal().isAfter(filterStart);
+              end.isAfter(filterStart);
         });
       }).toList();
     }
