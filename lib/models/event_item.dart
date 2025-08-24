@@ -56,7 +56,7 @@ class EventItem {
   final bool hideFromList; // trueなら企画一覧とお気に入り一覧に表示しない デフォルトはfalse
   final bool disableDetailsLink; // trueなら詳細ページへの遷移を無効にする デフォルトはfalse
   final FestivalDay date;
-  final List<TimeSlot> timeSlots; // デフォルトは空のリスト 時間指定のない常時開催企画は、このリストが空になる
+  final List<TimeSlot> timeSlots; // デフォルトは空のリスト 時間指定のない終日開催企画は、このリストが空になる
 
   const EventItem({
     required this.id,

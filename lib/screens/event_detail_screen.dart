@@ -151,7 +151,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     icon: Icons.schedule,
                     title: '開催日時',
                     child: widget.event.timeSlots.isEmpty
-                        ? const Text('常時開催', style: TextStyle(fontSize: 16))
+                        ? const Text('終日開催', style: TextStyle(fontSize: 16))
                         : Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: widget.event.timeSlots.map((slot) {

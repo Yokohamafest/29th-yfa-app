@@ -394,7 +394,7 @@ class _EventListScreenState extends State<EventListScreen> {
             ),
           ),
           SwitchListTile(
-            title: const Text('常時開催企画を非表示'),
+            title: const Text('終日開催企画を非表示'),
             value: _hideAllDayEvents,
             onChanged: (bool value) {
               setState(() {

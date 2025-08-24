@@ -193,7 +193,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   children: [
                     if (allDayEvents.isNotEmpty) ...[
                       const Text(
-                        '常時開催企画',
+                        '終日開催企画',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
