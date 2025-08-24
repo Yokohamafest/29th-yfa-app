@@ -1150,10 +1150,10 @@ class _MapScreenState extends State<MapScreen> {
                               fit: BoxFit.cover,
                               placeholder: (context, url) => Shimmer.fromColors(
                                 baseColor: Colors.grey.shade300,
-                                highlightColor: AppColors.tertiary.withAlpha(150),
-                                child: Container(
-                                  color: Colors.white,
+                                highlightColor: AppColors.tertiary.withAlpha(
+                                  150,
                                 ),
+                                child: Container(color: Colors.white),
                               ),
                               errorWidget: (context, url, error) => Container(
                                 color: Colors.grey[300],
@@ -1314,7 +1314,7 @@ class _MapPinWidgetState extends State<MapPinWidget>
         final borderColor = widget.isBlinking
             ? Color.lerp(
                 Colors.orangeAccent,
-                Colors.redAccent,
+                Colors.pinkAccent,
                 _animationController.value,
               )!
             : (widget.isHighlighted
@@ -1328,7 +1328,7 @@ class _MapPinWidgetState extends State<MapPinWidget>
           final opacity = 255 + (0.5 + (_animationController.value * 0.4));
 
           glowShadow = BoxShadow(
-            color: Colors.orangeAccent.withAlpha(opacity.toInt()),
+            color: borderColor.withAlpha(opacity.toInt()),
             blurRadius: 8.0,
             spreadRadius: spread,
           );
