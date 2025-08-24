@@ -70,8 +70,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
       scheduleWidgets.add(
         _buildTimeSlotHeader(
-          currentEntry.timeSlot.startTime,
-          currentEntry.timeSlot.endTime,
+          currentEntry.timeSlot.startTime.toLocal(),
+          currentEntry.timeSlot.endTime.toLocal(),
         ),
       );
       scheduleWidgets.add(
@@ -177,13 +177,13 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
           for (final event in favoritedEvents) {
             for (final slot in event.timeSlots) {
-              if (slot.startTime.day == dayToFilter) {
+              if (slot.startTime.toLocal().day == dayToFilter) {
                 scheduleItems.add(ScheduleEntry(event, slot));
               }
             }
           }
           scheduleItems.sort(
-            (a, b) => a.timeSlot.startTime.compareTo(b.timeSlot.startTime),
+            (a, b) => a.timeSlot.startTime.toLocal().compareTo(b.timeSlot.startTime.toLocal()),
           );
 
           return favoritedEvents.isEmpty

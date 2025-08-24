@@ -13,6 +13,10 @@ import '../widgets/tag_widget.dart';
 import '../models/enum_extensions.dart';
 import '../services/notification_service.dart';
 import '../utils/app_colors.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../widgets/map_tutorial_overlay.dart';
+import 'package:shimmer/shimmer.dart';
 
 enum BuildingSelection { campus, building2, building3, building4 }
 
@@ -66,6 +70,15 @@ class _MapScreenState extends State<MapScreen> {
 
   late final Map<BuildingSelection, List<MapInfo>> _floorMapsByBuilding;
 
+  final TransformationController _transformationController =
+      TransformationController();
+  double _currentScale = 1.0;
+  static const double _zoomThreshold = 2.5;
+
+  String? _highlightedPinIdForNavigation;
+
+  bool _showTutorialOverlay = false;
+
   @override
   void initState() {
     super.initState();
@@ -104,6 +117,31 @@ class _MapScreenState extends State<MapScreen> {
         });
       }
     });
+    _transformationController.addListener(() {
+      if (mounted) {
+        setState(() {
+          _currentScale = _transformationController.value.getMaxScaleOnAxis();
+        });
+      }
+    });
+    _checkIfShowTutorial();
+  }
+
+  @override
+  void dispose() {
+    _transformationController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _checkIfShowTutorial() async {
+    final prefs = await SharedPreferences.getInstance();
+    final bool hasShown = prefs.getBool('has_shown_map_tutorial') ?? false;
+
+    if (!hasShown && mounted) {
+      setState(() {
+        _showTutorialOverlay = true;
+      });
+    }
   }
 
   Future<void> _launchURL(Uri url) async {
@@ -195,19 +233,27 @@ class _MapScreenState extends State<MapScreen> {
       _selectedBuilding = targetBuilding;
       _currentMap = targetMap;
       _blinkingPinId = targetPin!.id;
+      _highlightedPinIdForNavigation = targetPin.id;
       _highlightedPinIds = {};
     });
 
-    Future.delayed(const Duration(seconds: 15), () {
+    Future.delayed(const Duration(seconds: 10), () {
       if (mounted) {
         setState(() {
           _blinkingPinId = null;
+          _highlightedPinIdForNavigation = null;
         });
       }
     });
   }
 
   void _applyFilters() {
+    if (_highlightedPinIdForNavigation != null) {
+      setState(() {
+        _highlightedPinIdForNavigation = null;
+      });
+    }
+
     final newHighlightedPinIds = <String>{};
     bool isFilterActive = false;
 
@@ -981,6 +1027,7 @@ class _MapScreenState extends State<MapScreen> {
             onSelectionChanged: (newSelection) {
               setState(() {
                 _selectedBuilding = newSelection.first;
+                _highlightedPinIdForNavigation = null;
                 if (_selectedBuilding == BuildingSelection.campus) {
                   _currentMap = _allMaps!.firstWhere(
                     (m) => m.id == MapType.campus,
@@ -1008,6 +1055,7 @@ class _MapScreenState extends State<MapScreen> {
           onPressed: (index) {
             setState(() {
               _currentMap = floors[index];
+              _highlightedPinIdForNavigation = null;
             });
           },
           borderRadius: BorderRadius.circular(8.0),
@@ -1026,104 +1074,152 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<dynamic>>(
-      future: _mapDataFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting ||
-            _currentMap == null) {
-          return Scaffold(
-            appBar: AppBar(title: const Text('マップ')),
-            body: const Center(child: CircularProgressIndicator()),
-          );
-        }
-        if (snapshot.hasError) {
-          return Scaffold(
-            appBar: AppBar(title: const Text('マップ')),
-            body: const Center(child: Text('データの読み込みに失敗しました')),
-          );
-        }
+    return Stack(
+      children: [
+        FutureBuilder<List<dynamic>>(
+          future: _mapDataFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting ||
+                _currentMap == null) {
+              return Scaffold(
+                appBar: AppBar(title: const Text('マップ')),
+                body: const Center(child: CircularProgressIndicator()),
+              );
+            }
+            if (snapshot.hasError) {
+              return Scaffold(
+                appBar: AppBar(title: const Text('マップ')),
+                body: const Center(child: Text('データの読み込みに失敗しました')),
+              );
+            }
 
-        final currentPins = _allPins!
-            .where((p) => p.mapId == _currentMap!.id)
-            .toList();
+            final currentPins = _allPins!
+                .where((p) => p.mapId == _currentMap!.id)
+                .toList();
 
-        return Scaffold(
-          appBar: AppBar(
-            title: Text("マップ", style: TextStyle(fontWeight: FontWeight.bold)),
-            actions: [
-              Builder(
-                builder: (context) {
-                  return TextButton.icon(
-                    onPressed: () {
-                      Scaffold.of(context).openEndDrawer();
-                    },
-                    icon: const Icon(Icons.search),
-                    label: const Text(
-                      'マップピン検索',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    style: TextButton.styleFrom(
-                      side: const BorderSide(color: Colors.white, width: 0.8),
-                      foregroundColor:
-                          Theme.of(context).appBarTheme.iconTheme?.color ??
-                          Colors.white,
-                      shadowColor: Colors.black,
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-          endDrawer: _buildFilterDrawer(),
-          body: Column(
-            children: [
-              _buildBuildingSelector(),
-              if (_selectedBuilding != BuildingSelection.campus)
-                _buildFloorSelector(),
-
-              Expanded(
-                child: InteractiveViewer(
-                  minScale: 0.5,
-                  maxScale: 5.0,
-                  child: Center(
-                    child: Stack(
-                      children: [
-                        Image.asset(
-                          _currentMap!.imagePath,
-                          width: MediaQuery.of(context).size.width,
-                          fit: BoxFit.fitWidth,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Center(
-                              child: Text('マップ画像を読み込めませんでした'),
-                            );
-                          },
+            return Scaffold(
+              appBar: AppBar(
+                title: Text(
+                  "マップ",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                actions: [
+                  Builder(
+                    builder: (context) {
+                      return TextButton.icon(
+                        onPressed: () {
+                          Scaffold.of(context).openEndDrawer();
+                        },
+                        icon: const Icon(Icons.search),
+                        label: const Text(
+                          'マップピン検索',
+                          style: TextStyle(fontWeight: FontWeight.bold),
                         ),
-
-                        Positioned.fill(
-                          child: LayoutBuilder(
-                            builder: (context, constraints) {
-                              return Stack(
-                                children: currentPins.map((pin) {
-                                  return _buildMapPin(
-                                    pin,
-                                    constraints,
-                                    _allEvents!,
-                                    _allPins!,
-                                  );
-                                }).toList(),
-                              );
-                            },
+                        style: TextButton.styleFrom(
+                          side: const BorderSide(
+                            color: Colors.white,
+                            width: 0.8,
                           ),
+                          foregroundColor:
+                              Theme.of(context).appBarTheme.iconTheme?.color ??
+                              Colors.white,
+                          shadowColor: Colors.black,
                         ),
-                      ],
+                      );
+                    },
+                  ),
+                ],
+              ),
+              endDrawer: _buildFilterDrawer(),
+              body: Column(
+                children: [
+                  _buildBuildingSelector(),
+                  if (_selectedBuilding != BuildingSelection.campus)
+                    _buildFloorSelector(),
+
+                  Expanded(
+                    child: InteractiveViewer(
+                      transformationController: _transformationController,
+                      minScale: 0.5,
+                      maxScale: 5.0,
+                      child: Center(
+                        child: Stack(
+                          children: [
+                            CachedNetworkImage(
+                              imageUrl: _currentMap!.imagePath,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) => Shimmer.fromColors(
+                                baseColor: Colors.grey.shade300,
+                                highlightColor: AppColors.tertiary.withAlpha(
+                                  150,
+                                ),
+                                child: Container(color: Colors.white),
+                              ),
+                              errorWidget: (context, url, error) => Container(
+                                color: Colors.grey[300],
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.image_not_supported,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            Positioned.fill(
+                              child: LayoutBuilder(
+                                builder: (context, constraints) {
+                                  return Stack(
+                                    children: currentPins
+                                        .where((pin) {
+                                          if (pin.id ==
+                                              _highlightedPinIdForNavigation) {
+                                            return true;
+                                          }
+                                          if (pin.hideUntilZoomed) {
+                                            return _currentScale >=
+                                                _zoomThreshold;
+                                          }
+                                          return true;
+                                        })
+                                        .map((pin) {
+                                          return _buildMapPin(
+                                            pin,
+                                            constraints,
+                                            _allEvents!,
+                                            _allPins!,
+                                          );
+                                        })
+                                        .toList(),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                ],
               ),
-            ],
+            );
+          },
+        ),
+        if (_showTutorialOverlay)
+          MapTutorialOverlay(
+            onDismiss: () async {
+              // オーバーレイが閉じられたら
+              final prefs = await SharedPreferences.getInstance();
+              // 「表示済み」のフラグを保存
+              await prefs.setBool('has_shown_map_tutorial', true);
+              if (mounted) {
+                setState(() {
+                  _showTutorialOverlay = false; // 表示フラグを下ろす
+                });
+              }
+            },
           ),
-        );
-      },
+      ],
     );
   }
 }
@@ -1217,15 +1313,32 @@ class _MapPinWidgetState extends State<MapPinWidget>
       builder: (context, child) {
         final borderColor = widget.isBlinking
             ? Color.lerp(
-                AppColors.primary,
-                AppColors.tertiary,
+                Colors.orangeAccent,
+                Colors.pinkAccent,
                 _animationController.value,
               )!
-            : (widget.isHighlighted ? AppColors.primary : Colors.grey.shade400);
+            : (widget.isHighlighted
+                  ? Colors.orangeAccent
+                  : Colors.grey.shade400);
 
-        final borderWidth = widget.isBlinking || widget.isHighlighted
-            ? 3.0
-            : 1.0;
+        BoxShadow? glowShadow;
+
+        if (widget.isBlinking) {
+          final spread = 2.0 + (_animationController.value * 5.0);
+          final opacity = 255 + (0.5 + (_animationController.value * 0.4));
+
+          glowShadow = BoxShadow(
+            color: borderColor.withAlpha(opacity.toInt()),
+            blurRadius: 8.0,
+            spreadRadius: spread,
+          );
+        } else if (widget.isHighlighted) {
+          glowShadow = const BoxShadow(
+            color: Colors.orangeAccent,
+            blurRadius: 8.0,
+            spreadRadius: 2.0,
+          );
+        }
 
         return Container(
           width: widget.width,
@@ -1236,13 +1349,18 @@ class _MapPinWidgetState extends State<MapPinWidget>
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(8.0),
-            border: Border.all(color: borderColor, width: borderWidth),
-            boxShadow: const [
-              BoxShadow(
+            // 枠線の色は上記で定義したものを使用 (太さは常に1.0)
+            border: Border.all(color: borderColor, width: 1.0),
+            // boxShadowを修正
+            boxShadow: [
+              // 通常時の影
+              const BoxShadow(
                 color: Colors.black26,
                 blurRadius: 4,
                 offset: Offset(0, 2),
               ),
+              // 上記で定義したglowShadowが存在する場合のみ、リストに追加
+              if (glowShadow != null) glowShadow,
             ],
           ),
           child: serviceIcon != null
