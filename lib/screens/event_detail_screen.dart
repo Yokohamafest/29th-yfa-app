@@ -5,6 +5,9 @@ import '../widgets/tag_widget.dart';
 import '../models/enum_extensions.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
+import '../utils/app_colors.dart';
 
 class EventDetailScreen extends StatefulWidget {
   final EventItem event;
@@ -87,20 +90,25 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           children: [
             AspectRatio(
               aspectRatio: 1 / 1,
-              child: Image.asset(
-                widget.event.imagePath,
+              child: CachedNetworkImage(
+                imageUrl: widget.event.imagePath,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: Colors.grey[300],
-                    child: const Center(
-                      child: Icon(
-                        Icons.image_not_supported,
-                        color: Colors.grey,
-                      ),
+                placeholder: (context, url) => Shimmer.fromColors(
+                  baseColor: Colors.grey.shade300,
+                  highlightColor: AppColors.tertiary.withAlpha(150),
+                  child: Container(
+                    color: Colors.white,
+                  ),
+                ),
+                errorWidget: (context, url, error) => Container(
+                  color: Colors.grey[300],
+                  child: const Center(
+                    child: Icon(
+                      Icons.image_not_supported,
+                      color: Colors.grey,
                     ),
-                  );
-                },
+                  ),
+                ),
               ),
             ),
             Padding(
@@ -148,7 +156,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: widget.event.timeSlots.map((slot) {
                               return Text(
-                                '${dayFormatter.format(slot.startTime)} ${timeFormatter.format(slot.startTime)} - ${timeFormatter.format(slot.endTime)}',
+                                '${dayFormatter.format(slot.startTime.toLocal())} ${timeFormatter.format(slot.startTime.toLocal())} - ${timeFormatter.format(slot.endTime.toLocal())}',
                                 style: const TextStyle(fontSize: 16),
                               );
                             }).toList(),

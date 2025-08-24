@@ -87,7 +87,7 @@ class NotificationService {
       return;
     }
     for (final timeSlot in event.timeSlots) {
-      final scheduleTime = timeSlot.startTime.subtract(
+      final scheduleTime = timeSlot.startTime.toLocal().subtract(
         Duration(minutes: reminderMinutes),
       );
 
@@ -96,7 +96,7 @@ class NotificationService {
       }
 
       final notificationId =
-          '${event.id}_${timeSlot.startTime.toIso8601String()}_$reminderMinutes'
+          '${event.id}_${timeSlot.startTime.toLocal().toIso8601String()}_$reminderMinutes'
               .hashCode;
 
       await flutterLocalNotificationsPlugin.zonedSchedule(
@@ -126,7 +126,7 @@ class NotificationService {
     for (final timeSlot in event.timeSlots) {
       for (final minutes in possibleMinutes) {
         final notificationId =
-            '${event.id}_${timeSlot.startTime.toIso8601String()}_$minutes'
+            '${event.id}_${timeSlot.startTime.toLocal().toIso8601String()}_$minutes'
                 .hashCode;
         await flutterLocalNotificationsPlugin.cancel(notificationId);
       }
