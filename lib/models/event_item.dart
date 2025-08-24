@@ -50,7 +50,7 @@ class EventItem {
   final String groupName;
   final String description;
   final String imagePath;
-  final EventArea area;
+  final List<EventArea> areas;
   final List<String> locations;
   final List<EventCategory> categories;
   final bool hideFromList; // trueなら企画一覧とお気に入り一覧に表示しない デフォルトはfalse
@@ -64,7 +64,7 @@ class EventItem {
     required this.groupName,
     required this.description,
     required this.imagePath,
-    required this.area,
+    required this.areas,
     required this.locations,
     required this.categories,
     this.hideFromList = false,
@@ -87,7 +87,10 @@ class EventItem {
       groupName: json['groupName'] ?? " ",
       description: json['description'] ?? " ",
       imagePath: json['imagePath'] ?? " ",
-      area: EventArea.values.byName(json['area'] ?? "other"),
+      areas: (json['areas'] as List?)
+              ?.map((area) => EventArea.values.byName(area as String))
+              .toList() ??
+          [],
       locations: List<String>.from(json['locations'] ?? []),
       categories: (json['categories'] as List)
           .map((category) => EventCategory.values.byName(category))

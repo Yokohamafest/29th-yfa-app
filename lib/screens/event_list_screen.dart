@@ -78,7 +78,11 @@ class _EventListScreenState extends State<EventListScreen> {
 
     if (_selectedAreas.isNotEmpty) {
       results = results
-          .where((event) => _selectedAreas.contains(event.area))
+          .where(
+            (event) => event.areas.any(
+              (area) => _selectedAreas.contains(area),
+            ),
+          )
           .toList();
     }
 

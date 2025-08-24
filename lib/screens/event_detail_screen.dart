@@ -131,9 +131,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                         text: widget.event.date.name,
                         color: Colors.green,
                       ),
-                      TagWidget(
-                        text: widget.event.area.name,
-                        color: Colors.orange,
+                      ...widget.event.areas.map(
+                        (area) =>
+                            TagWidget(text: area.name, color: Colors.orange),
                       ),
                       ...widget.event.categories.map(
                         (category) =>
@@ -148,16 +148,22 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     child: Builder(
                       builder: (context) {
                         if (widget.event.timeSlots == null) {
-                          return const Text('時間未定', style: TextStyle(fontSize: 16));
+                          return const Text(
+                            '時間未定',
+                            style: TextStyle(fontSize: 16),
+                          );
                         }
                         if (widget.event.timeSlots!.isEmpty) {
-                          return const Text('終日開催', style: TextStyle(fontSize: 16));
+                          return const Text(
+                            '終日開催',
+                            style: TextStyle(fontSize: 16),
+                          );
                         }
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: widget.event.timeSlots!.map((slot) {
                             return Text(
-                              '${dayFormatter.format(slot.startTime)} ${timeFormatter.format(slot.endTime)}',
+                              '${dayFormatter.format(slot.startTime.toLocal())} ${timeFormatter.format(slot.startTime.toLocal())} - ${timeFormatter.format(slot.endTime.toLocal())}',
                               style: const TextStyle(fontSize: 16),
                             );
                           }).toList(),
@@ -170,7 +176,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     icon: Icons.location_on,
                     title: '開催場所',
                     child: Text(
-                      '${widget.event.area.name} / ${widget.event.locations.join(' & ')}',
+                      '${widget.event.areas.map((a) => a.name).join('、')} / ${widget.event.locations.join(' 、')}',
                       style: const TextStyle(fontSize: 16),
                     ),
                     trailing: OutlinedButton(

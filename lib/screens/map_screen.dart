@@ -194,7 +194,7 @@ class _MapScreenState extends State<MapScreen> {
       MapEntry<String, EventArea>? buildingEntry;
       try {
         buildingEntry = buildingAreaMap.entries.firstWhere(
-          (entry) => entry.value == targetEvent!.area,
+          (entry) => entry.value == targetEvent!.areas.first,
         );
       } catch (e) {
         buildingEntry = null;
@@ -303,7 +303,7 @@ class _MapScreenState extends State<MapScreen> {
             final targetArea = buildingAreaMap[pin.title];
             if (targetArea != null) {
               shouldHighlight = filteredEvents.any(
-                (event) => event.area == targetArea,
+                (event) => event.areas.contains(targetArea),
               );
             }
           }
@@ -376,7 +376,7 @@ class _MapScreenState extends State<MapScreen> {
                   final targetArea = buildingAreaMap[pin.title];
                   if (targetArea != null) {
                     attachedEvents = visibleEvents
-                        .where((event) => event.area == targetArea)
+                        .where((event) => event.areas.contains(targetArea))
                         .toList();
                   }
                 } else if (pin.type == PinType.location) {
