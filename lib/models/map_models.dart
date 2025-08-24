@@ -10,7 +10,8 @@ enum MapType {
   building3F1,
   building3F2,
   building3F3,
-  building4F1F2,
+  building4F1,
+  building4F2,
 }
 
 // マップ画像の情報を持つクラス
