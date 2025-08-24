@@ -4,6 +4,8 @@ import '../screens/event_detail_screen.dart';
 import 'tag_widget.dart';
 import '../models/enum_extensions.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
+import '../utils/app_colors.dart';
 
 class EventCard extends StatelessWidget {
   final EventItem event;
@@ -58,8 +60,12 @@ class EventCard extends StatelessWidget {
                 child: CachedNetworkImage(
                   imageUrl: event.imagePath,
                   fit: BoxFit.cover,
-                  placeholder: (context, url) => Container(
-                    color: Colors.grey[300],
+                  placeholder: (context, url) => Shimmer.fromColors(
+                    baseColor: Colors.grey.shade300,
+                    highlightColor: AppColors.tertiary.withAlpha(150),
+                    child: Container(
+                      color: Colors.white,
+                    ),
                   ),
                   errorWidget: (context, url, error) => Container(
                     color: Colors.grey[300],

@@ -16,6 +16,7 @@ import '../utils/app_colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/map_tutorial_overlay.dart';
+import 'package:shimmer/shimmer.dart';
 
 enum BuildingSelection { campus, building2, building3, building4 }
 
@@ -1147,8 +1148,13 @@ class _MapScreenState extends State<MapScreen> {
                             CachedNetworkImage(
                               imageUrl: _currentMap!.imagePath,
                               fit: BoxFit.cover,
-                              placeholder: (context, url) =>
-                                  Container(color: Colors.grey[300]),
+                              placeholder: (context, url) => Shimmer.fromColors(
+                                baseColor: Colors.grey.shade300,
+                                highlightColor: AppColors.tertiary.withAlpha(150),
+                                child: Container(
+                                  color: Colors.white,
+                                ),
+                              ),
                               errorWidget: (context, url, error) => Container(
                                 color: Colors.grey[300],
                                 child: const Center(

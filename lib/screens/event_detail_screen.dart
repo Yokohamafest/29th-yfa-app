@@ -6,6 +6,8 @@ import '../models/enum_extensions.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
+import '../utils/app_colors.dart';
 
 class EventDetailScreen extends StatefulWidget {
   final EventItem event;
@@ -89,12 +91,16 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             AspectRatio(
               aspectRatio: 1 / 1,
               child: CachedNetworkImage(
-                imageUrl: widget.event.imagePath, // Firestoreから受け取ったURLをここに渡す
+                imageUrl: widget.event.imagePath,
                 fit: BoxFit.cover,
-                placeholder: (context, url) => Container( // 読込中に表示するウィジェット
-                  color: Colors.grey[300],
+                placeholder: (context, url) => Shimmer.fromColors(
+                  baseColor: Colors.grey.shade300,
+                  highlightColor: AppColors.tertiary.withAlpha(150),
+                  child: Container(
+                    color: Colors.white,
+                  ),
                 ),
-                errorWidget: (context, url, error) => Container( // エラー時に表示するウィジェット
+                errorWidget: (context, url, error) => Container(
                   color: Colors.grey[300],
                   child: const Center(
                     child: Icon(
