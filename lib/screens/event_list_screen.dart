@@ -39,6 +39,8 @@ class _EventListScreenState extends State<EventListScreen> {
   TimeOfDay? _endTimeFilter;
   bool _hideAllDayEvents = false;
 
+  int _selectedDayForTimeFilter = 1;
+
   @override
   void initState() {
     super.initState();
@@ -107,18 +109,20 @@ class _EventListScreenState extends State<EventListScreen> {
     }
 
     if (_startTimeFilter != null || _endTimeFilter != null) {
+      final int filterDay = _selectedDayForTimeFilter == 1 ? 14 : 15;
+
       final filterStart = _startTimeFilter != null
           ? DateTime(
               2025,
               9,
-              14,
+              filterDay,
               _startTimeFilter!.hour,
               _startTimeFilter!.minute,
             )
           : DateTime(2025, 9, 14, 4, 0);
 
       final filterEnd = _endTimeFilter != null
-          ? DateTime(2025, 9, 14, _endTimeFilter!.hour, _endTimeFilter!.minute)
+          ? DateTime(2025, 9, filterDay, _endTimeFilter!.hour, _endTimeFilter!.minute)
           : DateTime(2025, 9, 15, 4, 0);
 
       results = results.where((event) {
@@ -337,10 +341,34 @@ class _EventListScreenState extends State<EventListScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 16.0, top: 8.0),
-          child: Text(
-            '時間帯',
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          padding: const EdgeInsets.only(left: 16.0, top: 8.0, right: 16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                '時間帯',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              if (_startTimeFilter != null || _endTimeFilter != null)
+                ToggleButtons(
+                  isSelected: [
+                    _selectedDayForTimeFilter == 1,
+                    _selectedDayForTimeFilter == 2,
+                  ],
+                  onPressed: (index) {
+                    setState(() {
+                      _selectedDayForTimeFilter = index + 1;
+                      _runFilter();
+                    });
+                  },
+                  borderRadius: BorderRadius.circular(8.0),
+                  constraints: const BoxConstraints(minHeight: 32.0, minWidth: 60.0),
+                  children: const [
+                    Text('1日目'),
+                    Text('2日目'),
+                  ],
+                ),
+            ],
           ),
         ),
         Padding(
