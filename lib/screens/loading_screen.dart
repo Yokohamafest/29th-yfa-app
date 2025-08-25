@@ -37,22 +37,22 @@ class _LoadingScreenState extends State<LoadingScreen> {
       await SystemChrome.setPreferredOrientations([
         DeviceOrientation.portraitUp,
       ]);
-      await Future.delayed(const Duration(milliseconds: 100));
+      await Future.delayed(const Duration(milliseconds: 200));
 
       _progressNotifier.value = 0.4;
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
-      await Future.delayed(const Duration(milliseconds: 100));
+      await Future.delayed(const Duration(milliseconds: 200));
 
       _progressNotifier.value = 0.7;
       await initializeDateFormatting('ja_JP');
-      await Future.delayed(const Duration(milliseconds: 200));
+      await Future.delayed(const Duration(milliseconds: 300));
 
       DataService().registerDeviceToken();
 
       _progressNotifier.value = 1.0;
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future.delayed(const Duration(milliseconds: 600));
 
       if (mounted) {
         Navigator.of(context).pushReplacement(
