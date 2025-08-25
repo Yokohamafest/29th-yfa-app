@@ -11,9 +11,9 @@
 
   factory InfoLinkItem.fromJson(Map<String, dynamic> json) {
     return InfoLinkItem(
-      title: json['title'],
-      url: json['url'],
-      iconName: json['iconName'],
+      title: json['title'] ?? " ",
+      url: json['url'] ?? " ",
+      iconName: json['iconName'] ?? " ",
     );
   }
 }

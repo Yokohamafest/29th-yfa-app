@@ -76,12 +76,13 @@ class _CompassLoadingIndicatorState extends State<CompassLoadingIndicator>
         ),
         const SizedBox(height: 24),
         Text(
-          '$percentage %',
+          'Now Loading…\n$percentage %',
           style: const TextStyle(
-            fontSize: 24,
+            fontSize: 16,
             fontWeight: FontWeight.bold,
             color: Colors.black87,
           ),
+          textAlign: TextAlign.center,
         ),
       ],
     );

@@ -3,17 +3,13 @@ import 'dart:async';
 import '../utils/app_colors.dart';
 import 'screens/loading_screen.dart';
 
-// ここにFirebaseの初期化コードが入る
 // ignore: unused_element
 Future<void> _firebaseMessagingBackgroundHandler(dynamic message) async {
-  // バックグラウンドで通知を受け取った際の処理
   debugPrint("Handling a background message: ${message.messageId}");
 }
 
 
-// main関数から async と await を削除
 void main() {
-  // WidgetsFlutterBinding.ensureInitialized(); // これも不要になることが多い
   runApp(const MyApp());
 }
 
@@ -41,7 +37,6 @@ class MyApp extends StatelessWidget {
           type: BottomNavigationBarType.fixed,
         ),
       ),
-      // ■ 最初の画面を新しいLoadingScreenに変更
       home: const LoadingScreen(),
     );
   }

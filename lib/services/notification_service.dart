@@ -86,7 +86,10 @@ class NotificationService {
       debugPrint('Exact alarm permission not granted.');
       return;
     }
-    for (final timeSlot in event.timeSlots) {
+
+    if (event.timeSlots == null) return;
+
+    for (final timeSlot in event.timeSlots!) {
       final scheduleTime = timeSlot.startTime.toLocal().subtract(
         Duration(minutes: reminderMinutes),
       );
@@ -102,7 +105,7 @@ class NotificationService {
       await flutterLocalNotificationsPlugin.zonedSchedule(
         notificationId,
         event.title,
-        '${event.title}が$reminderMinutes分後に「${event.location}」で始まります!',
+        '${event.title}が$reminderMinutes分後に始まります!',
         tz.TZDateTime.from(scheduleTime, tz.local),
         const NotificationDetails(
           android: AndroidNotificationDetails(
@@ -122,8 +125,10 @@ class NotificationService {
   }
 
   Future<void> cancelReminder(EventItem event) async {
+    if (event.timeSlots == null) return;
+
     final possibleMinutes = [5, 15, 30, 60];
-    for (final timeSlot in event.timeSlots) {
+    for (final timeSlot in event.timeSlots!) {
       for (final minutes in possibleMinutes) {
         final notificationId =
             '${event.id}_${timeSlot.startTime.toLocal().toIso8601String()}_$minutes'

@@ -26,7 +26,7 @@ class EventCard extends StatelessWidget {
     final bool isFavorited = favoriteEventIds.contains(event.id);
     final allTags = [
       {'text': event.date.name, 'color': Colors.green},
-      {'text': event.area.name, 'color': Colors.orange},
+      ...event.areas.map((a) => {'text': a.name, 'color': Colors.orange}),
       ...event.categories.map((c) => {'text': c.name, 'color': Colors.blue}),
     ];
 
@@ -119,6 +119,8 @@ class EventCard extends StatelessWidget {
                           fontSize: 12.0,
                           color: Colors.grey[700],
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const Spacer(),
 

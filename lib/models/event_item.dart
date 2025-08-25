@@ -26,19 +26,20 @@ enum EventCategory {
   food, // 飲食
   handsOn, // 体験
   game, //ゲーム
+  goods, //物販
   other, // その他
 }
 
 class TimeSlot {
   final DateTime startTime;
-  final DateTime endTime;
+  final DateTime? endTime;
 
-  const TimeSlot({required this.startTime, required this.endTime});
+  const TimeSlot({required this.startTime, this.endTime});
 
   factory TimeSlot.fromJson(Map<String, dynamic> json) {
     return TimeSlot(
       startTime: DateTime.parse(json['startTime']),
-      endTime: DateTime.parse(json['endTime']),
+      endTime: json['endTime'] != null ? DateTime.parse(json['endTime']) : null,
     );
   }
 }
@@ -49,14 +50,13 @@ class EventItem {
   final String groupName;
   final String description;
   final String imagePath;
-  final EventArea area;
-  final String
-  location; // この文字列によってどこで行われる企画なのかを判定している（タイムテーブル画面とマップ画面）ので、文字は統一するように（「体育館」や「31A」、「32A」など）
+  final List<EventArea> areas;
+  final List<String> locations;
   final List<EventCategory> categories;
   final bool hideFromList; // trueなら企画一覧とお気に入り一覧に表示しない デフォルトはfalse
   final bool disableDetailsLink; // trueなら詳細ページへの遷移を無効にする デフォルトはfalse
   final FestivalDay date;
-  final List<TimeSlot> timeSlots; // デフォルトは空のリスト 時間指定のない常時開催企画は、このリストが空になる
+  final List<TimeSlot>? timeSlots; // デフォルトは空のリスト 時間指定のない終日開催企画は、このリストが空になる
 
   const EventItem({
     required this.id,
@@ -64,33 +64,41 @@ class EventItem {
     required this.groupName,
     required this.description,
     required this.imagePath,
-    required this.area,
-    required this.location,
+    required this.areas,
+    required this.locations,
     required this.categories,
     this.hideFromList = false,
     this.disableDetailsLink = false,
     required this.date,
-    this.timeSlots = const [],
+    this.timeSlots,
   });
 
   factory EventItem.fromJson(Map<String, dynamic> json) {
+    List<TimeSlot>? timeSlots;
+    if (json['timeSlots'] != null) {
+      timeSlots = (json['timeSlots'] as List)
+          .map((slot) => TimeSlot.fromJson(slot))
+          .toList();
+    }
+
     return EventItem(
-      id: json['id'],
-      title: json['title'],
-      groupName: json['groupName'],
-      description: json['description'],
-      imagePath: json['imagePath'],
-      area: EventArea.values.byName(json['area']),
-      location: json['location'],
+      id: json['id'] ?? " ",
+      title: json['title'] ?? " ",
+      groupName: json['groupName'] ?? " ",
+      description: json['description'] ?? " ",
+      imagePath: json['imagePath'] ?? " ",
+      areas: (json['areas'] as List?)
+              ?.map((area) => EventArea.values.byName(area as String))
+              .toList() ??
+          [],
+      locations: List<String>.from(json['locations'] ?? []),
       categories: (json['categories'] as List)
           .map((category) => EventCategory.values.byName(category))
           .toList(),
       hideFromList: json['hideFromList'] ?? false,
       disableDetailsLink: json['disableDetailsLink'] ?? false,
-      date: FestivalDay.values.byName(json['date']),
-      timeSlots: (json['timeSlots'] as List)
-          .map((slot) => TimeSlot.fromJson(slot))
-          .toList(),
+      date: FestivalDay.values.byName(json['date'] ?? "dayOne"),
+      timeSlots: timeSlots,
     );
   }
 }

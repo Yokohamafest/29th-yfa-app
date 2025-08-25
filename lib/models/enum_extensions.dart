@@ -61,6 +61,9 @@ extension EventCategoryExt on EventCategory {
       case EventCategory.game:
         return 'ゲーム';
 
+      case EventCategory.goods:
+        return '物販';
+
       case EventCategory.other:
         return 'その他';
     }

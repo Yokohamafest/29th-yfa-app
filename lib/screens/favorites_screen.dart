@@ -68,10 +68,13 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     for (int i = 0; i < scheduleEntries.length; i++) {
       final currentEntry = scheduleEntries[i];
 
+      final startTime = currentEntry.timeSlot.startTime.toLocal();
+      final endTime = currentEntry.timeSlot.endTime?.toLocal() ?? DateTime(startTime.year, startTime.month, startTime.day, 20, 0);
+
       scheduleWidgets.add(
         _buildTimeSlotHeader(
-          currentEntry.timeSlot.startTime.toLocal(),
-          currentEntry.timeSlot.endTime.toLocal(),
+          startTime,
+          endTime,
         ),
       );
       scheduleWidgets.add(
@@ -168,22 +171,39 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               )
               .toList();
 
+          final undecidedEvents = favoritedEvents
+              .where((event) => event.timeSlots == null)
+              .toList();
+
           final allDayEvents = favoritedEvents
-              .where((event) => event.timeSlots.isEmpty)
+              .where(
+                (event) => event.timeSlots != null && event.timeSlots!.isEmpty,
+              )
+              .toList();
+
+          final timedEvents = favoritedEvents
+              .where(
+                (event) =>
+                    event.timeSlots != null && event.timeSlots!.isNotEmpty,
+              )
               .toList();
 
           final List<ScheduleEntry> scheduleItems = [];
           final dayToFilter = _selectedDay == FestivalDay.dayOne ? 14 : 15;
 
-          for (final event in favoritedEvents) {
-            for (final slot in event.timeSlots) {
-              if (slot.startTime.toLocal().day == dayToFilter) {
-                scheduleItems.add(ScheduleEntry(event, slot));
+          for (final event in timedEvents) {
+            if (event.timeSlots != null) {
+              for (final slot in event.timeSlots!) {
+                if (slot.startTime.toLocal().day == dayToFilter) {
+                  scheduleItems.add(ScheduleEntry(event, slot));
+                }
               }
             }
           }
           scheduleItems.sort(
-            (a, b) => a.timeSlot.startTime.toLocal().compareTo(b.timeSlot.startTime.toLocal()),
+            (a, b) => a.timeSlot.startTime.toLocal().compareTo(
+              b.timeSlot.startTime.toLocal(),
+            ),
           );
 
           return favoritedEvents.isEmpty
@@ -193,7 +213,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   children: [
                     if (allDayEvents.isNotEmpty) ...[
                       const Text(
-                        '常時開催企画',
+                        '終日開催企画',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -244,6 +264,25 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                       ),
                     ),
                     ..._buildScheduleWidgets(scheduleItems),
+                    const Divider(height: 32, thickness: 1),
+
+                    if (undecidedEvents.isNotEmpty) ...[
+                      const Text(
+                        '時間未定企画',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      ...undecidedEvents.map(
+                        (event) => EventCard(
+                          event: event,
+                          favoriteEventIds: widget.favoriteEventIds,
+                          onToggleFavorite: widget.onToggleFavorite,
+                          onNavigateToMap: widget.onNavigateToMap,
+                        ),
+                      ),
+                    ],
                   ],
                 );
         },

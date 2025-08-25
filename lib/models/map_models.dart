@@ -10,7 +10,8 @@ enum MapType {
   building3F1,
   building3F2,
   building3F3,
-  building4F1F2,
+  building4F1,
+  building4F2,
 }
 
 // マップ画像の情報を持つクラス
@@ -18,17 +19,20 @@ class MapInfo {
   final MapType id;
   final String name;
   final String imagePath;
+  final int sortOrder;
   const MapInfo({
     required this.id,
     required this.name,
     required this.imagePath,
+    required this.sortOrder,
   });
 
   factory MapInfo.fromJson(Map<String, dynamic> json) {
     return MapInfo(
-      id: MapType.values.byName(json['id']),
-      name: json['name'],
-      imagePath: json['imagePath'],
+      id: MapType.values.byName(json['id'] ?? "campus"),
+      name: json['name'] ?? " ",
+      imagePath: json['imagePath'] ?? " ",
+      sortOrder: json['sortOrder'] ?? 99,
     );
   }
 }
@@ -66,9 +70,9 @@ class PinLink {
 
   factory PinLink.fromJson(Map<String, dynamic> json) {
     return PinLink(
-      text: json['text'],
-      actionType: PinLinkActionType.values.byName(json['actionType']),
-      actionValue: json['actionValue'],
+      text: json['text'] ?? " ",
+      actionType: PinLinkActionType.values.byName(json['actionType'] ?? "timetable"),
+      actionValue: json['actionValue'] ?? " ",
     );
   }
 }
