@@ -1,6 +1,5 @@
 ﻿import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_app_yfa/data/dummy_announcements.dart';
 import '../models/map_models.dart';
 import '../models/event_item.dart';
 import 'event_detail_screen.dart';
@@ -49,6 +48,7 @@ class _MapScreenState extends State<MapScreen> {
   List<MapInfo>? _allMaps;
   List<MapPin>? _allPins;
   List<EventItem>? _allEvents;
+  List<AnnouncementItem>? _allAnnouncements;
 
   BuildingSelection _selectedBuilding = BuildingSelection.campus;
   MapInfo? _currentMap;
@@ -87,6 +87,7 @@ class _MapScreenState extends State<MapScreen> {
       _dataService.getMaps(),
       _dataService.getPins(),
       _dataService.getEvents(),
+      _dataService.getAnnouncements(),
     ]);
 
     _mapDataFuture.then((data) {
@@ -94,6 +95,7 @@ class _MapScreenState extends State<MapScreen> {
         _allMaps = data[0] as List<MapInfo>;
         _allPins = data[1] as List<MapPin>;
         _allEvents = data[2] as List<EventItem>;
+        _allAnnouncements = data[3] as List<AnnouncementItem>;
 
         _floorMapsByBuilding = {
           BuildingSelection.building2:
@@ -529,12 +531,14 @@ class _MapScreenState extends State<MapScreen> {
                                               link.actionValue;
                                           AnnouncementItem? targetAnnouncement;
                                           try {
-                                            targetAnnouncement =
-                                                dummyAnnouncements.firstWhere(
-                                                  (announcement) =>
-                                                      announcement.id ==
-                                                      announcementId,
-                                                );
+                                            if (_allAnnouncements != null) {
+                                              targetAnnouncement =
+                                                  _allAnnouncements!.firstWhere(
+                                                (announcement) =>
+                                                    announcement.id ==
+                                                    announcementId,
+                                              );
+                                            }
                                           } catch (e) {
                                             targetAnnouncement = null;
                                           }
