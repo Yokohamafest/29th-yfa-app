@@ -48,6 +48,11 @@ enum PinType {
   building, // 建物全体を示すピン
 }
 
+enum PinVisualStyle {
+  defaultBox,
+  marker,
+}
+
 enum PinLinkActionType {
   url,
   map,
@@ -83,6 +88,7 @@ class MapPin {
   final Offset position; // マップ画像上のXY座標 (左上が0,0)
   final PinType type;
   final String title;
+  final PinVisualStyle visualStyle;
   final String? parentBuildingId; // どの建物に属しているかを示すID (屋外ならnull)
   final double? fontSize;
   final double? iconSize;
@@ -98,6 +104,7 @@ class MapPin {
     required this.position,
     required this.type,
     required this.title,
+    this.visualStyle = PinVisualStyle.defaultBox,
     this.parentBuildingId,
     this.fontSize, // デフォルトは10
     this.iconSize,
@@ -134,6 +141,7 @@ class MapPin {
       type: PinType.values.byName(json['type'] ?? 'location'),
       // もしJSONに'title'がなければ、'名称未設定'をデフォルト値として使う
       title: json['title'] ?? '名称未設定',
+      visualStyle: PinVisualStyle.values.byName(json['visualStyle'] ?? 'defaultBox'),
       parentBuildingId: json['parentBuildingId'],
       fontSize: (json['fontSize'] as num?)?.toDouble(),
       iconSize: (json['iconSize'] as num?)?.toDouble(),

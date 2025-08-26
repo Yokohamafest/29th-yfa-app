@@ -1287,51 +1287,24 @@ class _MapPinWidgetState extends State<MapPinWidget>
 
   @override
   Widget build(BuildContext context) {
-    IconData? serviceIcon;
-    if (widget.pin.type != PinType.building &&
-        widget.pin.type != PinType.location) {
-      switch (widget.pin.type) {
-        case PinType.restroom:
-          serviceIcon = Icons.wc;
-          break;
-        case PinType.vendingMachine:
-          serviceIcon = Icons.local_drink;
-          break;
-        case PinType.bikeParking:
-          serviceIcon = Icons.pedal_bike;
-          break;
-        case PinType.smokingArea:
-          serviceIcon = Icons.smoking_rooms_rounded;
-          break;
-        case PinType.recyclingStation:
-          serviceIcon = Icons.delete;
-          break;
-        default:
-          serviceIcon = Icons.info;
-      }
-    }
-
     return AnimatedBuilder(
       animation: _animationController,
       builder: (context, child) {
-        final borderColor = widget.isBlinking
+        final highlightColor = widget.isBlinking
             ? Color.lerp(
                 Colors.orangeAccent,
                 Colors.pinkAccent,
                 _animationController.value,
               )!
             : (widget.isHighlighted
-                  ? Colors.orangeAccent
-                  : Colors.grey.shade400);
+                ? Colors.orangeAccent
+                : Colors.grey.shade400);
 
         BoxShadow? glowShadow;
-
         if (widget.isBlinking) {
           final spread = 2.0 + (_animationController.value * 5.0);
-          final opacity = 255 + (0.5 + (_animationController.value * 0.4));
-
           glowShadow = BoxShadow(
-            color: borderColor.withAlpha(opacity.toInt()),
+            color: highlightColor.withAlpha(179),
             blurRadius: 8.0,
             spreadRadius: spread,
           );
@@ -1343,41 +1316,76 @@ class _MapPinWidgetState extends State<MapPinWidget>
           );
         }
 
-        return Container(
-          width: widget.width,
-          height: widget.height,
-          padding:
-              widget.pin.padding ??
-              const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8.0),
-            border: Border.all(color: borderColor, width: 1.0),
-            boxShadow: [
-              const BoxShadow(
-                color: Colors.black26,
-                blurRadius: 4,
-                offset: Offset(0, 2),
-              ),
-              if (glowShadow != null) glowShadow,
-            ],
-          ),
-          child: serviceIcon != null
-              ? Icon(
-                  serviceIcon,
-                  color: AppColors.primary,
-                  size: widget.pin.iconSize ?? 20,
-                )
-              : Text(
-                  widget.pin.title,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: widget.pin.fontSize ?? 10,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
+        if (widget.pin.visualStyle == PinVisualStyle.marker) {
+          final markerColor = widget.isHighlighted || widget.isBlinking
+              ? highlightColor
+              : Colors.red;
+
+          return Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [if (glowShadow != null) glowShadow],
+            ),
+            child: Icon(
+              Icons.location_pin,
+              color: markerColor,
+              size: 40,
+              shadows: const [
+                Shadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))
+              ],
+            ),
+          );
+        } else {
+          IconData? serviceIcon;
+          if (widget.pin.type != PinType.building &&
+              widget.pin.type != PinType.location) {
+            switch (widget.pin.type) {
+              case PinType.restroom: serviceIcon = Icons.wc; break;
+              case PinType.vendingMachine: serviceIcon = Icons.local_drink; break;
+              case PinType.bikeParking: serviceIcon = Icons.pedal_bike; break;
+              case PinType.smokingArea: serviceIcon = Icons.smoking_rooms_rounded; break;
+              case PinType.recyclingStation: serviceIcon = Icons.delete; break;
+              default: serviceIcon = Icons.info;
+            }
+          }
+
+          return Container(
+            width: widget.width,
+            height: widget.height,
+            padding: widget.pin.padding ??
+                const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8.0),
+              border: Border.all(color: highlightColor, width: 1.5),
+              boxShadow: [
+                const BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 4,
+                  offset: Offset(0, 2),
                 ),
-        );
+                if (glowShadow != null) glowShadow,
+              ],
+            ),
+            child: serviceIcon != null
+                ? Icon(
+                    serviceIcon,
+                    color: AppColors.primary,
+                    size: widget.pin.iconSize ?? 20,
+                  )
+                : Text(
+                    widget.pin.title,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: widget.pin.fontSize ?? 10,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+          );
+        }
       },
     );
   }
