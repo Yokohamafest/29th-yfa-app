@@ -209,7 +209,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         SizedBox(height: 420),
 
                         Container(
-                          height: 250,
+                          height: 300,
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               begin: Alignment.topCenter,
@@ -220,7 +220,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         ),
 
                         Positioned(
-                          top: 250,
+                          top: 300,
                           left: 0,
                           right: 0,
                           height: 50,
@@ -228,7 +228,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         ),
 
                         Positioned(
-                          top: 100,
+                          top: 162,
                           left: screenWidth * 0.55,
                           child: Image.asset(
                             'assets/images/title.png',
@@ -236,8 +236,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           ),
                         ),
                         Positioned(
-                          top: 0,
-                          left: screenWidth * 0.55,
+                          top: 62,
+                          left: screenWidth * 0.54,
                           child: Image.asset(
                             'assets/images/voyage_logo.png',
                             width: 150,
@@ -250,7 +250,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             builder: (context, slideInChild) {
                               return Positioned(
                                 left: _xAnimation!.value,
-                                top: 140,
+                                top: 190,
                                 child: slideInChild!,
                               );
                             },
@@ -278,7 +278,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           ),
 
                         Positioned(
-                          top: 275,
+                          top: 325,
                           left: 0,
                           right: 0,
                           child: Image.asset(
@@ -295,7 +295,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 16.0,
-                          vertical: 24.0,
+                          vertical: 16.0,
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -318,7 +318,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
 
           Positioned(
-            top: 45,
+            top: 65,
             left: 0,
             child: Builder(
               builder: (context) {
