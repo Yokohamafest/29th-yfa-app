@@ -30,6 +30,8 @@ class _OptionsScreenState extends State<OptionsScreen> {
 
   bool _generalNotificationsEnabled = true;
 
+  bool _isGeneralNotificationSwitchCoolingDown = false;
+
   late Future<List<InfoLinkItem>> _infoLinksFuture;
 
   @override
@@ -96,6 +98,12 @@ class _OptionsScreenState extends State<OptionsScreen> {
   }
 
   Future<void> _updateGeneralNotificationSetting(bool value) async {
+    if (_isGeneralNotificationSwitchCoolingDown) return;
+
+    setState(() {
+      _isGeneralNotificationSwitchCoolingDown = true;
+    });
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('general_notifications_enabled', value);
     setState(() {
@@ -113,6 +121,14 @@ class _OptionsScreenState extends State<OptionsScreen> {
         );
       }
     }
+
+    Future.delayed(const Duration(seconds: 5), () {
+      if (mounted) {
+        setState(() {
+          _isGeneralNotificationSwitchCoolingDown = false;
+        });
+      }
+    });
   }
 
   IconData _getIconForName(String name) {
@@ -149,7 +165,9 @@ class _OptionsScreenState extends State<OptionsScreen> {
             title: const Text('運営からのお知らせ通知'),
             subtitle: const Text('企画の中止や変更など、重要なお知らせを受け取ります'),
             value: _generalNotificationsEnabled,
-            onChanged: _updateGeneralNotificationSetting,
+            onChanged: _isGeneralNotificationSwitchCoolingDown
+                ? null
+                : _updateGeneralNotificationSetting,
           ),
 
           FavoriteNotificationSettings(
