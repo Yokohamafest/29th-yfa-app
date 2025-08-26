@@ -1260,6 +1260,8 @@ class _MapPinWidgetState extends State<MapPinWidget>
     with SingleTickerProviderStateMixin {
   late final AnimationController _animationController;
 
+  static const double referenceScreenWidth = 412.0; // 開発時に使っていたスマホの横幅をピンのサイズを正規化するための基準値にしている
+
   @override
   void initState() {
     super.initState();
@@ -1294,6 +1296,9 @@ class _MapPinWidgetState extends State<MapPinWidget>
 
   @override
   Widget build(BuildContext context) {
+    final double currentScreenWidth = MediaQuery.of(context).size.width;
+    final double scaleFactor = currentScreenWidth / referenceScreenWidth;
+
     return AnimatedBuilder(
       animation: _animationController,
       builder: (context, child) {
@@ -1328,7 +1333,7 @@ class _MapPinWidgetState extends State<MapPinWidget>
               ? highlightColor
               : Colors.red;
 
-          final double size = widget.pin.markerSize ?? 40.0;
+          final double size = (widget.pin.markerSize ?? 40.0) * scaleFactor;
 
           return Container(
             width: size,
@@ -1360,14 +1365,19 @@ class _MapPinWidgetState extends State<MapPinWidget>
             }
           }
 
+          final scaledFontSize = (widget.pin.fontSize ?? 10) * scaleFactor;
+          final scaledIconSize = (widget.pin.iconSize ?? 20) * scaleFactor;
+          final scaledPadding = (widget.pin.padding ??
+                  const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0)) *
+              scaleFactor;
+
           return Container(
             width: widget.width,
             height: widget.height,
-            padding: widget.pin.padding ??
-                const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+            padding: scaledPadding,
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(8.0),
+              borderRadius: BorderRadius.circular(8.0 * scaleFactor),
               border: Border.all(color: highlightColor, width: 1.5),
               boxShadow: [
                 const BoxShadow(
@@ -1382,13 +1392,13 @@ class _MapPinWidgetState extends State<MapPinWidget>
                 ? Icon(
                     serviceIcon,
                     color: AppColors.primary,
-                    size: widget.pin.iconSize ?? 20,
+                    size: scaledIconSize,
                   )
                 : Text(
                     widget.pin.title,
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: widget.pin.fontSize ?? 10,
+                      fontSize: scaledFontSize,
                       fontWeight: FontWeight.bold,
                       color: Colors.black87,
                     ),
