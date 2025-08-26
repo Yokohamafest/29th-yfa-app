@@ -4,11 +4,11 @@ import 'package:flutter_app_yfa/screens/favorites_screen.dart';
 import 'package:flutter_app_yfa/screens/home_screen.dart';
 import 'package:flutter_app_yfa/screens/map_screen.dart';
 import 'package:flutter_app_yfa/screens/timetable_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'services/data_service.dart';
 import 'services/notification_service.dart';
 import 'models/event_item.dart';
 import 'widgets/reminder_permission_dialog.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});
@@ -19,8 +19,8 @@ class MainScaffold extends StatefulWidget {
 
 class _MainScaffoldState extends State<MainScaffold> {
   final DataService _dataService = DataService();
-  final NotificationService _notificationService = NotificationService();
   List<EventItem>? _allEvents;
+  final NotificationService _notificationService = NotificationService();
 
   int _selectedIndex = 0;
   final Set<String> _favoriteEventIds = {};

@@ -183,4 +183,15 @@ class NotificationService {
       payload: payload,
     );
   }
+
+  Future<void> requestNotificationPermission() async {
+    final status = await Permission.notification.request();
+    if (status.isGranted) {
+      debugPrint("通知権限が許可されました。");
+    } else if (status.isDenied) {
+      debugPrint("通知権限が拒否されました。");
+    } else if (status.isPermanentlyDenied) {
+      debugPrint("通知権限が恒久的に拒否されています。設定画面から変更する必要があります。");
+    }
+  }
 }

@@ -2,11 +2,12 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter/services.dart';
-
 import '../main_scaffold.dart';
 import '../services/data_service.dart';
 import '../firebase_options.dart';
 import '../widgets/compass_loading_indicator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../services/notification_service.dart';
 
 class LoadingScreen extends StatefulWidget {
   const LoadingScreen({super.key});
@@ -16,6 +17,7 @@ class LoadingScreen extends StatefulWidget {
 }
 
 class _LoadingScreenState extends State<LoadingScreen> {
+  final NotificationService _notificationService = NotificationService();
   final ValueNotifier<double> _progressNotifier = ValueNotifier(0.0);
 
   @override
@@ -38,6 +40,11 @@ class _LoadingScreenState extends State<LoadingScreen> {
         DeviceOrientation.portraitUp,
       ]);
       await Future.delayed(const Duration(milliseconds: 200));
+
+      await _checkAndRequestNotificationPermission();
+
+      await _notificationService.init();
+
 
       _progressNotifier.value = 0.4;
       await Firebase.initializeApp(
@@ -62,6 +69,16 @@ class _LoadingScreenState extends State<LoadingScreen> {
     } catch (e) {
       print("!!!!! 初期化処理中にエラーが発生しました !!!!!");
       print(e.toString());
+    }
+  }
+
+  Future<void> _checkAndRequestNotificationPermission() async {
+    final prefs = await SharedPreferences.getInstance();
+    final bool hasRequested = prefs.getBool('has_requested_notification_permission') ?? false;
+
+    if (!hasRequested) {
+      await _notificationService.requestNotificationPermission();
+      await prefs.setBool('has_requested_notification_permission', true);
     }
   }
 
