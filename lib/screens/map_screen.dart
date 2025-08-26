@@ -25,7 +25,7 @@ class MapScreen extends StatefulWidget {
   final Function(String) onToggleFavorite;
   final Function(String) onNavigateToMap;
   final Function(int) changeTab;
-  final VoidCallback onSettingsChanged;
+  final Future<void> Function() onSettingsChanged;
 
   const MapScreen({
     super.key,
@@ -179,7 +179,8 @@ class _MapScreenState extends State<MapScreen> {
     try {
       targetPin = _allPins!.firstWhere(
         (pin) =>
-            pin.type == PinType.location && targetEvent!.locations.contains(pin.title),
+            pin.type == PinType.location &&
+            targetEvent!.locations.contains(pin.title),
       );
     } catch (e) {
       targetPin = null;
@@ -293,7 +294,7 @@ class _MapScreenState extends State<MapScreen> {
           bool shouldHighlight = false;
           if (pin.type == PinType.location) {
             shouldHighlight = filteredEvents.any(
-              (event) => event.locations.contains(pin.title)
+              (event) => event.locations.contains(pin.title),
             );
           } else if (pin.type == PinType.building) {
             const buildingAreaMap = {
@@ -541,10 +542,10 @@ class _MapScreenState extends State<MapScreen> {
                                             if (_allAnnouncements != null) {
                                               targetAnnouncement =
                                                   _allAnnouncements!.firstWhere(
-                                                (announcement) =>
-                                                    announcement.id ==
-                                                    announcementId,
-                                              );
+                                                    (announcement) =>
+                                                        announcement.id ==
+                                                        announcementId,
+                                                  );
                                             }
                                           } catch (e) {
                                             targetAnnouncement = null;
@@ -1155,59 +1156,51 @@ class _MapScreenState extends State<MapScreen> {
                       minScale: 0.5,
                       maxScale: 5.0,
                       child: Center(
-                        child: Stack(
-                          children: [
-                            CachedNetworkImage(
-                              imageUrl: _currentMap!.imagePath,
-                              fit: BoxFit.cover,
-                              placeholder: (context, url) => Shimmer.fromColors(
-                                baseColor: Colors.grey.shade300,
-                                highlightColor: AppColors.tertiary.withAlpha(
-                                  150,
+                        child: AspectRatio(
+                          aspectRatio: _currentMap!.aspectRatio,
+                          child: Stack(
+                            children: [
+                              CachedNetworkImage(
+                                key: ValueKey(_currentMap!.id),
+                                imageUrl: _currentMap!.imagePath,
+                                fit: BoxFit.contain,
+                                placeholder: (context, url) => Shimmer.fromColors(
+                                  baseColor: Colors.grey.shade300,
+                                  highlightColor: AppColors.tertiary.withAlpha(150),
+                                  child: Container(color: Colors.white),
                                 ),
-                                child: Container(color: Colors.white),
-                              ),
-                              errorWidget: (context, url, error) => Container(
-                                color: Colors.grey[300],
-                                child: const Center(
-                                  child: Icon(
-                                    Icons.image_not_supported,
-                                    color: Colors.grey,
+                                errorWidget: (context, url, error) => Container(
+                                  color: Colors.grey[300],
+                                  child: const Center(
+                                    child: Icon(
+                                      Icons.image_not_supported,
+                                      color: Colors.grey,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-
-                            Positioned.fill(
-                              child: LayoutBuilder(
-                                builder: (context, constraints) {
-                                  return Stack(
-                                    children: currentPins
-                                        .where((pin) {
-                                          if (pin.id ==
-                                              _highlightedPinIdForNavigation) {
-                                            return true;
-                                          }
-                                          if (pin.hideUntilZoomed) {
-                                            return _currentScale >=
-                                                _zoomThreshold;
-                                          }
-                                          return true;
-                                        })
-                                        .map((pin) {
-                                          return _buildMapPin(
-                                            pin,
-                                            constraints,
-                                            _allEvents!,
-                                            _allPins!,
-                                          );
-                                        })
-                                        .toList(),
-                                  );
-                                },
+                              Positioned.fill(
+                                child: LayoutBuilder(
+                                  builder: (context, constraints) {
+                                    return Stack(
+                                      children: currentPins.where((pin) {
+                                        if (pin.id == _highlightedPinIdForNavigation) return true;
+                                        if (pin.hideUntilZoomed) return _currentScale >= _zoomThreshold;
+                                        return true;
+                                      }).map((pin) {
+                                        return _buildMapPin(
+                                          pin,
+                                          constraints,
+                                          _allEvents!,
+                                          _allPins!,
+                                        );
+                                      }).toList(),
+                                    );
+                                  },
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -1260,7 +1253,8 @@ class _MapPinWidgetState extends State<MapPinWidget>
     with SingleTickerProviderStateMixin {
   late final AnimationController _animationController;
 
-  static const double referenceScreenWidth = 412.0; // 開発時に使っていたスマホの横幅をピンのサイズを正規化するための基準値にしている
+  static const double referenceScreenWidth =
+      412.0; // 開発時に使っていたスマホの横幅をピンのサイズを正規化するための基準値にしている
 
   @override
   void initState() {
@@ -1309,8 +1303,8 @@ class _MapPinWidgetState extends State<MapPinWidget>
                 _animationController.value,
               )!
             : (widget.isHighlighted
-                ? Colors.orangeAccent
-                : Colors.grey.shade400);
+                  ? Colors.orangeAccent
+                  : Colors.grey.shade400);
 
         BoxShadow? glowShadow;
         if (widget.isBlinking) {
@@ -1347,7 +1341,11 @@ class _MapPinWidgetState extends State<MapPinWidget>
               color: markerColor,
               size: size,
               shadows: const [
-                Shadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))
+                Shadow(
+                  color: Colors.black26,
+                  blurRadius: 4,
+                  offset: Offset(0, 2),
+                ),
               ],
             ),
           );
@@ -1356,18 +1354,30 @@ class _MapPinWidgetState extends State<MapPinWidget>
           if (widget.pin.type != PinType.building &&
               widget.pin.type != PinType.location) {
             switch (widget.pin.type) {
-              case PinType.restroom: serviceIcon = Icons.wc; break;
-              case PinType.vendingMachine: serviceIcon = Icons.local_drink; break;
-              case PinType.bikeParking: serviceIcon = Icons.pedal_bike; break;
-              case PinType.smokingArea: serviceIcon = Icons.smoking_rooms_rounded; break;
-              case PinType.recyclingStation: serviceIcon = Icons.delete; break;
-              default: serviceIcon = Icons.info;
+              case PinType.restroom:
+                serviceIcon = Icons.wc;
+                break;
+              case PinType.vendingMachine:
+                serviceIcon = Icons.local_drink;
+                break;
+              case PinType.bikeParking:
+                serviceIcon = Icons.pedal_bike;
+                break;
+              case PinType.smokingArea:
+                serviceIcon = Icons.smoking_rooms_rounded;
+                break;
+              case PinType.recyclingStation:
+                serviceIcon = Icons.delete;
+                break;
+              default:
+                serviceIcon = Icons.info;
             }
           }
 
           final scaledFontSize = (widget.pin.fontSize ?? 10) * scaleFactor;
           final scaledIconSize = (widget.pin.iconSize ?? 20) * scaleFactor;
-          final scaledPadding = (widget.pin.padding ??
+          final scaledPadding =
+              (widget.pin.padding ??
                   const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0)) *
               scaleFactor;
 

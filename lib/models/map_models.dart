@@ -20,11 +20,13 @@ class MapInfo {
   final String name;
   final String imagePath;
   final int sortOrder;
+  final double aspectRatio;
   const MapInfo({
     required this.id,
     required this.name,
     required this.imagePath,
     required this.sortOrder,
+    required this.aspectRatio,
   });
 
   factory MapInfo.fromJson(Map<String, dynamic> json) {
@@ -33,6 +35,7 @@ class MapInfo {
       name: json['name'] ?? " ",
       imagePath: json['imagePath'] ?? " ",
       sortOrder: json['sortOrder'] ?? 99,
+      aspectRatio: (json['aspectRatio'] as num?)?.toDouble() ?? 16/9,
     );
   }
 }

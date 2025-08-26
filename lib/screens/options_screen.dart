@@ -11,7 +11,7 @@ import 'package:permission_handler/permission_handler.dart';
 import '../utils/app_colors.dart';
 
 class OptionsScreen extends StatefulWidget {
-  final VoidCallback onSettingsChanged;
+  final Future<void> Function() onSettingsChanged;
   final NotificationService notificationService;
 
   const OptionsScreen({

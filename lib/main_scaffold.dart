@@ -39,7 +39,7 @@ class _MainScaffoldState extends State<MainScaffold> {
     _loadFavorites();
   }
 
-  void _rescheduleAllReminders() async {
+  Future<void> _rescheduleAllReminders() async {
     if (_allEvents == null) return;
 
     final prefs = await SharedPreferences.getInstance();
@@ -59,7 +59,7 @@ class _MainScaffoldState extends State<MainScaffold> {
     final permissionsStatus = await _notificationService.checkPermissions();
     if (!permissionsStatus.allGranted) {
       if (mounted) {
-        showDialog(
+        await showDialog<bool>(
           context: context,
           builder: (context) => NotificationPermissionDialog(permissionsStatus: permissionsStatus),
         );

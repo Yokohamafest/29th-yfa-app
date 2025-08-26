@@ -16,7 +16,7 @@ class FavoritesScreen extends StatefulWidget {
   final Function(String) onToggleFavorite;
   final Function(String) onNavigateToMap;
   final Function(int) changeTab;
-  final VoidCallback onSettingsChanged;
+  final Future<void> Function() onSettingsChanged;
 
   const FavoritesScreen({
     super.key,
