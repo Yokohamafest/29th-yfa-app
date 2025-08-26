@@ -1321,9 +1321,11 @@ class _MapPinWidgetState extends State<MapPinWidget>
               ? highlightColor
               : Colors.red;
 
+          final double size = widget.pin.markerSize ?? 40.0;
+
           return Container(
-            width: 40,
-            height: 40,
+            width: size,
+            height: size,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               boxShadow: [if (glowShadow != null) glowShadow],
@@ -1331,7 +1333,7 @@ class _MapPinWidgetState extends State<MapPinWidget>
             child: Icon(
               Icons.location_pin,
               color: markerColor,
-              size: 40,
+              size: size,
               shadows: const [
                 Shadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))
               ],
