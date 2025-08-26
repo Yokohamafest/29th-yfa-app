@@ -171,13 +171,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       body: Stack(
         children: [
           Column(
-            children: [
-              Expanded(
-                child: Container(
-                  color: AppColors.primary,
-                ),
-              ),
-            ],
+            children: [Expanded(child: Container(color: AppColors.primary))],
           ),
 
           FutureBuilder<List<dynamic>>(
@@ -405,7 +399,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   'お知らせ一覧',
                   style: TextStyle(color: AppColors.primary),
                 ),
-                trailing: const Icon(Icons.arrow_forward, color: AppColors.primary),
+                trailing: const Icon(
+                  Icons.arrow_forward,
+                  color: AppColors.primary,
+                ),
                 onTap: () {
                   Navigator.push(
                     context,
@@ -435,7 +432,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-
       children: [
         const Text(
           '注目企画',
@@ -447,7 +443,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ),
         const SizedBox(height: 8),
         SizedBox(
-          height: (MediaQuery.of(context).size.width * 0.9) * 9 / 16,
+          height: (MediaQuery.of(context).size.width * 0.85),
           child: PageView.builder(
             controller: _pageController,
             itemCount: 10000,
@@ -458,61 +454,70 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               final realIndex = index % visibleSpotlights.length;
               final spotlight = visibleSpotlights[realIndex];
 
-              return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 8.0),
-                clipBehavior: Clip.antiAlias,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.0),
-                ),
-                child: InkWell(
-                  onTap: () async {
-                    if (spotlight.actionType == SpotlightActionType.event) {
-                      final String eventId = spotlight.actionValue;
-                      EventItem? targetEvent;
-                      try {
-                        targetEvent = allEvents.firstWhere(
-                          (e) => e.id == eventId,
-                        );
-                      } catch (e) {
-                        targetEvent = null;
-                      }
-                      if (targetEvent != null) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => EventDetailScreen(
-                              event: targetEvent!,
-                              favoriteEventIds: widget.favoriteEventIds,
-                              onToggleFavorite: widget.onToggleFavorite,
-                              onNavigateToMap: widget.onNavigateToMap,
+              final viewportWidth = MediaQuery.of(context).size.width * 0.85;
+              const double horizontalSpacing = 30.0;
+
+              return Center(
+                child: SizedBox(
+                  width: viewportWidth - horizontalSpacing,
+                  height: viewportWidth - horizontalSpacing,
+                  child: Card(
+                    clipBehavior: Clip.antiAlias,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    child: InkWell(
+                      onTap: () async {
+                        if (spotlight.actionType == SpotlightActionType.event) {
+                          final String eventId = spotlight.actionValue;
+                          EventItem? targetEvent;
+                          try {
+                            targetEvent = allEvents.firstWhere(
+                              (e) => e.id == eventId,
+                            );
+                          } catch (e) {
+                            targetEvent = null;
+                          }
+                          if (targetEvent != null) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => EventDetailScreen(
+                                  event: targetEvent!,
+                                  favoriteEventIds: widget.favoriteEventIds,
+                                  onToggleFavorite: widget.onToggleFavorite,
+                                  onNavigateToMap: widget.onNavigateToMap,
+                                ),
+                              ),
+                            );
+                          }
+                        } else if (spotlight.actionType ==
+                            SpotlightActionType.url) {
+                          final url = Uri.parse(spotlight.actionValue);
+                          if (await canLaunchUrl(url)) {
+                            await launchUrl(url);
+                          }
+                        }
+                      },
+                      child: AspectRatio(
+                        aspectRatio: 1 / 1,
+                        child: CachedNetworkImage(
+                          imageUrl: spotlight.imagePath,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Shimmer.fromColors(
+                            baseColor: Colors.grey.shade100,
+                            highlightColor: AppColors.tertiary.withAlpha(150),
+                            child: Container(color: Colors.white),
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            color: Colors.grey[300],
+                            child: const Center(
+                              child: Icon(
+                                Icons.image_not_supported,
+                                color: Colors.grey,
+                              ),
                             ),
                           ),
-                        );
-                      }
-                    } else if (spotlight.actionType ==
-                        SpotlightActionType.url) {
-                      final url = Uri.parse(spotlight.actionValue);
-                      if (await canLaunchUrl(url)) {
-                        await launchUrl(url);
-                      }
-                    }
-                  },
-                  child: CachedNetworkImage(
-                    imageUrl: spotlight.imagePath,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Shimmer.fromColors(
-                      baseColor: Colors.grey.shade100,
-                      highlightColor: AppColors.tertiary.withAlpha(150),
-                      child: Container(
-                        color: Colors.white,
-                      ),
-                    ),
-                    errorWidget: (context, url, error) => Container(
-                      color: Colors.grey[300],
-                      child: const Center(
-                        child: Icon(
-                          Icons.image_not_supported,
-                          color: Colors.grey,
                         ),
                       ),
                     ),
