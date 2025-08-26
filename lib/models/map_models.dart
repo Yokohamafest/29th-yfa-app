@@ -92,6 +92,7 @@ class MapPin {
   final String? parentBuildingId; // どの建物に属しているかを示すID (屋外ならnull)
   final double? fontSize;
   final double? iconSize;
+  final double? markerSize;
   final EdgeInsets? padding;
   final String? detailText;
   final bool showDetailText;
@@ -109,6 +110,7 @@ class MapPin {
     this.fontSize, // デフォルトは10
     this.iconSize,
     this.padding,
+    this.markerSize,
     this.detailText,
     this.showDetailText = true,
     this.link,
@@ -146,6 +148,7 @@ class MapPin {
       fontSize: (json['fontSize'] as num?)?.toDouble(),
       iconSize: (json['iconSize'] as num?)?.toDouble(),
       padding: padding,
+      markerSize: (json['markerSize'] as num?)?.toDouble(),
       detailText: json['detailText'],
       link: json['link'] != null ? PinLink.fromJson(json['link']) : null,
       hideUntilZoomed: json['hideUntilZoomed'] ?? false,
