@@ -348,11 +348,18 @@ class _MapScreenState extends State<MapScreen> {
     final absoluteX = pin.position.dx * constraints.maxWidth;
     final absoluteY = pin.position.dy * constraints.maxHeight;
 
+    final Offset translationOffset;
+    if (pin.visualStyle == PinVisualStyle.marker) {
+      translationOffset = const Offset(-0.5, -1.0);
+    } else {
+      translationOffset = const Offset(-0.5, -0.5);
+    }
+
     return Positioned(
       left: absoluteX,
       top: absoluteY,
       child: FractionalTranslation(
-        translation: const Offset(-0.5, -0.5),
+        translation: translationOffset,
         child: InkWell(
           onTap: () {
             showModalBottomSheet(
