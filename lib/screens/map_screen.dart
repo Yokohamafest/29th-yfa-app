@@ -351,6 +351,23 @@ class _MapScreenState extends State<MapScreen> {
                 borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
               ),
               builder: (context) {
+                const servicePinTypes = {
+                  PinType.restroom,
+                  PinType.vendingMachine,
+                  PinType.smokingArea,
+                  PinType.bikeParking,
+                  PinType.recyclingStation,
+                };
+
+                final servicesInBuilding = _allPins
+                    .where((childPin) =>
+                        childPin.parentBuildingId == pin.id &&
+                        servicePinTypes.contains(childPin.type))
+                    .toList();
+
+                final uniqueServiceTypes =
+                    servicesInBuilding.map((pin) => pin.type).toSet().toList();
+
                 List<EventItem> attachedEvents = [];
 
                 final visibleEvents = _allEvents
@@ -376,12 +393,6 @@ class _MapScreenState extends State<MapScreen> {
                       .where((event) => event.locations.contains(pin.title))
                       .toList();
                 }
-
-                final servicesInBuilding = _allPins
-                    .where(
-                      (servicePin) => servicePin.parentBuildingId == pin.id,
-                    )
-                    .toList();
 
                 final bool isEventFilterActive =
                     _currentFilterType == MapFilterType.event &&
@@ -614,7 +625,7 @@ class _MapScreenState extends State<MapScreen> {
                             const Divider(height: 24),
 
                             if (pin.type == PinType.building &&
-                                servicesInBuilding.isNotEmpty) ...[
+                                uniqueServiceTypes.isNotEmpty) ...[
                               const Text(
                                 '館内設備',
                                 style: TextStyle(
@@ -625,32 +636,23 @@ class _MapScreenState extends State<MapScreen> {
                               ),
                               const SizedBox(height: 8.0),
                               Wrap(
-                                spacing: 16.0,
-                                runSpacing: 8.0,
-                                children: servicesInBuilding.map((servicePin) {
+                                spacing: 8.0,
+                                runSpacing: 4.0,
+                                children: uniqueServiceTypes.map((serviceType) {
                                   IconData serviceIcon;
-                                  switch (servicePin.type) {
-                                    case PinType.restroom:
-                                      serviceIcon = Icons.wc;
-                                      break;
-                                    case PinType.vendingMachine:
-                                      serviceIcon = Icons.local_drink;
-                                      break;
-                                    case PinType.smokingArea:
-                                      serviceIcon = Icons.smoking_rooms;
-                                      break;
-                                    case PinType.bikeParking:
-                                      serviceIcon = Icons.pedal_bike;
-                                      break;
-                                    case PinType.recyclingStation:
-                                      serviceIcon = Icons.recycling;
-                                      break;
-                                    default:
-                                      serviceIcon = Icons.info;
+                                  switch (serviceType) {
+                                    case PinType.restroom: serviceIcon = Icons.wc; break;
+                                    case PinType.vendingMachine: serviceIcon = Icons.local_drink; break;
+                                    case PinType.smokingArea: serviceIcon = Icons.smoking_rooms; break;
+                                    case PinType.bikeParking: serviceIcon = Icons.pedal_bike; break;
+                                    case PinType.recyclingStation: serviceIcon = Icons.recycling; break;
+                                    default: serviceIcon = Icons.info;
                                   }
                                   return Chip(
-                                    avatar: Icon(serviceIcon, size: 16),
-                                    label: Text(servicePin.title),
+                                    avatar: Icon(serviceIcon, size: 16, color: Colors.black54),
+                                    label: Text(serviceType.displayName),
+                                    backgroundColor: Colors.grey.shade200,
+                                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
                                   );
                                 }).toList(),
                               ),
