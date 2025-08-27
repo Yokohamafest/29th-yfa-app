@@ -42,21 +42,22 @@ class _LoadingScreenState extends State<LoadingScreen> {
       await Future.delayed(const Duration(milliseconds: 200));
 
       await _checkAndRequestNotificationPermission();
-
       await _notificationService.init();
 
-
-      _progressNotifier.value = 0.4;
+      _progressNotifier.value = 0.3;
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
       await Future.delayed(const Duration(milliseconds: 200));
 
-      _progressNotifier.value = 0.7;
+      _progressNotifier.value = 0.5;
       await initializeDateFormatting('ja_JP');
       await Future.delayed(const Duration(milliseconds: 300));
 
-      DataService().registerDeviceToken();
+      _progressNotifier.value = 0.7;
+      await DataService.instance.initialize();
+
+      DataService.instance.registerDeviceToken();
 
       _progressNotifier.value = 1.0;
       await Future.delayed(const Duration(milliseconds: 600));

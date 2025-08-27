@@ -42,13 +42,10 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
-  final DataService _dataService = DataService();
-  late Future<List<dynamic>> _mapDataFuture;
-
-  List<MapInfo>? _allMaps;
-  List<MapPin>? _allPins;
-  List<EventItem>? _allEvents;
-  List<AnnouncementItem>? _allAnnouncements;
+  final List<MapInfo> _allMaps = DataService.instance.maps;
+  final List<MapPin> _allPins = DataService.instance.pins;
+  final List<EventItem> _allEvents = DataService.instance.events;
+  final List<AnnouncementItem> _allAnnouncements = DataService.instance.announcements;
 
   BuildingSelection _selectedBuilding = BuildingSelection.campus;
   MapInfo? _currentMap;
@@ -83,43 +80,27 @@ class _MapScreenState extends State<MapScreen> {
   @override
   void initState() {
     super.initState();
-    _mapDataFuture = Future.wait([
-      _dataService.getMaps(),
-      _dataService.getPins(),
-      _dataService.getEvents(),
-      _dataService.getAnnouncements(),
-    ]);
-
-    _mapDataFuture.then((data) {
-      if (mounted) {
-        _allMaps = data[0] as List<MapInfo>;
-        _allPins = data[1] as List<MapPin>;
-        _allEvents = data[2] as List<EventItem>;
-        _allAnnouncements = data[3] as List<AnnouncementItem>;
 
         _floorMapsByBuilding = {
           BuildingSelection.building2:
-              _allMaps!.where((m) => m.id.name.startsWith('building2')).toList()
+              _allMaps.where((m) => m.id.name.startsWith('building2')).toList()
                 ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder)),
           BuildingSelection.building3:
-              _allMaps!.where((m) => m.id.name.startsWith('building3')).toList()
+              _allMaps.where((m) => m.id.name.startsWith('building3')).toList()
                 ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder)),
           BuildingSelection.building4:
-              _allMaps!.where((m) => m.id.name.startsWith('building4')).toList()
+              _allMaps.where((m) => m.id.name.startsWith('building4')).toList()
                 ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder)),
         };
 
-        setState(() {
-          _currentMap = _allMaps!.firstWhere((m) => m.id == MapType.campus);
-        });
+    _currentMap = _allMaps.firstWhere((m) => m.id == MapType.campus);
 
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (widget.highlightedEventId != null) {
-            _navigateToEvent(widget.highlightedEventId!);
-          }
-        });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && widget.highlightedEventId != null) {
+        _navigateToEvent(widget.highlightedEventId!);
       }
     });
+
     _transformationController.addListener(() {
       if (mounted) {
         setState(() {
@@ -168,7 +149,7 @@ class _MapScreenState extends State<MapScreen> {
   void _navigateToEvent(String eventId) {
     EventItem? targetEvent;
     try {
-      targetEvent = _allEvents!.firstWhere((e) => e.id == eventId);
+      targetEvent = _allEvents.firstWhere((e) => e.id == eventId);
     } catch (e) {
       targetEvent = null;
     }
@@ -177,7 +158,7 @@ class _MapScreenState extends State<MapScreen> {
 
     MapPin? targetPin;
     try {
-      targetPin = _allPins!.firstWhere(
+      targetPin = _allPins.firstWhere(
         (pin) =>
             pin.type == PinType.location &&
             targetEvent!.locations.contains(pin.title),
@@ -207,7 +188,7 @@ class _MapScreenState extends State<MapScreen> {
       if (buildingEntry != null) {
         final buildingTitle = buildingEntry.key;
         try {
-          targetPin = _allPins!.firstWhere(
+          targetPin = _allPins.firstWhere(
             (pin) => pin.type == PinType.building && pin.title == buildingTitle,
           );
         } catch (e) {
@@ -218,7 +199,7 @@ class _MapScreenState extends State<MapScreen> {
 
     if (targetPin == null) return;
 
-    final MapInfo targetMap = _allMaps!.firstWhere(
+    final MapInfo targetMap = _allMaps.firstWhere(
       (map) => map.id == targetPin!.mapId,
     );
 
@@ -267,7 +248,7 @@ class _MapScreenState extends State<MapScreen> {
           _selectedCategories.isNotEmpty ||
           _filterFavorites;
       if (isFilterActive) {
-        final filteredEvents = _allEvents!.where((event) {
+        final filteredEvents = _allEvents.where((event) {
           if (_selectedDays.isNotEmpty) {
             final isDayMatch =
                 (_selectedDays.contains(FestivalDay.dayOne) &&
@@ -290,7 +271,7 @@ class _MapScreenState extends State<MapScreen> {
           return true;
         }).toList();
 
-        for (final pin in _allPins!) {
+        for (final pin in _allPins) {
           bool shouldHighlight = false;
           if (pin.type == PinType.location) {
             shouldHighlight = filteredEvents.any(
@@ -319,7 +300,7 @@ class _MapScreenState extends State<MapScreen> {
     } else {
       isFilterActive = _selectedServiceTypes.isNotEmpty;
       if (isFilterActive) {
-        for (final pin in _allPins!) {
+        for (final pin in _allPins) {
           if (_selectedServiceTypes.contains(pin.type)) {
             newHighlightedPinIds.add(pin.id);
 
@@ -372,7 +353,7 @@ class _MapScreenState extends State<MapScreen> {
               builder: (context) {
                 List<EventItem> attachedEvents = [];
 
-                final visibleEvents = _allEvents!
+                final visibleEvents = _allEvents
                     .where((event) => !event.hideFromList)
                     .toList();
 
@@ -396,7 +377,7 @@ class _MapScreenState extends State<MapScreen> {
                       .toList();
                 }
 
-                final servicesInBuilding = _allPins!
+                final servicesInBuilding = _allPins
                     .where(
                       (servicePin) => servicePin.parentBuildingId == pin.id,
                     )
@@ -466,7 +447,7 @@ class _MapScreenState extends State<MapScreen> {
                                         setState(() {
                                           _selectedBuilding =
                                               newBuildingSelection;
-                                          _currentMap = _allMaps!.firstWhere(
+                                          _currentMap = _allMaps.firstWhere(
                                             (map) => map.id == targetMapId,
                                           );
                                         });
@@ -506,7 +487,7 @@ class _MapScreenState extends State<MapScreen> {
                                           final eventId = link.actionValue;
                                           EventItem? targetEvent;
                                           try {
-                                            targetEvent = _allEvents!
+                                            targetEvent = _allEvents
                                                 .firstWhere(
                                                   (e) => e.id == eventId,
                                                 );
@@ -539,15 +520,13 @@ class _MapScreenState extends State<MapScreen> {
                                               link.actionValue;
                                           AnnouncementItem? targetAnnouncement;
                                           try {
-                                            if (_allAnnouncements != null) {
-                                              targetAnnouncement =
-                                                  _allAnnouncements!.firstWhere(
-                                                    (announcement) =>
-                                                        announcement.id ==
-                                                        announcementId,
-                                                  );
-                                            }
-                                          } catch (e) {
+                                            targetAnnouncement =
+                                                _allAnnouncements.firstWhere(
+                                                  (announcement) =>
+                                                      announcement.id ==
+                                                      announcementId,
+                                                );
+                                                                                    } catch (e) {
                                             targetAnnouncement = null;
                                           }
                                           if (targetAnnouncement != null) {
@@ -585,7 +564,7 @@ class _MapScreenState extends State<MapScreen> {
                                           try {
                                             final targetMapType = MapType.values
                                                 .byName(mapIdString);
-                                            targetMap = _allMaps!.firstWhere(
+                                            targetMap = _allMaps.firstWhere(
                                               (map) => map.id == targetMapType,
                                             );
                                           } catch (e) {
@@ -1042,7 +1021,7 @@ class _MapScreenState extends State<MapScreen> {
                 _selectedBuilding = newSelection.first;
                 _highlightedPinIdForNavigation = null;
                 if (_selectedBuilding == BuildingSelection.campus) {
-                  _currentMap = _allMaps!.firstWhere(
+                  _currentMap = _allMaps.firstWhere(
                     (m) => m.id == MapType.campus,
                   );
                 } else {
@@ -1087,30 +1066,21 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_currentMap == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text("マップ")),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final currentPins = _allPins
+        .where((p) => p.mapId == _currentMap!.id)
+        .toList();
+
     return Stack(
       children: [
-        FutureBuilder<List<dynamic>>(
-          future: _mapDataFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting ||
-                _currentMap == null) {
-              return Scaffold(
-                appBar: AppBar(title: const Text('マップ')),
-                body: const Center(child: CircularProgressIndicator()),
-              );
-            }
-            if (snapshot.hasError) {
-              return Scaffold(
-                appBar: AppBar(title: const Text('マップ')),
-                body: const Center(child: Text('データの読み込みに失敗しました')),
-              );
-            }
-
-            final currentPins = _allPins!
-                .where((p) => p.mapId == _currentMap!.id)
-                .toList();
-
-            return Scaffold(
+        _allMaps.isEmpty ? const Center(child: Text('表示できるマップがありません'))
+        : Scaffold(
               appBar: AppBar(
                 title: Text(
                   "マップ",
@@ -1164,11 +1134,13 @@ class _MapScreenState extends State<MapScreen> {
                                 key: ValueKey(_currentMap!.id),
                                 imageUrl: _currentMap!.imagePath,
                                 fit: BoxFit.contain,
-                                placeholder: (context, url) => Shimmer.fromColors(
-                                  baseColor: Colors.grey.shade300,
-                                  highlightColor: AppColors.tertiary.withAlpha(150),
-                                  child: Container(color: Colors.white),
-                                ),
+                                placeholder: (context, url) =>
+                                    Shimmer.fromColors(
+                                      baseColor: Colors.grey.shade300,
+                                      highlightColor: AppColors.tertiary
+                                          .withAlpha(150),
+                                      child: Container(color: Colors.white),
+                                    ),
                                 errorWidget: (context, url, error) => Container(
                                   color: Colors.grey[300],
                                   child: const Center(
@@ -1183,18 +1155,27 @@ class _MapScreenState extends State<MapScreen> {
                                 child: LayoutBuilder(
                                   builder: (context, constraints) {
                                     return Stack(
-                                      children: currentPins.where((pin) {
-                                        if (pin.id == _highlightedPinIdForNavigation) return true;
-                                        if (pin.hideUntilZoomed) return _currentScale >= _zoomThreshold;
-                                        return true;
-                                      }).map((pin) {
-                                        return _buildMapPin(
-                                          pin,
-                                          constraints,
-                                          _allEvents!,
-                                          _allPins!,
-                                        );
-                                      }).toList(),
+                                      children: currentPins
+                                          .where((pin) {
+                                            if (pin.id ==
+                                                _highlightedPinIdForNavigation) {
+                                              return true;
+                                            }
+                                            if (pin.hideUntilZoomed) {
+                                              return _currentScale >=
+                                                  _zoomThreshold;
+                                            }
+                                            return true;
+                                          })
+                                          .map((pin) {
+                                            return _buildMapPin(
+                                              pin,
+                                              constraints,
+                                              _allEvents,
+                                              _allPins,
+                                            );
+                                          })
+                                          .toList(),
                                     );
                                   },
                                 ),
@@ -1207,10 +1188,8 @@ class _MapScreenState extends State<MapScreen> {
                   ),
                 ],
               ),
-            );
-          },
-        ),
-        if (_showTutorialOverlay)
+            ),
+          if (_showTutorialOverlay)
           MapTutorialOverlay(
             onDismiss: () async {
               final prefs = await SharedPreferences.getInstance();

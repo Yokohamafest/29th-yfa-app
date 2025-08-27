@@ -36,8 +36,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
-  final DataService _dataService = DataService();
-  late Future<List<dynamic>> _homeDataFuture;
+  final DataService _dataService = DataService.instance;
   AnimationController? _slideInController;
   late final AnimationController _rockingController;
   Animation<double>? _xAnimation;
@@ -50,12 +49,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-
-    _homeDataFuture = Future.wait([
-      _dataService.getAnnouncements(),
-      _dataService.getSpotlights(),
-      _dataService.getEvents(),
-    ]);
 
     _rockingController = AnimationController(
       vsync: this,
@@ -123,6 +116,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       });
     }
 
+    final announcements = _dataService.announcements;
+    final spotlights = _dataService.spotlights;
+    final allEvents = _dataService.events;
+
     return Scaffold(
       drawer: Drawer(
         child: ListView(
@@ -174,34 +171,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             children: [Expanded(child: Container(color: AppColors.primary))],
           ),
 
-          FutureBuilder<List<dynamic>>(
-            future: _homeDataFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Positioned.fill(
-                  top: 420,
-                  child: Center(
-                    child: CircularProgressIndicator(color: Colors.white),
-                  ),
-                );
-              }
-              if (snapshot.hasError || !snapshot.hasData) {
-                return const Positioned.fill(
-                  top: 420,
-                  child: Center(
-                    child: Text(
-                      '情報を読み込めませんでした',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                );
-              }
+            RefreshIndicator(
+              onRefresh: () async {
+                await _dataService.refreshDynamicData();
+                setState(() {});
+              },
 
-              final announcements = snapshot.data![0] as List<AnnouncementItem>;
-              final spotlights = snapshot.data![1] as List<SpotlightItem>;
-              final allEvents = snapshot.data![2] as List<EventItem>;
-
-              return SingleChildScrollView(
+              child: SingleChildScrollView(
                 child: Column(
                   children: [
                     Stack(
@@ -313,10 +289,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ),
                   ],
                 ),
-              );
-            },
-          ),
-
+              ),
+            ),
           Positioned(
             top: 65,
             left: 0,
