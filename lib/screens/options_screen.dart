@@ -1,5 +1,4 @@
 ﻿import 'package:flutter/material.dart';
-import 'package:flutter_app_yfa/models/info_link_item.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -11,7 +10,7 @@ import 'package:permission_handler/permission_handler.dart';
 import '../utils/app_colors.dart';
 
 class OptionsScreen extends StatefulWidget {
-  final VoidCallback onSettingsChanged;
+  final Future<void> Function() onSettingsChanged;
   final NotificationService notificationService;
 
   const OptionsScreen({
@@ -25,19 +24,18 @@ class OptionsScreen extends StatefulWidget {
 }
 
 class _OptionsScreenState extends State<OptionsScreen> {
-  final DataService _dataService = DataService();
+  final DataService _dataService = DataService.instance;
   String _appVersion = '';
 
   bool _generalNotificationsEnabled = true;
 
-  late Future<List<InfoLinkItem>> _infoLinksFuture;
+  bool _isGeneralNotificationSwitchCoolingDown = false;
 
   @override
   void initState() {
     super.initState();
     _loadAppVersion();
     _loadGeneralNotificationSetting();
-    _infoLinksFuture = _dataService.getInfoLinks();
   }
 
   Future<void> _loadAppVersion() async {
@@ -96,13 +94,19 @@ class _OptionsScreenState extends State<OptionsScreen> {
   }
 
   Future<void> _updateGeneralNotificationSetting(bool value) async {
+    if (_isGeneralNotificationSwitchCoolingDown) return;
+
+    setState(() {
+      _isGeneralNotificationSwitchCoolingDown = true;
+    });
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('general_notifications_enabled', value);
     setState(() {
       _generalNotificationsEnabled = value;
     });
 
-    DataService().updateNotificationPreference(value);
+    _dataService.updateNotificationPreference(value);
 
     if (value == true) {
       final status = await Permission.notification.status;
@@ -113,6 +117,14 @@ class _OptionsScreenState extends State<OptionsScreen> {
         );
       }
     }
+
+    Future.delayed(const Duration(seconds: 5), () {
+      if (mounted) {
+        setState(() {
+          _isGeneralNotificationSwitchCoolingDown = false;
+        });
+      }
+    });
   }
 
   IconData _getIconForName(String name) {
@@ -130,6 +142,7 @@ class _OptionsScreenState extends State<OptionsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final links = _dataService.infoLinks;
     return Scaffold(
       appBar: AppBar(title: const Text('オプション')),
 
@@ -149,7 +162,9 @@ class _OptionsScreenState extends State<OptionsScreen> {
             title: const Text('運営からのお知らせ通知'),
             subtitle: const Text('企画の中止や変更など、重要なお知らせを受け取ります'),
             value: _generalNotificationsEnabled,
-            onChanged: _updateGeneralNotificationSetting,
+            onChanged: _isGeneralNotificationSwitchCoolingDown
+                ? null
+                : _updateGeneralNotificationSetting,
           ),
 
           FavoriteNotificationSettings(
@@ -209,27 +224,14 @@ class _OptionsScreenState extends State<OptionsScreen> {
               );
             },
           ),
-          FutureBuilder<List<InfoLinkItem>>(
-            future: _infoLinksFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const SizedBox.shrink();
-              }
-              if (snapshot.hasError || !snapshot.hasData) {
-                return const ListTile(title: Text('情報を読み込めませんでした'));
-              }
-
-              final links = snapshot.data!;
-              return Column(
-                children: links.map((link) {
-                  return ListTile(
-                    leading: Icon(_getIconForName(link.iconName)),
-                    title: Text(link.title),
-                    onTap: () => _launchURL(link.url),
-                  );
-                }).toList(),
+          Column(
+            children: links.map((link) {
+              return ListTile(
+                leading: Icon(_getIconForName(link.iconName)),
+                title: Text(link.title),
+                onTap: () => _launchURL(link.url),
               );
-            },
+            }).toList(),
           ),
         ],
       ),

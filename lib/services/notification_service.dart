@@ -1,4 +1,5 @@
 ﻿import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -43,14 +44,26 @@ class NotificationService {
 
   Future<NotificationPermissionsStatus> checkPermissions() async {
     final notificationStatus = await Permission.notification.status;
-    final exactAlarmStatus = await Permission.scheduleExactAlarm.status;
-    return NotificationPermissionsStatus(
-      isNotificationGranted: notificationStatus.isGranted,
-      isExactAlarmGranted: exactAlarmStatus.isGranted,
-    );
+
+    if (Platform.isIOS) {
+      return NotificationPermissionsStatus(
+        isNotificationGranted: notificationStatus.isGranted,
+        isExactAlarmGranted: true,
+      );
+    } else {
+      final exactAlarmStatus = await Permission.scheduleExactAlarm.status;
+      return NotificationPermissionsStatus(
+        isNotificationGranted: notificationStatus.isGranted,
+        isExactAlarmGranted: exactAlarmStatus.isGranted,
+      );
+    }
   }
 
   Future<bool> _requestExactAlarmPermission(BuildContext context) async {
+    if (Platform.isIOS) {
+      return true;
+    }
+
     if (await Permission.scheduleExactAlarm.isGranted) {
       return true;
     }
@@ -169,5 +182,16 @@ class NotificationService {
       notificationDetails,
       payload: payload,
     );
+  }
+
+  Future<void> requestNotificationPermission() async {
+    final status = await Permission.notification.request();
+    if (status.isGranted) {
+      debugPrint("通知権限が許可されました。");
+    } else if (status.isDenied) {
+      debugPrint("通知権限が拒否されました。");
+    } else if (status.isPermanentlyDenied) {
+      debugPrint("通知権限が恒久的に拒否されています。設定画面から変更する必要があります。");
+    }
   }
 }

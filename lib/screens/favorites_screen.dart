@@ -16,7 +16,7 @@ class FavoritesScreen extends StatefulWidget {
   final Function(String) onToggleFavorite;
   final Function(String) onNavigateToMap;
   final Function(int) changeTab;
-  final VoidCallback onSettingsChanged;
+  final Future<void> Function() onSettingsChanged;
 
   const FavoritesScreen({
     super.key,
@@ -36,13 +36,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
   static final timeFormatter = DateFormat('HH:mm');
 
-  final DataService _dataService = DataService();
-  late Future<List<EventItem>> _eventsFuture;
-
   @override
   void initState() {
     super.initState();
-    _eventsFuture = _dataService.getEvents();
     _selectedDay = _getInitialSelectedDay();
   }
 
@@ -105,6 +101,51 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final allEvents = DataService.instance.events;
+
+    final favoritedEvents = allEvents
+        .where(
+          (event) =>
+              widget.favoriteEventIds.contains(event.id) &&
+              !event.hideFromList,
+        )
+        .toList();
+
+    final undecidedEvents = favoritedEvents
+        .where((event) => event.timeSlots == null)
+        .toList();
+
+    final allDayEvents = favoritedEvents
+        .where(
+          (event) => event.timeSlots != null && event.timeSlots!.isEmpty,
+        )
+        .toList();
+
+    final timedEvents = favoritedEvents
+        .where(
+          (event) =>
+              event.timeSlots != null && event.timeSlots!.isNotEmpty,
+        )
+        .toList();
+
+    final List<ScheduleEntry> scheduleItems = [];
+    final dayToFilter = _selectedDay == FestivalDay.dayOne ? 14 : 15;
+
+    for (final event in timedEvents) {
+      if (event.timeSlots != null) {
+        for (final slot in event.timeSlots!) {
+          if (slot.startTime.toLocal().day == dayToFilter) {
+            scheduleItems.add(ScheduleEntry(event, slot));
+          }
+        }
+      }
+    }
+    scheduleItems.sort(
+      (a, b) => a.timeSlot.startTime.toLocal().compareTo(
+        b.timeSlot.startTime.toLocal(),
+      ),
+    );
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -148,145 +189,86 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           const SizedBox(width: 8),
         ],
       ),
-      body: FutureBuilder<List<EventItem>>(
-        future: _eventsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return const Center(child: Text('データの読み込みに失敗しました'));
-          }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('表示できる企画がありません'));
-          }
 
-          final allEvents = snapshot.data!;
+      body: favoritedEvents.isEmpty
+          ? const Center(child: Text('お気に入りに登録した企画はありません'))
+          : ListView(
+              padding: const EdgeInsets.all(16.0),
+              children: [
+                if (allDayEvents.isNotEmpty) ...[
+                  const Text(
+                    '終日開催企画',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  ...allDayEvents.map(
+                    (event) => EventCard(
+                      event: event,
+                      favoriteEventIds: widget.favoriteEventIds,
+                      onToggleFavorite: widget.onToggleFavorite,
+                      onNavigateToMap: widget.onNavigateToMap,
+                    ),
+                  ),
+                  const Divider(height: 32, thickness: 1),
+                ],
+                const Text(
+                  '時間指定企画',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Center(
+                  child: ToggleButtons(
+                    isSelected: [
+                      _selectedDay == FestivalDay.dayOne,
+                      _selectedDay == FestivalDay.dayTwo,
+                    ],
+                    onPressed: (int index) {
+                      setState(() {
+                        _selectedDay = (index == 0)
+                            ? FestivalDay.dayOne
+                            : FestivalDay.dayTwo;
+                      });
+                    },
+                    borderRadius: BorderRadius.circular(8.0),
+                    children: const [
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        child: Text('1日目'),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        child: Text('2日目'),
+                      ),
+                    ],
+                  ),
+                ),
+                ..._buildScheduleWidgets(scheduleItems),
+                const Divider(height: 32, thickness: 1),
 
-          final favoritedEvents = allEvents
-              .where(
-                (event) =>
-                    widget.favoriteEventIds.contains(event.id) &&
-                    !event.hideFromList,
-              )
-              .toList();
-
-          final undecidedEvents = favoritedEvents
-              .where((event) => event.timeSlots == null)
-              .toList();
-
-          final allDayEvents = favoritedEvents
-              .where(
-                (event) => event.timeSlots != null && event.timeSlots!.isEmpty,
-              )
-              .toList();
-
-          final timedEvents = favoritedEvents
-              .where(
-                (event) =>
-                    event.timeSlots != null && event.timeSlots!.isNotEmpty,
-              )
-              .toList();
-
-          final List<ScheduleEntry> scheduleItems = [];
-          final dayToFilter = _selectedDay == FestivalDay.dayOne ? 14 : 15;
-
-          for (final event in timedEvents) {
-            if (event.timeSlots != null) {
-              for (final slot in event.timeSlots!) {
-                if (slot.startTime.toLocal().day == dayToFilter) {
-                  scheduleItems.add(ScheduleEntry(event, slot));
-                }
-              }
-            }
-          }
-          scheduleItems.sort(
-            (a, b) => a.timeSlot.startTime.toLocal().compareTo(
-              b.timeSlot.startTime.toLocal(),
+                if (undecidedEvents.isNotEmpty) ...[
+                  const Text(
+                    '時間未定企画',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  ...undecidedEvents.map(
+                    (event) => EventCard(
+                      event: event,
+                      favoriteEventIds: widget.favoriteEventIds,
+                      onToggleFavorite: widget.onToggleFavorite,
+                      onNavigateToMap: widget.onNavigateToMap,
+                    ),
+                  ),
+                ],
+              ],
             ),
-          );
-
-          return favoritedEvents.isEmpty
-              ? const Center(child: Text('お気に入りに登録した企画はありません'))
-              : ListView(
-                  padding: const EdgeInsets.all(16.0),
-                  children: [
-                    if (allDayEvents.isNotEmpty) ...[
-                      const Text(
-                        '終日開催企画',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      ...allDayEvents.map(
-                        (event) => EventCard(
-                          event: event,
-                          favoriteEventIds: widget.favoriteEventIds,
-                          onToggleFavorite: widget.onToggleFavorite,
-                          onNavigateToMap: widget.onNavigateToMap,
-                        ),
-                      ),
-                      const Divider(height: 32, thickness: 1),
-                    ],
-                    const Text(
-                      '時間指定企画',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Center(
-                      child: ToggleButtons(
-                        isSelected: [
-                          _selectedDay == FestivalDay.dayOne,
-                          _selectedDay == FestivalDay.dayTwo,
-                        ],
-                        onPressed: (int index) {
-                          setState(() {
-                            _selectedDay = (index == 0)
-                                ? FestivalDay.dayOne
-                                : FestivalDay.dayTwo;
-                          });
-                        },
-                        borderRadius: BorderRadius.circular(8.0),
-                        children: const [
-                          Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 16),
-                            child: Text('1日目'),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 16),
-                            child: Text('2日目'),
-                          ),
-                        ],
-                      ),
-                    ),
-                    ..._buildScheduleWidgets(scheduleItems),
-                    const Divider(height: 32, thickness: 1),
-
-                    if (undecidedEvents.isNotEmpty) ...[
-                      const Text(
-                        '時間未定企画',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      ...undecidedEvents.map(
-                        (event) => EventCard(
-                          event: event,
-                          favoriteEventIds: widget.favoriteEventIds,
-                          onToggleFavorite: widget.onToggleFavorite,
-                          onNavigateToMap: widget.onNavigateToMap,
-                        ),
-                      ),
-                    ],
-                  ],
-                );
-        },
-      ),
-    );
+      );
   }
 }
