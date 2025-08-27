@@ -48,7 +48,9 @@ enum PinType {
   bikeParking,
   smokingArea,
   recyclingStation,
-  building, // 建物全体を示すピン
+  eatingSpace,
+  nursingRoom,
+  building,
 }
 
 enum PinVisualStyle {

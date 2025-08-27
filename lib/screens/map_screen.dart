@@ -45,7 +45,8 @@ class _MapScreenState extends State<MapScreen> {
   final List<MapInfo> _allMaps = DataService.instance.maps;
   final List<MapPin> _allPins = DataService.instance.pins;
   final List<EventItem> _allEvents = DataService.instance.events;
-  final List<AnnouncementItem> _allAnnouncements = DataService.instance.announcements;
+  final List<AnnouncementItem> _allAnnouncements =
+      DataService.instance.announcements;
 
   BuildingSelection _selectedBuilding = BuildingSelection.campus;
   MapInfo? _currentMap;
@@ -81,17 +82,17 @@ class _MapScreenState extends State<MapScreen> {
   void initState() {
     super.initState();
 
-        _floorMapsByBuilding = {
-          BuildingSelection.building2:
-              _allMaps.where((m) => m.id.name.startsWith('building2')).toList()
-                ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder)),
-          BuildingSelection.building3:
-              _allMaps.where((m) => m.id.name.startsWith('building3')).toList()
-                ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder)),
-          BuildingSelection.building4:
-              _allMaps.where((m) => m.id.name.startsWith('building4')).toList()
-                ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder)),
-        };
+    _floorMapsByBuilding = {
+      BuildingSelection.building2:
+          _allMaps.where((m) => m.id.name.startsWith('building2')).toList()
+            ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder)),
+      BuildingSelection.building3:
+          _allMaps.where((m) => m.id.name.startsWith('building3')).toList()
+            ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder)),
+      BuildingSelection.building4:
+          _allMaps.where((m) => m.id.name.startsWith('building4')).toList()
+            ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder)),
+    };
 
     _currentMap = _allMaps.firstWhere((m) => m.id == MapType.campus);
 
@@ -357,16 +358,22 @@ class _MapScreenState extends State<MapScreen> {
                   PinType.smokingArea,
                   PinType.bikeParking,
                   PinType.recyclingStation,
+                  PinType.eatingSpace,
+                  PinType.nursingRoom,
                 };
 
                 final servicesInBuilding = _allPins
-                    .where((childPin) =>
-                        childPin.parentBuildingId == pin.id &&
-                        servicePinTypes.contains(childPin.type))
+                    .where(
+                      (childPin) =>
+                          childPin.parentBuildingId == pin.id &&
+                          servicePinTypes.contains(childPin.type),
+                    )
                     .toList();
 
-                final uniqueServiceTypes =
-                    servicesInBuilding.map((pin) => pin.type).toSet().toList();
+                final uniqueServiceTypes = servicesInBuilding
+                    .map((pin) => pin.type)
+                    .toSet()
+                    .toList();
 
                 List<EventItem> attachedEvents = [];
 
@@ -498,10 +505,9 @@ class _MapScreenState extends State<MapScreen> {
                                           final eventId = link.actionValue;
                                           EventItem? targetEvent;
                                           try {
-                                            targetEvent = _allEvents
-                                                .firstWhere(
-                                                  (e) => e.id == eventId,
-                                                );
+                                            targetEvent = _allEvents.firstWhere(
+                                              (e) => e.id == eventId,
+                                            );
                                           } catch (e) {
                                             targetEvent = null;
                                           }
@@ -537,7 +543,7 @@ class _MapScreenState extends State<MapScreen> {
                                                       announcement.id ==
                                                       announcementId,
                                                 );
-                                                                                    } catch (e) {
+                                          } catch (e) {
                                             targetAnnouncement = null;
                                           }
                                           if (targetAnnouncement != null) {
@@ -641,18 +647,41 @@ class _MapScreenState extends State<MapScreen> {
                                 children: uniqueServiceTypes.map((serviceType) {
                                   IconData serviceIcon;
                                   switch (serviceType) {
-                                    case PinType.restroom: serviceIcon = Icons.wc; break;
-                                    case PinType.vendingMachine: serviceIcon = Icons.local_drink; break;
-                                    case PinType.smokingArea: serviceIcon = Icons.smoking_rooms; break;
-                                    case PinType.bikeParking: serviceIcon = Icons.pedal_bike; break;
-                                    case PinType.recyclingStation: serviceIcon = Icons.recycling; break;
-                                    default: serviceIcon = Icons.info;
+                                    case PinType.restroom:
+                                      serviceIcon = Icons.wc;
+                                      break;
+                                    case PinType.vendingMachine:
+                                      serviceIcon = Icons.local_drink;
+                                      break;
+                                    case PinType.smokingArea:
+                                      serviceIcon = Icons.smoking_rooms;
+                                      break;
+                                    case PinType.bikeParking:
+                                      serviceIcon = Icons.pedal_bike;
+                                      break;
+                                    case PinType.recyclingStation:
+                                      serviceIcon = Icons.recycling;
+                                      break;
+                                    case PinType.eatingSpace:
+                                      serviceIcon = Icons.restaurant;
+                                      break;
+                                    case PinType.nursingRoom:
+                                      serviceIcon = Icons.baby_changing_station;
+                                      break;
+                                    default:
+                                      serviceIcon = Icons.info;
                                   }
                                   return Chip(
-                                    avatar: Icon(serviceIcon, size: 16, color: Colors.black54),
+                                    avatar: Icon(
+                                      serviceIcon,
+                                      size: 16,
+                                      color: Colors.black54,
+                                    ),
                                     label: Text(serviceType.displayName),
                                     backgroundColor: Colors.grey.shade200,
-                                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 4.0,
+                                    ),
                                   );
                                 }).toList(),
                               ),
@@ -973,6 +1002,8 @@ class _MapScreenState extends State<MapScreen> {
       PinType.smokingArea,
       PinType.bikeParking,
       PinType.recyclingStation,
+      PinType.eatingSpace,
+      PinType.nursingRoom,
     ];
     return Column(
       children: serviceTypes.map((type) {
@@ -1081,117 +1112,121 @@ class _MapScreenState extends State<MapScreen> {
 
     return Stack(
       children: [
-        _allMaps.isEmpty ? const Center(child: Text('表示できるマップがありません'))
-        : Scaffold(
-              appBar: AppBar(
-                title: Text(
-                  "マップ",
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                actions: [
-                  Builder(
-                    builder: (context) {
-                      return TextButton.icon(
-                        onPressed: () {
-                          Scaffold.of(context).openEndDrawer();
-                        },
-                        icon: const Icon(Icons.search),
-                        label: const Text(
-                          'マップピン検索',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        style: TextButton.styleFrom(
-                          side: const BorderSide(
-                            color: Colors.white,
-                            width: 0.8,
-                          ),
-                          foregroundColor:
-                              Theme.of(context).appBarTheme.iconTheme?.color ??
-                              Colors.white,
-                          shadowColor: Colors.black,
-                        ),
-                      );
-                    },
+        _allMaps.isEmpty
+            ? const Center(child: Text('表示できるマップがありません'))
+            : Scaffold(
+                appBar: AppBar(
+                  title: Text(
+                    "マップ",
+                    style: TextStyle(fontWeight: FontWeight.bold),
                   ),
-                ],
-              ),
-              endDrawer: _buildFilterDrawer(),
-              body: Column(
-                children: [
-                  _buildBuildingSelector(),
-                  if (_selectedBuilding != BuildingSelection.campus)
-                    _buildFloorSelector(),
+                  actions: [
+                    Builder(
+                      builder: (context) {
+                        return TextButton.icon(
+                          onPressed: () {
+                            Scaffold.of(context).openEndDrawer();
+                          },
+                          icon: const Icon(Icons.search),
+                          label: const Text(
+                            'マップピン検索',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          style: TextButton.styleFrom(
+                            side: const BorderSide(
+                              color: Colors.white,
+                              width: 0.8,
+                            ),
+                            foregroundColor:
+                                Theme.of(
+                                  context,
+                                ).appBarTheme.iconTheme?.color ??
+                                Colors.white,
+                            shadowColor: Colors.black,
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+                endDrawer: _buildFilterDrawer(),
+                body: Column(
+                  children: [
+                    _buildBuildingSelector(),
+                    if (_selectedBuilding != BuildingSelection.campus)
+                      _buildFloorSelector(),
 
-                  Expanded(
-                    child: InteractiveViewer(
-                      transformationController: _transformationController,
-                      minScale: 0.5,
-                      maxScale: 5.0,
-                      child: Center(
-                        child: AspectRatio(
-                          aspectRatio: _currentMap!.aspectRatio,
-                          child: Stack(
-                            children: [
-                              CachedNetworkImage(
-                                key: ValueKey(_currentMap!.id),
-                                imageUrl: _currentMap!.imagePath,
-                                fit: BoxFit.contain,
-                                placeholder: (context, url) =>
-                                    Shimmer.fromColors(
-                                      baseColor: Colors.grey.shade300,
-                                      highlightColor: AppColors.tertiary
-                                          .withAlpha(150),
-                                      child: Container(color: Colors.white),
-                                    ),
-                                errorWidget: (context, url, error) => Container(
-                                  color: Colors.grey[300],
-                                  child: const Center(
-                                    child: Icon(
-                                      Icons.image_not_supported,
-                                      color: Colors.grey,
-                                    ),
+                    Expanded(
+                      child: InteractiveViewer(
+                        transformationController: _transformationController,
+                        minScale: 0.5,
+                        maxScale: 5.0,
+                        child: Center(
+                          child: AspectRatio(
+                            aspectRatio: _currentMap!.aspectRatio,
+                            child: Stack(
+                              children: [
+                                CachedNetworkImage(
+                                  key: ValueKey(_currentMap!.id),
+                                  imageUrl: _currentMap!.imagePath,
+                                  fit: BoxFit.contain,
+                                  placeholder: (context, url) =>
+                                      Shimmer.fromColors(
+                                        baseColor: Colors.grey.shade300,
+                                        highlightColor: AppColors.tertiary
+                                            .withAlpha(150),
+                                        child: Container(color: Colors.white),
+                                      ),
+                                  errorWidget: (context, url, error) =>
+                                      Container(
+                                        color: Colors.grey[300],
+                                        child: const Center(
+                                          child: Icon(
+                                            Icons.image_not_supported,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ),
+                                ),
+                                Positioned.fill(
+                                  child: LayoutBuilder(
+                                    builder: (context, constraints) {
+                                      return Stack(
+                                        children: currentPins
+                                            .where((pin) {
+                                              if (pin.id ==
+                                                  _highlightedPinIdForNavigation) {
+                                                return true;
+                                              }
+                                              if (pin.hideUntilZoomed) {
+                                                return _currentScale >=
+                                                    _zoomThreshold;
+                                              }
+                                              return true;
+                                            })
+                                            .map((pin) {
+                                              return _buildMapPin(
+                                                pin,
+                                                constraints,
+                                                _allEvents,
+                                                _allPins,
+                                              );
+                                            })
+                                            .toList(),
+                                      );
+                                    },
                                   ),
                                 ),
-                              ),
-                              Positioned.fill(
-                                child: LayoutBuilder(
-                                  builder: (context, constraints) {
-                                    return Stack(
-                                      children: currentPins
-                                          .where((pin) {
-                                            if (pin.id ==
-                                                _highlightedPinIdForNavigation) {
-                                              return true;
-                                            }
-                                            if (pin.hideUntilZoomed) {
-                                              return _currentScale >=
-                                                  _zoomThreshold;
-                                            }
-                                            return true;
-                                          })
-                                          .map((pin) {
-                                            return _buildMapPin(
-                                              pin,
-                                              constraints,
-                                              _allEvents,
-                                              _allPins,
-                                            );
-                                          })
-                                          .toList(),
-                                    );
-                                  },
-                                ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          if (_showTutorialOverlay)
+        if (_showTutorialOverlay)
           MapTutorialOverlay(
             onDismiss: () async {
               final prefs = await SharedPreferences.getInstance();
@@ -1349,6 +1384,12 @@ class _MapPinWidgetState extends State<MapPinWidget>
                 break;
               case PinType.recyclingStation:
                 serviceIcon = Icons.delete;
+                break;
+              case PinType.eatingSpace:
+                serviceIcon = Icons.restaurant;
+                break;
+              case PinType.nursingRoom:
+                serviceIcon = Icons.baby_changing_station;
                 break;
               default:
                 serviceIcon = Icons.info;
