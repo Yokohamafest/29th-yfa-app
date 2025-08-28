@@ -4,11 +4,11 @@ import 'package:flutter_app_yfa/screens/favorites_screen.dart';
 import 'package:flutter_app_yfa/screens/home_screen.dart';
 import 'package:flutter_app_yfa/screens/map_screen.dart';
 import 'package:flutter_app_yfa/screens/timetable_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'services/data_service.dart';
 import 'services/notification_service.dart';
 import 'models/event_item.dart';
 import 'widgets/reminder_permission_dialog.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});
@@ -17,10 +17,9 @@ class MainScaffold extends StatefulWidget {
   State<MainScaffold> createState() => _MainScaffoldState();
 }
 
-class _MainScaffoldState extends State<MainScaffold> {
-  final DataService _dataService = DataService();
+class _MainScaffoldState extends State<MainScaffold> with WidgetsBindingObserver {
+  final DataService _dataService = DataService.instance;
   final NotificationService _notificationService = NotificationService();
-  List<EventItem>? _allEvents;
 
   int _selectedIndex = 0;
   final Set<String> _favoriteEventIds = {};
@@ -29,18 +28,38 @@ class _MainScaffoldState extends State<MainScaffold> {
   @override
   void initState() {
     super.initState();
-    _dataService.getEvents().then((events) {
-      if (mounted) {
-        setState(() {
-          _allEvents = events;
-        });
-      }
-    });
     _loadFavorites();
+    WidgetsBinding.instance.addObserver(this);
   }
 
-  void _rescheduleAllReminders() async {
-    if (_allEvents == null) return;
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      _refreshDynamicData();
+    }
+  }
+
+  Future<void> _refreshDynamicData() async {
+    try {
+      await DataService.instance.refreshDynamicData();
+      if (mounted) {
+        setState(() {
+        });
+      }
+    } catch (e) {
+      print("Error refreshing dynamic data: $e");
+    }
+  }
+
+  Future<void> _rescheduleAllReminders() async {
+    final allEvents = _dataService.events;
 
     final prefs = await SharedPreferences.getInstance();
     final remindersEnabled = prefs.getBool('reminders_enabled') ?? true;
@@ -48,7 +67,7 @@ class _MainScaffoldState extends State<MainScaffold> {
     if (!remindersEnabled) {
       for (final eventId in _favoriteEventIds) {
         EventItem? event;
-        try { event = _allEvents!.firstWhere((e) => e.id == eventId); } catch (e) { event = null; }
+        try { event = allEvents.firstWhere((e) => e.id == eventId); } catch (e) { event = null; }
         if (event != null) {
           await _notificationService.cancelReminder(event);
         }
@@ -59,7 +78,7 @@ class _MainScaffoldState extends State<MainScaffold> {
     final permissionsStatus = await _notificationService.checkPermissions();
     if (!permissionsStatus.allGranted) {
       if (mounted) {
-        showDialog(
+        await showDialog<bool>(
           context: context,
           builder: (context) => NotificationPermissionDialog(permissionsStatus: permissionsStatus),
         );
@@ -76,7 +95,7 @@ class _MainScaffoldState extends State<MainScaffold> {
 
     for (final eventId in _favoriteEventIds) {
       EventItem? event;
-      try { event = _allEvents!.firstWhere((e) => e.id == eventId); } catch (e) { event = null; }
+      try { event = allEvents.firstWhere((e) => e.id == eventId); } catch (e) { event = null; }
       if (event == null) continue;
 
       await _notificationService.cancelReminder(event);
@@ -113,12 +132,12 @@ class _MainScaffoldState extends State<MainScaffold> {
   }
 
   void _toggleFavorite(String eventId) async {
-    if (_allEvents == null) return;
+    final allEvents = _dataService.events;
     final isFavorited = _favoriteEventIds.contains(eventId);
 
     if (isFavorited) {
       EventItem? event;
-      try { event = _allEvents!.firstWhere((e) => e.id == eventId); } catch (e) { event = null; }
+      try { event = allEvents.firstWhere((e) => e.id == eventId); } catch (e) { event = null; }
       if (event != null) {
         await _notificationService.cancelReminder(event);
       }
@@ -131,7 +150,7 @@ class _MainScaffoldState extends State<MainScaffold> {
 
         if (permissionsStatus.allGranted) {
           EventItem? event;
-          try { event = _allEvents!.firstWhere((e) => e.id == eventId); } catch (e) { event = null; }
+          try { event = allEvents.firstWhere((e) => e.id == eventId); } catch (e) { event = null; }
           if (event != null) {
             final reminderMinutesSettings = {
               5: prefs.getBool('reminder_5_min_enabled') ?? false,

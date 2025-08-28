@@ -85,6 +85,10 @@ extension PinTypeExt on PinType {
         return '喫煙所';
       case PinType.recyclingStation:
         return '資源ステーション';
+      case PinType.eatingSpace:
+        return '飲食スペース';
+      case PinType.nursingRoom:
+        return '授乳室';
       case PinType.building:
         return '建物';
     }
