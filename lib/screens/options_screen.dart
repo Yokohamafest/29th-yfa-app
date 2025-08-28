@@ -55,36 +55,6 @@ class _OptionsScreenState extends State<OptionsScreen> {
     }
   }
 
-  void _clearCache() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('データの初期化'),
-        content: const Text('お気に入りや既読の情報など、保存されたデータがすべてリセットされます。'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('キャンセル'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('リセット'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true && mounted) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.clear();
-
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('データをリセットしました。アプリを再起動してください。')),
-      );
-    }
-  }
-
   Future<void> _loadGeneralNotificationSetting() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -169,23 +139,6 @@ class _OptionsScreenState extends State<OptionsScreen> {
 
           FavoriteNotificationSettings(
             onSettingsChanged: widget.onSettingsChanged,
-          ),
-          const Divider(),
-
-          const ListTile(
-            title: Text(
-              'データ管理',
-              style: TextStyle(
-                color: AppColors.primary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.delete_outline),
-            title: const Text('キャッシュをクリアする'),
-            subtitle: const Text('お気に入りや既読の情報をリセットする。\n（デバッグ用のため、削除予定）'),
-            onTap: _clearCache,
           ),
           const Divider(),
 
