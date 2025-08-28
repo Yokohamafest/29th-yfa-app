@@ -12,6 +12,7 @@ enum MapType {
   building3F3,
   building4F1,
   building4F2,
+  dummy,
 }
 
 // マップ画像の情報を持つクラス
@@ -20,11 +21,13 @@ class MapInfo {
   final String name;
   final String imagePath;
   final int sortOrder;
+  final double aspectRatio;
   const MapInfo({
     required this.id,
     required this.name,
     required this.imagePath,
     required this.sortOrder,
+    required this.aspectRatio,
   });
 
   factory MapInfo.fromJson(Map<String, dynamic> json) {
@@ -33,6 +36,7 @@ class MapInfo {
       name: json['name'] ?? " ",
       imagePath: json['imagePath'] ?? " ",
       sortOrder: json['sortOrder'] ?? 99,
+      aspectRatio: (json['aspectRatio'] as num?)?.toDouble() ?? 16/9,
     );
   }
 }
@@ -45,7 +49,14 @@ enum PinType {
   bikeParking,
   smokingArea,
   recyclingStation,
-  building, // 建物全体を示すピン
+  eatingSpace,
+  nursingRoom,
+  building,
+}
+
+enum PinVisualStyle {
+  defaultBox,
+  marker,
 }
 
 enum PinLinkActionType {
@@ -83,9 +94,11 @@ class MapPin {
   final Offset position; // マップ画像上のXY座標 (左上が0,0)
   final PinType type;
   final String title;
+  final PinVisualStyle visualStyle;
   final String? parentBuildingId; // どの建物に属しているかを示すID (屋外ならnull)
   final double? fontSize;
   final double? iconSize;
+  final double? markerSize;
   final EdgeInsets? padding;
   final String? detailText;
   final bool showDetailText;
@@ -98,10 +111,12 @@ class MapPin {
     required this.position,
     required this.type,
     required this.title,
+    this.visualStyle = PinVisualStyle.defaultBox,
     this.parentBuildingId,
     this.fontSize, // デフォルトは10
     this.iconSize,
     this.padding,
+    this.markerSize,
     this.detailText,
     this.showDetailText = true,
     this.link,
@@ -134,10 +149,12 @@ class MapPin {
       type: PinType.values.byName(json['type'] ?? 'location'),
       // もしJSONに'title'がなければ、'名称未設定'をデフォルト値として使う
       title: json['title'] ?? '名称未設定',
+      visualStyle: PinVisualStyle.values.byName(json['visualStyle'] ?? 'defaultBox'),
       parentBuildingId: json['parentBuildingId'],
       fontSize: (json['fontSize'] as num?)?.toDouble(),
       iconSize: (json['iconSize'] as num?)?.toDouble(),
       padding: padding,
+      markerSize: (json['markerSize'] as num?)?.toDouble(),
       detailText: json['detailText'],
       link: json['link'] != null ? PinLink.fromJson(json['link']) : null,
       hideUntilZoomed: json['hideUntilZoomed'] ?? false,
