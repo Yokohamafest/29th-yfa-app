@@ -64,6 +64,9 @@ extension EventCategoryExt on EventCategory {
       case EventCategory.goods:
         return '物販';
 
+      case EventCategory.lecture:
+        return '講演';
+
       case EventCategory.other:
         return 'その他';
     }

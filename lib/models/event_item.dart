@@ -27,6 +27,7 @@ enum EventCategory {
   handsOn, // 体験
   game, //ゲーム
   goods, //物販
+  lecture,// 講演
   other, // その他
 }
 
