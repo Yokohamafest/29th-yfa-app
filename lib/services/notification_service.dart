@@ -28,7 +28,11 @@ class NotificationService {
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
     const DarwinInitializationSettings initializationSettingsIOS =
-        DarwinInitializationSettings();
+        DarwinInitializationSettings(
+          requestAlertPermission: true,
+          requestBadgePermission: true,
+          requestSoundPermission: true,
+        );
 
     const InitializationSettings initializationSettings =
         InitializationSettings(
@@ -156,13 +160,14 @@ class NotificationService {
     required String body,
     String? payload,
   }) async {
-    final AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'general_notifications',
-      '運営からのお知らせ',
-      channelDescription: '運営からの重要なお知らせを通知します。',
-      importance: Importance.max,
-      priority: Priority.high,
-    );
+    final AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+          'general_notifications',
+          '運営からのお知らせ',
+          channelDescription: '運営からの重要なお知らせを通知します。',
+          importance: Importance.max,
+          priority: Priority.high,
+        );
 
     const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
       presentAlert: true,

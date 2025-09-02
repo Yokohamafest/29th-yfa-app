@@ -30,8 +30,15 @@
 	<string>運営からのお知らせや、お気に入りに登録した企画のリマインダーを通知するために利用します。</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>FirebaseMessagingPresentationOptions</key>
+	<array>
+			<string>sound</string>
+			<string>badge</string>
+			<string>alert</string>
+	</array>
 	<key>UIBackgroundModes</key>
 	<array>
+		<string>fetch</string>
 		<string>remote-notification</string>
 	</array>
 	<key>UILaunchStoryboardName</key>
