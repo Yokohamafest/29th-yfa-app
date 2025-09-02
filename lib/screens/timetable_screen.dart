@@ -84,8 +84,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
               _buildHeaderCell('体育館ステージ', Colors.orange.shade400),
               SizedBox(width: 3),
               _buildHeaderCell('31Aステージ', Colors.green.shade400),
-              SizedBox(width: 3),
-              _buildHeaderCell('32Aステージ', Colors.blue.shade400),
             ],
           ),
           Expanded(
@@ -105,12 +103,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
                       _buildStageColumn(
                         '31A',
                         Colors.green.shade400,
-                        allEvents,
-                      ),
-                      const SizedBox(width: 3),
-                      _buildStageColumn(
-                        '32A',
-                        Colors.blue.shade400,
                         allEvents,
                       ),
                     ],
@@ -222,7 +214,9 @@ class _TimetableScreenState extends State<TimetableScreen> {
         }
 
         final start = timeSlot.startTime.toLocal();
-        final end = timeSlot.endTime?.toLocal() ?? DateTime(start.year, start.month, start.day, 20, 0);
+        final end =
+            timeSlot.endTime?.toLocal() ??
+            DateTime(start.year, start.month, start.day, 20, 0);
         final topPosition =
             ((start.hour - 10) * 60 + start.minute) / 60.0 * _hourHeight;
 
@@ -289,7 +283,15 @@ class _TimetableEventCard extends StatelessWidget {
     int titleMaxLines;
     int groupNameMaxLines;
 
-    final end = timeSlot.endTime?.toLocal() ?? DateTime(timeSlot.startTime.year, timeSlot.startTime.month, timeSlot.startTime.day, 20, 0);
+    final end =
+        timeSlot.endTime?.toLocal() ??
+        DateTime(
+          timeSlot.startTime.year,
+          timeSlot.startTime.month,
+          timeSlot.startTime.day,
+          20,
+          0,
+        );
 
     if (cardHeight < 65) {
       titleMaxLines = 1;
