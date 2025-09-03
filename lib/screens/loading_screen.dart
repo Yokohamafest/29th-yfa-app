@@ -41,7 +41,6 @@ class _LoadingScreenState extends State<LoadingScreen> {
       ]);
       await Future.delayed(const Duration(milliseconds: 200));
 
-      await _checkAndRequestNotificationPermission();
       await _notificationService.init();
 
       _progressNotifier.value = 0.3;
@@ -70,16 +69,6 @@ class _LoadingScreenState extends State<LoadingScreen> {
     } catch (e) {
       print("!!!!! 初期化処理中にエラーが発生しました !!!!!");
       print(e.toString());
-    }
-  }
-
-  Future<void> _checkAndRequestNotificationPermission() async {
-    final prefs = await SharedPreferences.getInstance();
-    final bool hasRequested = prefs.getBool('has_requested_notification_permission') ?? false;
-
-    if (!hasRequested) {
-      await _notificationService.requestNotificationPermission();
-      await prefs.setBool('has_requested_notification_permission', true);
     }
   }
 

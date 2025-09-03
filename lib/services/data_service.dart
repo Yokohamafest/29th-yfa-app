@@ -160,11 +160,17 @@ class DataService {
     return jsonList.map((json) => InfoLinkItem.fromJson(json)).toList();
   }
 
-  Future<void> registerDeviceToken() async {
-    try {
-      final fcmToken = await FirebaseMessaging.instance.getToken();
-      if (fcmToken == null) return;
+Future<void> registerDeviceToken() async {
+  try {
+    final fcmToken = await FirebaseMessaging.instance.getToken();
 
+    if (fcmToken != null) {
+      print("--- iOS FCM Token for Testing ---");
+      print(fcmToken);
+      print("---------------------------------");
+    }
+
+    if (fcmToken == null) return;
       final url = Uri.parse(devicesUrl);
       await http
           .post(
