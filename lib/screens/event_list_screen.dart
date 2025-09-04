@@ -38,6 +38,16 @@ class _EventListScreenState extends State<EventListScreen> {
 
   int _selectedDayForTimeFilter = 1;
 
+  bool get _isFilterActive {
+    return _searchController.text.isNotEmpty ||
+        _selectedCategories.isNotEmpty ||
+        _selectedAreas.isNotEmpty ||
+        _selectedDays.isNotEmpty ||
+        _startTimeFilter != null ||
+        _endTimeFilter != null ||
+        _hideAllDayEvents;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -52,6 +62,19 @@ class _EventListScreenState extends State<EventListScreen> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _clearFilters() {
+    setState(() {
+      _searchController.clear();
+      _selectedCategories.clear();
+      _selectedAreas.clear();
+      _selectedDays.clear();
+      _startTimeFilter = null;
+      _endTimeFilter = null;
+      _hideAllDayEvents = false;
+      _runFilter();
+    });
   }
 
   void _runFilter() {
@@ -81,9 +104,7 @@ class _EventListScreenState extends State<EventListScreen> {
     if (_selectedAreas.isNotEmpty) {
       results = results
           .where(
-            (event) => event.areas.any(
-              (area) => _selectedAreas.contains(area),
-            ),
+            (event) => event.areas.any((area) => _selectedAreas.contains(area)),
           )
           .toList();
     }
@@ -122,7 +143,13 @@ class _EventListScreenState extends State<EventListScreen> {
           : DateTime(2025, 9, 14, 4, 0);
 
       final filterEnd = _endTimeFilter != null
-          ? DateTime(2025, 9, filterDay, _endTimeFilter!.hour, _endTimeFilter!.minute)
+          ? DateTime(
+              2025,
+              9,
+              filterDay,
+              _endTimeFilter!.hour,
+              _endTimeFilter!.minute,
+            )
           : DateTime(2025, 9, 15, 4, 0);
 
       results = results.where((event) {
@@ -133,14 +160,24 @@ class _EventListScreenState extends State<EventListScreen> {
           return !_hideAllDayEvents;
         }
         return event.timeSlots!.any((slot) {
-          final end = slot.endTime?.toLocal() ?? DateTime(slot.startTime.year, slot.startTime.month, slot.startTime.day, 20, 0);
+          final end =
+              slot.endTime?.toLocal() ??
+              DateTime(
+                slot.startTime.year,
+                slot.startTime.month,
+                slot.startTime.day,
+                20,
+                0,
+              );
           return slot.startTime.toLocal().isBefore(filterEnd) &&
               end.isAfter(filterStart);
         });
       }).toList();
     }
 
-    if (_startTimeFilter == null && _endTimeFilter == null && _hideAllDayEvents) {
+    if (_startTimeFilter == null &&
+        _endTimeFilter == null &&
+        _hideAllDayEvents) {
       results = results.where((event) {
         return !(event.timeSlots == null || event.timeSlots!.isEmpty);
       }).toList();
@@ -281,21 +318,63 @@ class _EventListScreenState extends State<EventListScreen> {
         ),
       ),
 
-      body: _filteredEvents.isEmpty
-          ? const Center(child: Text('表示できる企画がありません'))
-          : ListView.builder(
-              padding: const EdgeInsets.all(8.0),
-              itemCount: _filteredEvents.length,
-              itemBuilder: (context, index) {
-                final event = _filteredEvents[index];
-                return EventCard(
-                  event: event,
-                  favoriteEventIds: widget.favoriteEventIds,
-                  onToggleFavorite: widget.onToggleFavorite,
-                  onNavigateToMap: widget.onNavigateToMap,
-                );
-              },
+      body: Column(
+        children: [
+          if (_isFilterActive)
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 8.0,
+              ),
+              color: Colors.orange.shade100,
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.info_outline,
+                    color: Colors.orange,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      '絞り込み中',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange,
+                      ),
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: _clearFilters,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.orange,
+                    ),
+                    child: const Text('クリア'),
+                  ),
+                ],
+              ),
             ),
+
+          Expanded(
+            child: _filteredEvents.isEmpty
+                ? const Center(child: Text('表示できる企画がありません'))
+                : ListView.builder(
+                    padding: const EdgeInsets.all(8.0),
+                    itemCount: _filteredEvents.length,
+                    itemBuilder: (context, index) {
+                      final event = _filteredEvents[index];
+                      return EventCard(
+                        event: event,
+                        favoriteEventIds: widget.favoriteEventIds,
+                        onToggleFavorite: widget.onToggleFavorite,
+                        onNavigateToMap: widget.onNavigateToMap,
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -345,11 +424,11 @@ class _EventListScreenState extends State<EventListScreen> {
                     });
                   },
                   borderRadius: BorderRadius.circular(8.0),
-                  constraints: const BoxConstraints(minHeight: 32.0, minWidth: 60.0),
-                  children: const [
-                    Text('1日目'),
-                    Text('2日目'),
-                  ],
+                  constraints: const BoxConstraints(
+                    minHeight: 32.0,
+                    minWidth: 60.0,
+                  ),
+                  children: const [Text('1日目'), Text('2日目')],
                 ),
             ],
           ),
