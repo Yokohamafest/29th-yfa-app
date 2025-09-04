@@ -664,6 +664,8 @@ class _MapScreenState extends State<MapScreen> {
                                     case PinType.nursingRoom:
                                       serviceIcon = Icons.baby_changing_station;
                                       break;
+                                    case PinType.restArea:
+                                      serviceIcon = Icons.chair;
                                     default:
                                       serviceIcon = Icons.info;
                                   }
@@ -1000,6 +1002,7 @@ class _MapScreenState extends State<MapScreen> {
       PinType.recyclingStation,
       PinType.eatingSpace,
       PinType.nursingRoom,
+      PinType.restArea,
     ];
     return Column(
       children: serviceTypes.map((type) {
@@ -1387,6 +1390,8 @@ class _MapPinWidgetState extends State<MapPinWidget>
               case PinType.nursingRoom:
                 serviceIcon = Icons.baby_changing_station;
                 break;
+              case PinType.restArea:
+                serviceIcon = Icons.chair;
               default:
                 serviceIcon = Icons.info;
             }

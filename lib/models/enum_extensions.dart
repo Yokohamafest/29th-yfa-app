@@ -92,6 +92,8 @@ extension PinTypeExt on PinType {
         return '飲食スペース';
       case PinType.nursingRoom:
         return '授乳室';
+      case PinType.restArea:
+        return '休憩所';
       case PinType.building:
         return '建物';
     }
