@@ -2,7 +2,6 @@
 import 'package:intl/intl.dart';
 import '../models/event_item.dart';
 import '../widgets/event_card.dart';
-import '../widgets/favorite_reminder_settings.dart';
 import '../services/data_service.dart';
 
 class ScheduleEntry {
@@ -16,7 +15,6 @@ class FavoritesScreen extends StatefulWidget {
   final Function(String) onToggleFavorite;
   final Function(String) onNavigateToMap;
   final Function(int) changeTab;
-  final Future<void> Function() onSettingsChanged;
 
   const FavoritesScreen({
     super.key,
@@ -24,7 +22,6 @@ class FavoritesScreen extends StatefulWidget {
     required this.onToggleFavorite,
     required this.onNavigateToMap,
     required this.changeTab,
-    required this.onSettingsChanged,
   });
 
   @override
@@ -152,7 +149,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           'お気に入り企画',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        actions: [
+        /*actions: [
           Builder(
             builder: (context) {
               return TextButton.icon(
@@ -187,7 +184,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             },
           ),
           const SizedBox(width: 8),
-        ],
+        ],*/
       ),
 
       body: favoritedEvents.isEmpty

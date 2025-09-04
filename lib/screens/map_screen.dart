@@ -25,7 +25,6 @@ class MapScreen extends StatefulWidget {
   final Function(String) onToggleFavorite;
   final Function(String) onNavigateToMap;
   final Function(int) changeTab;
-  final Future<void> Function() onSettingsChanged;
 
   const MapScreen({
     super.key,
@@ -34,7 +33,6 @@ class MapScreen extends StatefulWidget {
     required this.onToggleFavorite,
     required this.onNavigateToMap,
     required this.changeTab,
-    required this.onSettingsChanged,
   });
 
   @override
@@ -567,8 +565,6 @@ class _MapScreenState extends State<MapScreen> {
                                             MaterialPageRoute(
                                               builder: (context) =>
                                                   OptionsScreen(
-                                                    onSettingsChanged: widget
-                                                        .onSettingsChanged,
                                                     notificationService:
                                                         NotificationService(),
                                                   ),

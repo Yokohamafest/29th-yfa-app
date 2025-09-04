@@ -2,20 +2,15 @@
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../widgets/favorite_reminder_settings.dart';
 import '../services/data_service.dart';
 import '../services/notification_service.dart';
-import '../widgets/announcement_permission_dialog.dart';
-import 'package:permission_handler/permission_handler.dart';
 import '../utils/app_colors.dart';
 
 class OptionsScreen extends StatefulWidget {
-  final Future<void> Function() onSettingsChanged;
   final NotificationService notificationService;
 
   const OptionsScreen({
     super.key,
-    required this.onSettingsChanged,
     required this.notificationService,
   });
 
@@ -78,16 +73,6 @@ class _OptionsScreenState extends State<OptionsScreen> {
 
     _dataService.updateNotificationPreference(value);
 
-    if (value == true) {
-      final status = await Permission.notification.status;
-      if (!status.isGranted && mounted) {
-        showDialog(
-          context: context,
-          builder: (context) => const GeneralNotificationPermissionDialog(),
-        );
-      }
-    }
-
     Future.delayed(const Duration(seconds: 5), () {
       if (mounted) {
         setState(() {
@@ -137,9 +122,9 @@ class _OptionsScreenState extends State<OptionsScreen> {
                 : _updateGeneralNotificationSetting,
           ),
 
-          FavoriteNotificationSettings(
+          /*FavoriteNotificationSettings(
             onSettingsChanged: widget.onSettingsChanged,
-          ),
+          ),*/
           const Divider(),
 
           const ListTile(

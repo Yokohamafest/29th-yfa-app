@@ -1,4 +1,5 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:flutter_app_yfa/utils/app_colors.dart';
 import 'package:intl/intl.dart';
 import '../models/event_item.dart';
 import 'event_detail_screen.dart';
@@ -81,7 +82,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(width: _leftColumnWidth),
-              _buildHeaderCell('体育館ステージ', Colors.orange.shade400),
+              _buildHeaderCell('体育館ステージ', AppColors.secondary),
               SizedBox(width: 3),
               _buildHeaderCell('31Aステージ', Colors.green.shade400),
             ],
@@ -94,11 +95,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
                   Row(
                     children: [
                       SizedBox(width: _leftColumnWidth),
-                      _buildStageColumn(
-                        '体育館',
-                        Colors.orange.shade400,
-                        allEvents,
-                      ),
+                      _buildStageColumn('体育館', AppColors.secondary, allEvents),
                       const SizedBox(width: 3),
                       _buildStageColumn(
                         '31A',

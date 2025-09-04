@@ -6,8 +6,8 @@ import '../main_scaffold.dart';
 import '../services/data_service.dart';
 import '../firebase_options.dart';
 import '../widgets/compass_loading_indicator.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../services/notification_service.dart';
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 
 class LoadingScreen extends StatefulWidget {
   const LoadingScreen({super.key});
@@ -32,16 +32,25 @@ class _LoadingScreenState extends State<LoadingScreen> {
     super.dispose();
   }
 
+  Future<void> _requestATT() async {
+    final status = await AppTrackingTransparency.trackingAuthorizationStatus;
+    if (status == TrackingStatus.notDetermined) {
+      await AppTrackingTransparency.requestTrackingAuthorization();
+    }
+  }
+
   Future<void> _initialize() async {
     try {
       _progressNotifier.value = 0.1;
       WidgetsFlutterBinding.ensureInitialized();
+
+      await _requestATT();
+
       await SystemChrome.setPreferredOrientations([
         DeviceOrientation.portraitUp,
       ]);
       await Future.delayed(const Duration(milliseconds: 200));
 
-      await _checkAndRequestNotificationPermission();
       await _notificationService.init();
 
       _progressNotifier.value = 0.3;
@@ -70,16 +79,6 @@ class _LoadingScreenState extends State<LoadingScreen> {
     } catch (e) {
       print("!!!!! 初期化処理中にエラーが発生しました !!!!!");
       print(e.toString());
-    }
-  }
-
-  Future<void> _checkAndRequestNotificationPermission() async {
-    final prefs = await SharedPreferences.getInstance();
-    final bool hasRequested = prefs.getBool('has_requested_notification_permission') ?? false;
-
-    if (!hasRequested) {
-      await _notificationService.requestNotificationPermission();
-      await prefs.setBool('has_requested_notification_permission', true);
     }
   }
 

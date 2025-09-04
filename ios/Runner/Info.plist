@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>アプリの品質改善や利用状況の分析のために、匿名のトラッキングデータを収集します。このデータが個人を特定することはありません。</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
@@ -27,7 +29,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSUserNotificationsUsageDescription</key>
-	<string>運営からのお知らせや、お気に入りに登録した企画のリマインダーを通知するために利用します。</string>
+	<string>運営からのお知らせを通知するために利用します。</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>FirebaseMessagingPresentationOptions</key>

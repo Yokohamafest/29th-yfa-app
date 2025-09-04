@@ -3,7 +3,7 @@ import Flutter
 // ★ 1. この行を追加
 import flutter_local_notifications
 
-@UIApplicationMain
+@main
 @objc class AppDelegate: FlutterAppDelegate {
   override func application(
     _ application: UIApplication,
