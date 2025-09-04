@@ -9,6 +9,7 @@ import 'services/notification_service.dart';
 import 'models/event_item.dart';
 import 'widgets/reminder_permission_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});
@@ -30,6 +31,17 @@ class _MainScaffoldState extends State<MainScaffold> with WidgetsBindingObserver
     super.initState();
     _loadFavorites();
     WidgetsBinding.instance.addObserver(this);
+
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      print('フォアグラウンドでメッセージを受信しました: ${message.notification?.title}');
+
+      if (message.notification != null && message.notification!.title != null && message.notification!.body != null) {
+        _notificationService.showPushNotification(
+          title: message.notification!.title!,
+          body: message.notification!.body!,
+        );
+      }
+    });
   }
 
   @override
