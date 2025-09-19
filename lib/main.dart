@@ -1,51 +1,42 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:intl/date_symbol_data_local.dart';
-import 'package:flutter_app_yfa/main_scaffold.dart';
-import 'services/notification_service.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'dart:async';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import '../utils/app_colors.dart';
+import 'screens/loading_screen.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
-// ここにFirebaseの初期化コードが入る
 // ignore: unused_element
-Future<void> _firebaseMessagingBackgroundHandler(dynamic message) async {
-  // バックグラウンドで通知を受け取った際の処理
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   debugPrint("Handling a background message: ${message.messageId}");
 }
 
-Future<void> main() async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  final NotificationService notificationService = NotificationService();
-  await notificationService.init();
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-  await notificationService.flutterLocalNotificationsPlugin
-      .resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin
-      >()
-      ?.requestNotificationsPermission();
+  await FirebaseMessaging.instance.requestPermission(alert: true, announcement: true, badge: true);
 
-  // Firebaseのコードが入る部分
-  // await Firebase.initializeApp();
-  // FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-  //
+  await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+    alert: true,
+    badge: true,
+    sound: true,
+  );
 
-  await initializeDateFormatting('ja_JP');
-
-  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-
-  runApp(MyApp(notificationService: notificationService));
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final NotificationService notificationService;
-  const MyApp({super.key,  required this.notificationService});
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: '29th Yokohama Festival',
+      title: '29th Yokohama Festival App',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
@@ -63,7 +54,7 @@ class MyApp extends StatelessWidget {
           type: BottomNavigationBarType.fixed,
         ),
       ),
-      home: const MainScaffold(),
+      home: const LoadingScreen(),
     );
   }
 }

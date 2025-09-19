@@ -12,13 +12,14 @@ import 'package:url_launcher/url_launcher.dart';
 import '../services/data_service.dart';
 import '../services/notification_service.dart';
 import '../utils/app_colors.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
 
 class HomeScreen extends StatefulWidget {
   final Set<String> favoriteEventIds;
   final Function(String) onToggleFavorite;
   final Function(String) onNavigateToMap;
   final Function(int) changeTab;
-  final VoidCallback onSettingsChanged;
 
   const HomeScreen({
     super.key,
@@ -26,7 +27,6 @@ class HomeScreen extends StatefulWidget {
     required this.onToggleFavorite,
     required this.onNavigateToMap,
     required this.changeTab,
-    required this.onSettingsChanged,
   });
 
   @override
@@ -34,8 +34,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
-  final DataService _dataService = DataService();
-  late Future<List<dynamic>> _homeDataFuture;
+  final DataService _dataService = DataService.instance;
   AnimationController? _slideInController;
   late final AnimationController _rockingController;
   Animation<double>? _xAnimation;
@@ -49,16 +48,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   void initState() {
     super.initState();
 
-    _homeDataFuture = Future.wait([
-      _dataService.getAnnouncements(),
-      _dataService.getSpotlights(),
-      _dataService.getEvents(),
-    ]);
-
     _rockingController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 4),
-    )..repeat(reverse: true);
+    )..repeat();
 
     _pageController = PageController(
       viewportFraction: 0.85,
@@ -121,6 +114,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       });
     }
 
+    final announcements = _dataService.announcements;
+    final spotlights = _dataService.spotlights;
+    final allEvents = _dataService.events;
+
     return Scaffold(
       drawer: Drawer(
         child: ListView(
@@ -155,7 +152,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   context,
                   MaterialPageRoute(
                     builder: (context) => OptionsScreen(
-                      onSettingsChanged: widget.onSettingsChanged,
                       notificationService: NotificationService(),
                     ),
                   ),
@@ -169,43 +165,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       body: Stack(
         children: [
           Column(
-            children: [
-              Expanded(
-                child: Container(
-                  color: AppColors.primary,
-                ),
-              ),
-            ],
+            children: [Expanded(child: Container(color: AppColors.primary))],
           ),
 
-          FutureBuilder<List<dynamic>>(
-            future: _homeDataFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Positioned.fill(
-                  top: 420,
-                  child: Center(
-                    child: CircularProgressIndicator(color: Colors.white),
-                  ),
-                );
-              }
-              if (snapshot.hasError || !snapshot.hasData) {
-                return const Positioned.fill(
-                  top: 420,
-                  child: Center(
-                    child: Text(
-                      '情報を読み込めませんでした',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                );
-              }
+            RefreshIndicator(
+              onRefresh: () async {
+                await _dataService.refreshDynamicData();
+                setState(() {});
+              },
 
-              final announcements = snapshot.data![0] as List<AnnouncementItem>;
-              final spotlights = snapshot.data![1] as List<SpotlightItem>;
-              final allEvents = snapshot.data![2] as List<EventItem>;
-
-              return SingleChildScrollView(
+              child: SingleChildScrollView(
                 child: Column(
                   children: [
                     Stack(
@@ -213,7 +182,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         SizedBox(height: 420),
 
                         Container(
-                          height: 250,
+                          height: 300,
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               begin: Alignment.topCenter,
@@ -224,7 +193,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         ),
 
                         Positioned(
-                          top: 250,
+                          top: 300,
                           left: 0,
                           right: 0,
                           height: 50,
@@ -232,7 +201,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         ),
 
                         Positioned(
-                          top: 100,
+                          top: 162,
                           left: screenWidth * 0.55,
                           child: Image.asset(
                             'assets/images/title.png',
@@ -240,8 +209,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           ),
                         ),
                         Positioned(
-                          top: 0,
-                          left: screenWidth * 0.55,
+                          top: 62,
+                          left: screenWidth * 0.54,
                           child: Image.asset(
                             'assets/images/voyage_logo.png',
                             width: 150,
@@ -254,7 +223,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             builder: (context, slideInChild) {
                               return Positioned(
                                 left: _xAnimation!.value,
-                                top: 140,
+                                top: 190,
                                 child: slideInChild!,
                               );
                             },
@@ -282,7 +251,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           ),
 
                         Positioned(
-                          top: 275,
+                          top: 325,
                           left: 0,
                           right: 0,
                           child: Image.asset(
@@ -299,7 +268,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 16.0,
-                          vertical: 24.0,
+                          vertical: 16.0,
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -317,12 +286,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ),
                   ],
                 ),
-              );
-            },
-          ),
-
+              ),
+            ),
           Positioned(
-            top: 45,
+            top: 65,
             left: 0,
             child: Builder(
               builder: (context) {
@@ -403,7 +370,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   'お知らせ一覧',
                   style: TextStyle(color: AppColors.primary),
                 ),
-                trailing: const Icon(Icons.arrow_forward, color: AppColors.primary),
+                trailing: const Icon(
+                  Icons.arrow_forward,
+                  color: AppColors.primary,
+                ),
                 onTap: () {
                   Navigator.push(
                     context,
@@ -433,7 +403,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-
       children: [
         const Text(
           '注目企画',
@@ -445,7 +414,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ),
         const SizedBox(height: 8),
         SizedBox(
-          height: (MediaQuery.of(context).size.width * 0.9) * 9 / 16,
+          height: (MediaQuery.of(context).size.width * 0.85),
           child: PageView.builder(
             controller: _pageController,
             itemCount: 10000,
@@ -456,51 +425,73 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               final realIndex = index % visibleSpotlights.length;
               final spotlight = visibleSpotlights[realIndex];
 
-              return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 8.0),
-                clipBehavior: Clip.antiAlias,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.0),
-                ),
-                child: InkWell(
-                  onTap: () async {
-                    if (spotlight.actionType == SpotlightActionType.event) {
-                      final String eventId = spotlight.actionValue;
-                      EventItem? targetEvent;
-                      try {
-                        targetEvent = allEvents.firstWhere(
-                          (e) => e.id == eventId,
-                        );
-                      } catch (e) {
-                        targetEvent = null;
-                      }
-                      if (targetEvent != null) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => EventDetailScreen(
-                              event: targetEvent!,
-                              favoriteEventIds: widget.favoriteEventIds,
-                              onToggleFavorite: widget.onToggleFavorite,
-                              onNavigateToMap: widget.onNavigateToMap,
+              final viewportWidth = MediaQuery.of(context).size.width * 0.85;
+              const double horizontalSpacing = 30.0;
+
+              return Center(
+                child: SizedBox(
+                  width: viewportWidth - horizontalSpacing,
+                  height: viewportWidth - horizontalSpacing,
+                  child: Card(
+                    clipBehavior: Clip.antiAlias,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    child: InkWell(
+                      onTap: () async {
+                        if (spotlight.actionType == SpotlightActionType.event) {
+                          final String eventId = spotlight.actionValue;
+                          EventItem? targetEvent;
+                          try {
+                            targetEvent = allEvents.firstWhere(
+                              (e) => e.id == eventId,
+                            );
+                          } catch (e) {
+                            targetEvent = null;
+                          }
+                          if (targetEvent != null) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => EventDetailScreen(
+                                  event: targetEvent!,
+                                  favoriteEventIds: widget.favoriteEventIds,
+                                  onToggleFavorite: widget.onToggleFavorite,
+                                  onNavigateToMap: widget.onNavigateToMap,
+                                ),
+                              ),
+                            );
+                          }
+                        } else if (spotlight.actionType ==
+                            SpotlightActionType.url) {
+                          final url = Uri.parse(spotlight.actionValue);
+                          if (await canLaunchUrl(url)) {
+                            await launchUrl(url);
+                          }
+                        }
+                      },
+                      child: AspectRatio(
+                        aspectRatio: 1 / 1,
+                        child: CachedNetworkImage(
+                          imageUrl: spotlight.imagePath,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Shimmer.fromColors(
+                            baseColor: Colors.grey.shade100,
+                            highlightColor: AppColors.tertiary.withAlpha(150),
+                            child: Container(color: Colors.white),
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            color: Colors.grey[300],
+                            child: const Center(
+                              child: Icon(
+                                Icons.image_not_supported,
+                                color: Colors.grey,
+                              ),
                             ),
                           ),
-                        );
-                      }
-                    } else if (spotlight.actionType ==
-                        SpotlightActionType.url) {
-                      final url = Uri.parse(spotlight.actionValue);
-                      if (await canLaunchUrl(url)) {
-                        await launchUrl(url);
-                      }
-                    }
-                  },
-                  child: Image.asset(
-                    spotlight.imagePath,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return const Center(child: Text('画像読込エラー'));
-                    },
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               );

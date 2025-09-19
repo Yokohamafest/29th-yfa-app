@@ -3,6 +3,9 @@ import '../models/event_item.dart';
 import '../screens/event_detail_screen.dart';
 import 'tag_widget.dart';
 import '../models/enum_extensions.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
+import '../utils/app_colors.dart';
 
 class EventCard extends StatelessWidget {
   final EventItem event;
@@ -23,7 +26,7 @@ class EventCard extends StatelessWidget {
     final bool isFavorited = favoriteEventIds.contains(event.id);
     final allTags = [
       {'text': event.date.name, 'color': Colors.green},
-      {'text': event.area.name, 'color': Colors.orange},
+      ...event.areas.map((a) => {'text': a.name, 'color': Colors.orange}),
       ...event.categories.map((c) => {'text': c.name, 'color': Colors.blue}),
     ];
 
@@ -54,20 +57,25 @@ class EventCard extends StatelessWidget {
             children: [
               AspectRatio(
                 aspectRatio: 1 / 1,
-                child: Image.asset(
-                  event.imagePath,
+                child: CachedNetworkImage(
+                  imageUrl: event.imagePath,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: Colors.grey[300],
-                      child: const Center(
-                        child: Icon(
-                          Icons.image_not_supported,
-                          color: Colors.grey,
-                        ),
+                  placeholder: (context, url) => Shimmer.fromColors(
+                    baseColor: Colors.grey.shade300,
+                    highlightColor: AppColors.tertiary.withAlpha(150),
+                    child: Container(
+                      color: Colors.white,
+                    ),
+                  ),
+                  errorWidget: (context, url, error) => Container(
+                    color: Colors.grey[300],
+                    child: const Center(
+                      child: Icon(
+                        Icons.image_not_supported,
+                        color: Colors.grey,
                       ),
-                    );
-                  },
+                    ),
+                  ),
                 ),
               ),
               Expanded(
@@ -111,6 +119,8 @@ class EventCard extends StatelessWidget {
                           fontSize: 12.0,
                           color: Colors.grey[700],
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const Spacer(),
 

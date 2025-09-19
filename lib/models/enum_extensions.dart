@@ -61,6 +61,12 @@ extension EventCategoryExt on EventCategory {
       case EventCategory.game:
         return 'ゲーム';
 
+      case EventCategory.goods:
+        return '物販';
+
+      case EventCategory.lecture:
+        return '講演';
+
       case EventCategory.other:
         return 'その他';
     }
@@ -82,6 +88,12 @@ extension PinTypeExt on PinType {
         return '喫煙所';
       case PinType.recyclingStation:
         return '資源ステーション';
+      case PinType.eatingSpace:
+        return '飲食スペース';
+      case PinType.nursingRoom:
+        return '授乳室';
+      case PinType.restArea:
+        return '休憩所';
       case PinType.building:
         return '建物';
     }

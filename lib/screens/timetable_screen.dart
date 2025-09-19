@@ -1,4 +1,5 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:flutter_app_yfa/utils/app_colors.dart';
 import 'package:intl/intl.dart';
 import '../models/event_item.dart';
 import 'event_detail_screen.dart';
@@ -28,13 +29,9 @@ class _TimetableScreenState extends State<TimetableScreen> {
   final double _hourHeight = 120.0;
   final double _leftColumnWidth = 50.0;
 
-  final DataService _dataService = DataService();
-  late Future<List<EventItem>> _eventsFuture;
-
   @override
   void initState() {
     super.initState();
-    _eventsFuture = _dataService.getEvents();
     _selectedDay = _getInitialSelectedDay();
   }
 
@@ -48,98 +45,70 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final allEvents = DataService.instance.events;
+
     return Scaffold(
       appBar: AppBar(title: const Text('タイムテーブル')),
-      body: FutureBuilder<List<EventItem>>(
-        future: _eventsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return const Center(child: Text('データの読み込みに失敗しました'));
-          }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('表示できる企画のデータがありません'));
-          }
-
-          final allEvents = snapshot.data!;
-
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: ToggleButtons(
-                  isSelected: [
-                    _selectedDay == FestivalDay.dayOne,
-                    _selectedDay == FestivalDay.dayTwo,
-                  ],
-                  onPressed: (index) {
-                    setState(() {
-                      _selectedDay = (index == 0)
-                          ? FestivalDay.dayOne
-                          : FestivalDay.dayTwo;
-                    });
-                  },
-                  borderRadius: BorderRadius.circular(8.0),
-                  children: const [
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: Text('1日目 (9/14)'),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: Text('2日目 (9/15)'),
-                    ),
-                  ],
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: ToggleButtons(
+              isSelected: [
+                _selectedDay == FestivalDay.dayOne,
+                _selectedDay == FestivalDay.dayTwo,
+              ],
+              onPressed: (index) {
+                setState(() {
+                  _selectedDay = (index == 0)
+                      ? FestivalDay.dayOne
+                      : FestivalDay.dayTwo;
+                });
+              },
+              borderRadius: BorderRadius.circular(8.0),
+              children: const [
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Text('1日目 (9/14)'),
                 ),
-              ),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Text('2日目 (9/15)'),
+                ),
+              ],
+            ),
+          ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(width: _leftColumnWidth),
+              _buildHeaderCell('体育館ステージ', AppColors.secondary),
+              SizedBox(width: 3),
+              _buildHeaderCell('31Aステージ', Colors.green.shade400),
+            ],
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Stack(
                 children: [
-                  SizedBox(width: _leftColumnWidth),
-                  _buildHeaderCell('体育館ステージ', Colors.orange.shade400),
-                  SizedBox(width: 3),
-                  _buildHeaderCell('31Aステージ', Colors.green.shade400),
-                  SizedBox(width: 3),
-                  _buildHeaderCell('32Aステージ', Colors.blue.shade400),
-                ],
-              ),
-
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Stack(
+                  _buildGridAndTimeAxis(),
+                  Row(
                     children: [
-                      _buildGridAndTimeAxis(),
-                      Row(
-                        children: [
-                          SizedBox(width: _leftColumnWidth),
-                          _buildStageColumn(
-                            '体育館',
-                            Colors.orange.shade400,
-                            allEvents,
-                          ),
-                          const SizedBox(width: 3),
-                          _buildStageColumn(
-                            '31A',
-                            Colors.green.shade400,
-                            allEvents,
-                          ),
-                          const SizedBox(width: 3),
-                          _buildStageColumn(
-                            '32A',
-                            Colors.blue.shade400,
-                            allEvents,
-                          ),
-                        ],
+                      SizedBox(width: _leftColumnWidth),
+                      _buildStageColumn('体育館', AppColors.secondary, allEvents),
+                      const SizedBox(width: 3),
+                      _buildStageColumn(
+                        '31A',
+                        Colors.green.shade400,
+                        allEvents,
                       ),
                     ],
                   ),
-                ),
+                ],
               ),
-            ],
-          );
-        },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -228,21 +197,23 @@ class _TimetableScreenState extends State<TimetableScreen> {
     List<EventItem> allEvents,
   ) {
     final eventsForStage = allEvents.where((event) {
-      final isSameLocation = event.location == locationName;
-      final isTimed = event.timeSlots.isNotEmpty;
+      final isSameLocation = event.locations.contains(locationName);
+      final isTimed = event.timeSlots != null && event.timeSlots!.isNotEmpty;
       return isSameLocation && isTimed;
     }).toList();
 
     final List<Widget> cards = [];
     for (final event in eventsForStage) {
-      for (final timeSlot in event.timeSlots) {
-        if (timeSlot.startTime.day !=
+      for (final timeSlot in event.timeSlots!) {
+        if (timeSlot.startTime.toLocal().day !=
             (_selectedDay == FestivalDay.dayOne ? 14 : 15)) {
           continue;
         }
 
-        final start = timeSlot.startTime;
-        final end = timeSlot.endTime;
+        final start = timeSlot.startTime.toLocal();
+        final end =
+            timeSlot.endTime?.toLocal() ??
+            DateTime(start.year, start.month, start.day, 20, 0);
         final topPosition =
             ((start.hour - 10) * 60 + start.minute) / 60.0 * _hourHeight;
 
@@ -309,12 +280,22 @@ class _TimetableEventCard extends StatelessWidget {
     int titleMaxLines;
     int groupNameMaxLines;
 
+    final end =
+        timeSlot.endTime?.toLocal() ??
+        DateTime(
+          timeSlot.startTime.year,
+          timeSlot.startTime.month,
+          timeSlot.startTime.day,
+          20,
+          0,
+        );
+
     if (cardHeight < 65) {
       titleMaxLines = 1;
       groupNameMaxLines = 1;
     } else {
-      final durationInMinutes = timeSlot.endTime
-          .difference(timeSlot.startTime)
+      final durationInMinutes = end
+          .difference(timeSlot.startTime.toLocal())
           .inMinutes;
       final thirtyMinuteBlocks = (durationInMinutes / 30).ceil();
       titleMaxLines = math.max(2, thirtyMinuteBlocks * 2);
@@ -353,7 +334,6 @@ class _TimetableEventCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  //const SizedBox(height: 12),
                   Text(
                     event.title,
                     style: const TextStyle(
@@ -384,7 +364,7 @@ class _TimetableEventCard extends StatelessWidget {
                 ),
                 color: Colors.black.withAlpha(204),
                 child: Text(
-                  '${formatter.format(timeSlot.startTime)} - ${formatter.format(timeSlot.endTime)}',
+                  '${formatter.format(timeSlot.startTime.toLocal())} - ${formatter.format(end.toLocal())}',
                   style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,

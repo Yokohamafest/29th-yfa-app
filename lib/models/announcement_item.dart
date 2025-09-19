@@ -15,9 +15,9 @@
 
   factory AnnouncementItem.fromJson(Map<String, dynamic> json) {
     return AnnouncementItem(
-      id: json['id'],
-      title: json['title'],
-      content: json['content'],
+      id: json['id'] ?? " ",
+      title: json['title'] ?? " ",
+      content: json['content'] ?? " ",
       publishedAt: DateTime.parse(json['publishedAt']),
     );
   }

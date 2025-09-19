@@ -10,7 +10,9 @@ enum MapType {
   building3F1,
   building3F2,
   building3F3,
-  building4F1F2,
+  building4F1,
+  building4F2,
+  dummy,
 }
 
 // マップ画像の情報を持つクラス
@@ -18,11 +20,25 @@ class MapInfo {
   final MapType id;
   final String name;
   final String imagePath;
+  final int sortOrder;
+  final double aspectRatio;
   const MapInfo({
     required this.id,
     required this.name,
     required this.imagePath,
+    required this.sortOrder,
+    required this.aspectRatio,
   });
+
+  factory MapInfo.fromJson(Map<String, dynamic> json) {
+    return MapInfo(
+      id: MapType.values.byName(json['id'] ?? "campus"),
+      name: json['name'] ?? " ",
+      imagePath: json['imagePath'] ?? " ",
+      sortOrder: json['sortOrder'] ?? 99,
+      aspectRatio: (json['aspectRatio'] as num?)?.toDouble() ?? 16/9,
+    );
+  }
 }
 
 // ピンの種類
@@ -33,7 +49,15 @@ enum PinType {
   bikeParking,
   smokingArea,
   recyclingStation,
-  building, // 建物全体を示すピン
+  eatingSpace,
+  nursingRoom,
+  restArea,
+  building,
+}
+
+enum PinVisualStyle {
+  defaultBox,
+  marker,
 }
 
 enum PinLinkActionType {
@@ -58,9 +82,9 @@ class PinLink {
 
   factory PinLink.fromJson(Map<String, dynamic> json) {
     return PinLink(
-      text: json['text'],
-      actionType: PinLinkActionType.values.byName(json['actionType']),
-      actionValue: json['actionValue'],
+      text: json['text'] ?? " ",
+      actionType: PinLinkActionType.values.byName(json['actionType'] ?? "timetable"),
+      actionValue: json['actionValue'] ?? " ",
     );
   }
 }
@@ -71,13 +95,16 @@ class MapPin {
   final Offset position; // マップ画像上のXY座標 (左上が0,0)
   final PinType type;
   final String title;
+  final PinVisualStyle visualStyle;
   final String? parentBuildingId; // どの建物に属しているかを示すID (屋外ならnull)
   final double? fontSize;
   final double? iconSize;
+  final double? markerSize;
   final EdgeInsets? padding;
   final String? detailText;
   final bool showDetailText;
   final PinLink? link;
+  final bool hideUntilZoomed;
 
   const MapPin({
     required this.id,
@@ -85,13 +112,16 @@ class MapPin {
     required this.position,
     required this.type,
     required this.title,
+    this.visualStyle = PinVisualStyle.defaultBox,
     this.parentBuildingId,
-    this.fontSize,
+    this.fontSize, // デフォルトは10
     this.iconSize,
     this.padding,
+    this.markerSize,
     this.detailText,
     this.showDetailText = true,
     this.link,
+    this.hideUntilZoomed = false,
   });
 
   factory MapPin.fromJson(Map<String, dynamic> json) {
@@ -108,21 +138,27 @@ class MapPin {
     }
 
     return MapPin(
-      id: json['id'],
-      mapId: MapType.values.byName(json['mapId']),
+      // もしJSONに'id'がなければ、空文字列''をデフォルト値として使う
+      id: json['id'] ?? '',
+      // もしJSONに'mapId'がなければ、'other'をデフォルト値として使う
+      mapId: MapType.values.byName(json['mapId'] ?? 'other'),
       position: Offset(
-        (json['position']['dx'] as num).toDouble(),
-        (json['position']['dy'] as num).toDouble(),
+        (json['position']?['dx'] as num? ?? 0.0).toDouble(),
+        (json['position']?['dy'] as num? ?? 0.0).toDouble(),
       ),
-      type: PinType.values.byName(json['type']),
-      title: json['title'],
+      // もしJSONに'type'がなければ、'location'をデフォルト値として使う
+      type: PinType.values.byName(json['type'] ?? 'location'),
+      // もしJSONに'title'がなければ、'名称未設定'をデフォルト値として使う
+      title: json['title'] ?? '名称未設定',
+      visualStyle: PinVisualStyle.values.byName(json['visualStyle'] ?? 'defaultBox'),
       parentBuildingId: json['parentBuildingId'],
       fontSize: (json['fontSize'] as num?)?.toDouble(),
       iconSize: (json['iconSize'] as num?)?.toDouble(),
       padding: padding,
+      markerSize: (json['markerSize'] as num?)?.toDouble(),
       detailText: json['detailText'],
-      showDetailText: json['showDetailText'] ?? true,
       link: json['link'] != null ? PinLink.fromJson(json['link']) : null,
+      hideUntilZoomed: json['hideUntilZoomed'] ?? false,
     );
   }
 }
