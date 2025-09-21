@@ -25,7 +25,6 @@ class MapScreen extends StatefulWidget {
   final Function(String) onToggleFavorite;
   final Function(String) onNavigateToMap;
   final Function(int) changeTab;
-  final Future<void> Function() onSettingsChanged;
 
   const MapScreen({
     super.key,
@@ -34,7 +33,6 @@ class MapScreen extends StatefulWidget {
     required this.onToggleFavorite,
     required this.onNavigateToMap,
     required this.changeTab,
-    required this.onSettingsChanged,
   });
 
   @override
@@ -567,8 +565,6 @@ class _MapScreenState extends State<MapScreen> {
                                             MaterialPageRoute(
                                               builder: (context) =>
                                                   OptionsScreen(
-                                                    onSettingsChanged: widget
-                                                        .onSettingsChanged,
                                                     notificationService:
                                                         NotificationService(),
                                                   ),
@@ -668,6 +664,8 @@ class _MapScreenState extends State<MapScreen> {
                                     case PinType.nursingRoom:
                                       serviceIcon = Icons.baby_changing_station;
                                       break;
+                                    case PinType.restArea:
+                                      serviceIcon = Icons.chair;
                                     default:
                                       serviceIcon = Icons.info;
                                   }
@@ -1004,6 +1002,7 @@ class _MapScreenState extends State<MapScreen> {
       PinType.recyclingStation,
       PinType.eatingSpace,
       PinType.nursingRoom,
+      PinType.restArea,
     ];
     return Column(
       children: serviceTypes.map((type) {
@@ -1391,6 +1390,8 @@ class _MapPinWidgetState extends State<MapPinWidget>
               case PinType.nursingRoom:
                 serviceIcon = Icons.baby_changing_station;
                 break;
+              case PinType.restArea:
+                serviceIcon = Icons.chair;
               default:
                 serviceIcon = Icons.info;
             }

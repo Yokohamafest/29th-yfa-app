@@ -1,15 +1,32 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import '../utils/app_colors.dart';
 import 'screens/loading_screen.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 // ignore: unused_element
-Future<void> _firebaseMessagingBackgroundHandler(dynamic message) async {
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   debugPrint("Handling a background message: ${message.messageId}");
 }
 
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-void main() {
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+  await FirebaseMessaging.instance.requestPermission(alert: true, announcement: true, badge: true);
+
+  await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+    alert: true,
+    badge: true,
+    sound: true,
+  );
+
   runApp(const MyApp());
 }
 
@@ -41,4 +58,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-

@@ -51,6 +51,7 @@ enum PinType {
   recyclingStation,
   eatingSpace,
   nursingRoom,
+  restArea,
   building,
 }
 

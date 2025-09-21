@@ -1,4 +1,5 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:flutter_app_yfa/utils/app_colors.dart';
 import 'package:intl/intl.dart';
 import '../models/event_item.dart';
 import 'event_detail_screen.dart';
@@ -81,11 +82,9 @@ class _TimetableScreenState extends State<TimetableScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(width: _leftColumnWidth),
-              _buildHeaderCell('体育館ステージ', Colors.orange.shade400),
+              _buildHeaderCell('体育館ステージ', AppColors.secondary),
               SizedBox(width: 3),
               _buildHeaderCell('31Aステージ', Colors.green.shade400),
-              SizedBox(width: 3),
-              _buildHeaderCell('32Aステージ', Colors.blue.shade400),
             ],
           ),
           Expanded(
@@ -96,21 +95,11 @@ class _TimetableScreenState extends State<TimetableScreen> {
                   Row(
                     children: [
                       SizedBox(width: _leftColumnWidth),
-                      _buildStageColumn(
-                        '体育館',
-                        Colors.orange.shade400,
-                        allEvents,
-                      ),
+                      _buildStageColumn('体育館', AppColors.secondary, allEvents),
                       const SizedBox(width: 3),
                       _buildStageColumn(
                         '31A',
                         Colors.green.shade400,
-                        allEvents,
-                      ),
-                      const SizedBox(width: 3),
-                      _buildStageColumn(
-                        '32A',
-                        Colors.blue.shade400,
                         allEvents,
                       ),
                     ],
@@ -222,7 +211,9 @@ class _TimetableScreenState extends State<TimetableScreen> {
         }
 
         final start = timeSlot.startTime.toLocal();
-        final end = timeSlot.endTime?.toLocal() ?? DateTime(start.year, start.month, start.day, 20, 0);
+        final end =
+            timeSlot.endTime?.toLocal() ??
+            DateTime(start.year, start.month, start.day, 20, 0);
         final topPosition =
             ((start.hour - 10) * 60 + start.minute) / 60.0 * _hourHeight;
 
@@ -289,7 +280,15 @@ class _TimetableEventCard extends StatelessWidget {
     int titleMaxLines;
     int groupNameMaxLines;
 
-    final end = timeSlot.endTime?.toLocal() ?? DateTime(timeSlot.startTime.year, timeSlot.startTime.month, timeSlot.startTime.day, 20, 0);
+    final end =
+        timeSlot.endTime?.toLocal() ??
+        DateTime(
+          timeSlot.startTime.year,
+          timeSlot.startTime.month,
+          timeSlot.startTime.day,
+          20,
+          0,
+        );
 
     if (cardHeight < 65) {
       titleMaxLines = 1;
